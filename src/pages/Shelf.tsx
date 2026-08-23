@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { Cover } from '../components/Cover'
+import { coverUrl } from '../lib/supabase'
 import { formatDay, formatNumber, monthKey, monthLabel } from '../utils/format'
 import {
   BookStatus,
@@ -25,7 +26,6 @@ function buildFilters(books: Book[]): Filter[] {
   ]
     .filter((year): year is string => Boolean(year))
     .sort((a, b) => b.localeCompare(a))
-    .slice(0, 3)
 
   return [
     { key: 'all', label: 'Alle', matches: () => true },
@@ -97,7 +97,14 @@ function groupByMonth(books: Book[]) {
 }
 
 export function Shelf() {
-  const { books, loading, error } = useBooks()
+  const { books, loading, error, reload } = useBooks()
+  const [retrying, setRetrying] = useState(false)
+
+  const retry = async () => {
+    setRetrying(true)
+    await reload()
+    setRetrying(false)
+  }
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
@@ -171,7 +178,20 @@ export function Shelf() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 pt-4">
-        {error && <p className="text-danger py-6 text-sm">{error}</p>}
+        {error && (
+          <div className="py-8 text-center">
+            <p className="text-danger mb-1 text-sm">Deine Bücher konnten nicht geladen werden.</p>
+            <p className="text-ink-3 mb-4 text-[12.5px]">{error}</p>
+            <button
+              type="button"
+              onClick={() => void retry()}
+              disabled={retrying}
+              className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-[14px] font-semibold disabled:opacity-50"
+            >
+              {retrying ? 'Lädt…' : 'Nochmal versuchen'}
+            </button>
+          </div>
+        )}
 
         {!loading && visible.length === 0 && (
           <p className="text-ink-2 py-16 text-center text-sm">
@@ -194,7 +214,9 @@ export function Shelf() {
                 <li key={book.id}>
                   <Link to={`/buch/${book.id}`} className="block">
                     <Cover
-                      book={book}
+                      title={book.title}
+                      authors={book.authors}
+                      src={coverUrl(book.cover_path)}
                       className={
                         book.status === BookStatus.Reading
                           ? 'outline-leaf outline-2 outline-offset-[3px]'
