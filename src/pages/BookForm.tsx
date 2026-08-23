@@ -1,7 +1,10 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type SyntheticEvent } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
+import { CoverPicker } from '../components/CoverPicker'
+import { removeCover, uploadCover } from '../lib/supabase'
+import { MAX_UPLOAD_BYTES, toCoverJpeg } from '../utils/image'
 import { todayIso } from '../utils/format'
 import {
   BookStatus,
@@ -74,6 +77,36 @@ export function BookForm() {
   const [authorText, setAuthorText] = useState(() => (existing?.authors ?? []).join(', '))
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [coverImage, setCoverImage] = useState<Blob | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [coverRemoved, setCoverRemoved] = useState(false)
+
+  useEffect(() => {
+    if (!coverPreview) return
+    return () => URL.revokeObjectURL(coverPreview)
+  }, [coverPreview])
+
+  const pickCover = async (file: File) => {
+    setError('')
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError('Das Bild ist zu groß. Bis 8 MB geht.')
+      return
+    }
+    try {
+      const image = await toCoverJpeg(file)
+      setCoverImage(image)
+      setCoverRemoved(false)
+      setCoverPreview(URL.createObjectURL(image))
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Bild konnte nicht gelesen werden.')
+    }
+  }
+
+  const dropCover = () => {
+    setCoverImage(null)
+    setCoverPreview(null)
+    setCoverRemoved(true)
+  }
 
   if (isEdit && !existing) {
     return (
@@ -85,7 +118,7 @@ export function BookForm() {
 
   const patch = (changes: Partial<BookDraft>) => setDraft((current) => ({ ...current, ...changes }))
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (event: SyntheticEvent) => {
     event.preventDefault()
     setError('')
     if (!draft.title.trim()) {
@@ -108,6 +141,17 @@ export function BookForm() {
         notes: textOrNull(draft.notes ?? ''),
       }
       const saved = existing ? await updateBook(existing.id, payload) : await addBook(payload)
+      const previousCover = existing?.cover_path ?? null
+
+      if (coverImage) {
+        const path = await uploadCover(payload.isbn ?? saved.id, coverImage)
+        await updateBook(saved.id, { cover_path: path })
+        if (previousCover) await removeCover(previousCover)
+      } else if (coverRemoved && previousCover) {
+        await updateBook(saved.id, { cover_path: null })
+        await removeCover(previousCover)
+      }
+
       if (existing && cameFromDetail) navigate(-1)
       else navigate(`/buch/${saved.id}`, { replace: true })
     } catch (caught) {
@@ -136,6 +180,18 @@ export function BookForm() {
 
       <div className="mx-auto max-w-xl px-4 pt-5">
         {error && <p className="text-danger mb-4 text-sm">{error}</p>}
+
+        <CoverPicker
+          book={{
+            title: draft.title || 'Neues Buch',
+            authors: authorText ? [authorText] : [],
+            cover_path: existing?.cover_path ?? null,
+          }}
+          previewUrl={coverPreview}
+          removed={coverRemoved}
+          onPick={pickCover}
+          onRemove={dropCover}
+        />
 
         <label className="mb-4 block">
           <span className={labelClass}>Titel</span>

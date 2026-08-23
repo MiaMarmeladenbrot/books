@@ -9,7 +9,7 @@ interface CoverProps {
   className?: string
 }
 
-const SHAPE =
+export const COVER_SHAPE =
   'relative aspect-[5/8] overflow-hidden rounded-[5px] shadow-[0_1px_2px_rgb(30_26_21/0.18),0_10px_20px_-10px_rgb(30_26_21/0.45)]'
 
 export function Cover({ book, showText = true, className = '' }: CoverProps) {
@@ -24,7 +24,7 @@ export function Cover({ book, showText = true, className = '' }: CoverProps) {
         loading="lazy"
         decoding="async"
         onError={() => setImageFailed(true)}
-        className={`${SHAPE} bg-shade w-full object-cover ${className}`}
+        className={`${COVER_SHAPE} bg-shade w-full object-cover ${className}`}
       />
     )
   }
@@ -34,7 +34,7 @@ export function Cover({ book, showText = true, className = '' }: CoverProps) {
 
   return (
     <div
-      className={`${SHAPE} flex flex-col justify-end text-white ${showText ? 'py-3 pr-3 pl-4' : ''} ${className}`}
+      className={`${COVER_SHAPE} flex flex-col justify-end text-white ${showText ? 'py-3 pr-3 pl-4' : ''} ${className}`}
       style={{ background }}
     >
       <span className="absolute inset-y-0 left-0 w-1.5 bg-linear-to-r from-black/30 to-transparent" />
