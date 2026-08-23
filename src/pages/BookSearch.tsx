@@ -1,33 +1,13 @@
 import { useState, type SyntheticEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, X } from 'lucide-react'
-import { COVER_SHAPE } from '../components/Cover'
+import { Cover } from '../components/Cover'
 import { lookupBooks, looksLikeIsbn, type Candidate } from '../lib/lookup'
-import { formatNumber, hueFromTitle } from '../utils/format'
+import { formatNumber } from '../utils/format'
 
 type Phase = 'idle' | 'searching' | 'results' | 'empty'
 
-function CandidateCover({ candidate }: { candidate: Candidate }) {
-  const hue = hueFromTitle(candidate.title)
-  if (candidate.cover_url) {
-    return (
-      <img
-        src={candidate.cover_url}
-        alt=""
-        loading="lazy"
-        className={`${COVER_SHAPE} bg-shade w-full object-cover`}
-      />
-    )
-  }
-  return (
-    <div
-      className={COVER_SHAPE}
-      style={{
-        background: `linear-gradient(150deg, hsl(${hue} 34% 40%), hsl(${(hue + 28) % 360} 30% 26%))`,
-      }}
-    />
-  )
-}
+const PAGE_SIZE = 8
 
 function describe(candidate: Candidate) {
   return [
@@ -44,6 +24,8 @@ export function BookSearch() {
   const [term, setTerm] = useState('')
   const [phase, setPhase] = useState<Phase>('idle')
   const [results, setResults] = useState<Candidate[]>([])
+  const [visible, setVisible] = useState(PAGE_SIZE)
+  const [moreAvailable, setMoreAvailable] = useState(false)
   const [error, setError] = useState('')
 
   const openForm = (prefill?: Candidate, fallbackTitle?: string) => {
@@ -57,9 +39,16 @@ export function BookSearch() {
 
     setError('')
     setPhase('searching')
+    setVisible(PAGE_SIZE)
     try {
-      const { results: found } = await lookupBooks(trimmed)
+      const { results: found, silent, moreAvailable: more } = await lookupBooks(trimmed)
+      setMoreAvailable(more)
       if (found.length === 0) {
+        if (silent > 0) {
+          setError('Der Katalog antwortet nicht. Nochmal versuchen oder von Hand eintragen.')
+          setPhase('idle')
+          return
+        }
         setPhase('empty')
         return
       }
@@ -134,7 +123,7 @@ export function BookSearch() {
 
         {phase === 'results' && (
           <ul className="mt-6">
-            {results.map((candidate, index) => (
+            {results.slice(0, visible).map((candidate, index) => (
               <li key={`${candidate.title}-${index}`} className="border-line border-b last:border-b-0">
                 <button
                   type="button"
@@ -142,7 +131,12 @@ export function BookSearch() {
                   className="flex w-full gap-3.5 py-3.5 text-left"
                 >
                   <span className="w-12 shrink-0">
-                    <CandidateCover candidate={candidate} />
+                    <Cover
+                      title={candidate.title}
+                      authors={candidate.authors}
+                      src={candidate.cover_url}
+                      showText={false}
+                    />
                   </span>
                   <span className="min-w-0">
                     <span className="block text-[14.5px] leading-snug font-semibold">
@@ -156,14 +150,40 @@ export function BookSearch() {
                     <span className="text-ink-3 mt-0.5 block text-[11.5px]">
                       {describe(candidate)}
                     </span>
-                    <span className="text-ink-3 border-line mt-1.5 inline-block rounded border px-1.5 text-[10px] font-bold tracking-wider uppercase">
-                      {candidate.source === 'DNB' ? 'DNB' : 'Open Library'}
-                    </span>
                   </span>
                 </button>
               </li>
             ))}
           </ul>
+        )}
+
+        {phase === 'results' && visible < results.length && (
+          <button
+            type="button"
+            onClick={() => setVisible((current) => current + PAGE_SIZE)}
+            className="border-line text-ink-2 mt-5 w-full rounded-xl border py-3 text-[14px] font-semibold"
+          >
+            Mehr laden ({results.length - visible} weitere)
+          </button>
+        )}
+
+        {phase === 'results' && visible >= results.length && moreAvailable && (
+          <p className="text-ink-3 mt-5 text-center text-[12.5px] leading-relaxed">
+            Der Katalog hat noch mehr Ausgaben. Suche verfeinern, etwa mit dem Autorennamen.
+          </p>
+        )}
+
+        {phase === 'results' && (
+          <div className="border-line mt-6 border-t pt-5 text-center">
+            <p className="text-ink-2 mb-3 text-[13px]">Nichts davon passt?</p>
+            <button
+              type="button"
+              onClick={() => openForm(undefined, term.trim())}
+              className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-[14px] font-semibold"
+            >
+              Von Hand eintragen
+            </button>
+          </div>
         )}
 
         {phase === 'idle' && !error && (

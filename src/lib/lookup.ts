@@ -4,7 +4,24 @@ const OPENLIBRARY_SEARCH = 'https://openlibrary.org/search.json'
 const OPENLIBRARY_COVER = 'https://covers.openlibrary.org/b'
 const MARC_NAMESPACE = 'http://www.loc.gov/MARC21/slim'
 
-const MAX_RESULTS = 8
+const FETCH_LIMIT = 20
+const REQUEST_TIMEOUT = 8000
+
+class CatalogueUnavailable extends Error {}
+
+async function fetchCatalogue(url: string) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT)
+  try {
+    const response = await fetch(url, { signal: controller.signal })
+    if (!response.ok) throw new CatalogueUnavailable(String(response.status))
+    return response
+  } catch {
+    throw new CatalogueUnavailable(url)
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 const IMPRINT_PREFIXES = [
   'kiwi',
@@ -95,6 +112,24 @@ function looksLikeStudyGuide(text: string) {
   return STUDY_GUIDE_MARKERS.some((marker) => lowered.includes(marker))
 }
 
+const VOLUME_WORDS = ['band', 'bd', 'book', 'teil', 'vol', 'nr']
+
+const SERIES_IN_PARENS =
+  /\s*\((.+?)[,\s]+(?:Band|Bd\.?|Book|Teil|Vol\.?|Nr\.?|#)?\s*(\d{1,3})\)\s*$/i
+
+function extractSeriesFromTitle(title: string) {
+  const match = title.match(SERIES_IN_PARENS)
+  if (!match) return { title, series: null, volume: null }
+
+  const name = match[1].trim().replace(/[,;:]$/, '')
+  const isVolumeWord = VOLUME_WORDS.includes(name.toLowerCase().replace(/\.$/, ''))
+  return {
+    title: title.slice(0, match.index).trim(),
+    series: isVolumeWord ? null : cleanSeries(name),
+    volume: Number(match[2]),
+  }
+}
+
 function flipName(name: string) {
   const cleaned = name.replace(/\s*\([^)]*\)\s*$/, '').trim()
   const parts = cleaned.split(',')
@@ -108,7 +143,7 @@ function firstNumber(value: string, pattern: RegExp) {
 }
 
 function coverForIsbn(isbn: string | null) {
-  return isbn ? `${OPENLIBRARY_COVER}/isbn/${isbn}-L.jpg?default=false` : null
+  return isbn ? `/api/cover?isbn=${isbn}` : null
 }
 
 function fields(record: Element, tag: string) {
@@ -132,8 +167,11 @@ function isAdditionalAuthor(field: Element) {
 
 function parseDnbRecord(record: Element): Candidate | null {
   const titleField = fields(record, '245')[0]
-  const title = titleField ? subfield(titleField, 'a').replace(/\s*[/:]$/, '').trim() : ''
-  if (!title) return null
+  const rawTitle = titleField ? subfield(titleField, 'a').replace(/\s*[/:]$/, '').trim() : ''
+  if (!rawTitle) return null
+
+  const fromTitle = extractSeriesFromTitle(rawTitle)
+  const title = fromTitle.title || rawTitle
 
   const authors = [
     ...new Set(
@@ -158,9 +196,9 @@ function parseDnbRecord(record: Element): Candidate | null {
     }
   }
 
-  let series: string | null = null
-  let volume: number | null = null
-  for (const tag of ['490', '830']) {
+  let series: string | null = fromTitle.series
+  let volume: number | null = fromTitle.volume
+  for (const tag of series ? [] : ['490', '830']) {
     for (const field of fields(record, tag)) {
       const candidate = cleanSeries(subfield(field, 'a'))
       if (candidate) {
@@ -192,7 +230,12 @@ function parseDnbRecord(record: Element): Candidate | null {
   }
 }
 
-async function searchDnb(query: string, limit: number): Promise<Candidate[]> {
+interface DnbResult {
+  candidates: Candidate[]
+  total: number
+}
+
+async function searchDnb(query: string, limit: number): Promise<DnbResult> {
   const parameters = new URLSearchParams({
     version: '1.1',
     operation: 'searchRetrieve',
@@ -201,16 +244,17 @@ async function searchDnb(query: string, limit: number): Promise<Candidate[]> {
     maximumRecords: String(limit),
   })
 
-  const response = await fetch(`${DNB_ENDPOINT}?${parameters}`)
-  if (!response.ok) return []
-
+  const response = await fetchCatalogue(`${DNB_ENDPOINT}?${parameters}`)
   const document = new DOMParser().parseFromString(await response.text(), 'application/xml')
-  if (document.getElementsByTagName('parsererror').length > 0) return []
+  if (document.getElementsByTagName('parsererror').length > 0) return { candidates: [], total: 0 }
 
-  return [...document.getElementsByTagNameNS(MARC_NAMESPACE, 'record')]
+  const candidates = [...document.getElementsByTagNameNS(MARC_NAMESPACE, 'record')]
     .map(parseDnbRecord)
     .filter((candidate): candidate is Candidate => candidate !== null)
     .filter((candidate) => !looksLikeStudyGuide(`${candidate.title} ${candidate.subtitle ?? ''}`))
+
+  const reported = document.getElementsByTagNameNS('*', 'numberOfRecords')[0]?.textContent
+  return { candidates, total: Number(reported ?? candidates.length) }
 }
 
 async function searchOpenLibraryIsbn(isbn: string): Promise<Candidate[]> {
@@ -219,9 +263,7 @@ async function searchOpenLibraryIsbn(isbn: string): Promise<Candidate[]> {
     format: 'json',
     jscmd: 'data',
   })
-  const response = await fetch(`${OPENLIBRARY_ISBN}?${parameters}`)
-  if (!response.ok) return []
-
+  const response = await fetchCatalogue(`${OPENLIBRARY_ISBN}?${parameters}`)
   const record = (await response.json())[`ISBN:${isbn}`]
   if (!record?.title) return []
 
@@ -249,9 +291,7 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
       'title,subtitle,author_name,first_publish_year,number_of_pages_median,publisher,isbn,cover_i',
     limit: String(limit),
   })
-  const response = await fetch(`${OPENLIBRARY_SEARCH}?${parameters}`)
-  if (!response.ok) return []
-
+  const response = await fetchCatalogue(`${OPENLIBRARY_SEARCH}?${parameters}`)
   const documents: Record<string, unknown>[] = (await response.json()).docs ?? []
   return documents
     .map((document) => {
@@ -275,8 +315,23 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
     .filter((candidate) => !looksLikeStudyGuide(candidate.title))
 }
 
-function settled<T>(results: PromiseSettledResult<T[]>[]) {
-  return results.flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
+function interleave(first: Candidate[], second: Candidate[]) {
+  const mixed: Candidate[] = []
+  for (let index = 0; index < Math.max(first.length, second.length); index += 1) {
+    if (first[index]) mixed.push(first[index])
+    if (second[index]) mixed.push(second[index])
+  }
+  return mixed
+}
+
+function dedupe(candidates: Candidate[]) {
+  const seen = new Set<string>()
+  return candidates.filter((candidate) => {
+    const key = `${candidate.title.toLowerCase()}|${candidate.published_year ?? ''}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 export async function lookupBooks(input: string) {
@@ -284,25 +339,36 @@ export async function lookupBooks(input: string) {
 
   if (looksLikeIsbn(trimmed)) {
     const isbn = trimmed.replace(/[^0-9Xx]/g, '')
-    const fromDnb = await searchDnb(`num=${isbn}`, 1)
-    if (fromDnb.length > 0) {
-      return { query: 'isbn' as const, results: fromDnb.map((c) => ({ ...c, isbn })) }
+    let silent = 0
+    const sources = [
+      async () => (await searchDnb(`num=${isbn}`, 1)).candidates,
+      () => searchOpenLibraryIsbn(isbn),
+    ]
+    for (const search of sources) {
+      try {
+        const found = await search()
+        if (found.length > 0) {
+          const results = found.map((candidate) => ({ ...candidate, isbn }))
+          return { query: 'isbn' as const, results, silent, moreAvailable: false }
+        }
+      } catch {
+        silent += 1
+      }
     }
-    return { query: 'isbn' as const, results: await searchOpenLibraryIsbn(isbn) }
+    return { query: 'isbn' as const, results: [], silent, moreAvailable: false }
   }
 
-  const both = await Promise.allSettled([
-    searchDnb(`tit="${trimmed.replace(/"/g, '')}"`, MAX_RESULTS),
-    searchOpenLibraryText(trimmed, MAX_RESULTS),
+  const outcomes = await Promise.allSettled([
+    searchDnb(`tit="${trimmed.replace(/"/g, '')}"`, FETCH_LIMIT),
+    searchOpenLibraryText(trimmed, FETCH_LIMIT),
   ])
+  const dnb = outcomes[0].status === 'fulfilled' ? outcomes[0].value : { candidates: [], total: 0 }
+  const openLibrary = outcomes[1].status === 'fulfilled' ? outcomes[1].value : []
 
-  const seen = new Set<string>()
-  const merged: Candidate[] = []
-  for (const candidate of settled(both)) {
-    const key = `${candidate.title.toLowerCase()}|${candidate.published_year ?? ''}`
-    if (seen.has(key)) continue
-    seen.add(key)
-    merged.push(candidate)
+  return {
+    query: 'text' as const,
+    results: dedupe(interleave(dnb.candidates, openLibrary)),
+    silent: outcomes.filter((outcome) => outcome.status === 'rejected').length,
+    moreAvailable: dnb.total > dnb.candidates.length,
   }
-  return { query: 'text' as const, results: merged.slice(0, MAX_RESULTS) }
 }
