@@ -51,7 +51,9 @@ export function BookDetail() {
 
       <main className="mx-auto max-w-xl px-4 pt-5">
         <div className="mb-5 flex gap-4">
-          <Cover book={book} className="w-29 shrink-0" />
+          <div className="w-29 shrink-0">
+            <Cover book={book} />
+          </div>
           <div>
             <h2 className="font-serif text-xl leading-tight font-semibold tracking-tight">
               {book.title}
