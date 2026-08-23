@@ -155,8 +155,9 @@ export function BookForm() {
       .map((name) => name.trim())
       .filter(Boolean)
     try {
+      const { cover_path: _keptSeparately, ...fields } = draft
       const payload = {
-        ...draft,
+        ...fields,
         title: draft.title.trim(),
         authors,
         subtitle: textOrNull(draft.subtitle ?? ''),
@@ -212,11 +213,12 @@ export function BookForm() {
         {error && <p className="text-danger mb-4 text-sm">{error}</p>}
 
         <CoverPicker
-          book={{
-            title: draft.title || 'Neues Buch',
-            authors: authorText ? [authorText] : [],
-            cover_path: existing?.cover_path ?? null,
-          }}
+          title={draft.title}
+          authors={authorText
+            .split(',')
+            .map((name) => name.trim())
+            .filter(Boolean)}
+          coverPath={existing?.cover_path ?? null}
           previewUrl={coverPreview ?? candidateCover}
           removed={coverRemoved}
           onPick={pickCover}

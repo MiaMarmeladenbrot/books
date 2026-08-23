@@ -1,35 +1,34 @@
 import { useState } from 'react'
-import { coverUrl } from '../lib/supabase'
 import { hueFromTitle } from '../utils/format'
-import type { Book } from '../types'
-
-interface CoverProps {
-  book: Pick<Book, 'title' | 'authors' | 'cover_path'>
-  showText?: boolean
-  className?: string
-}
 
 export const COVER_SHAPE =
   'relative aspect-[5/8] overflow-hidden rounded-[5px] shadow-[0_1px_2px_rgb(30_26_21/0.18),0_10px_20px_-10px_rgb(30_26_21/0.45)]'
 
-export function Cover({ book, showText = true, className = '' }: CoverProps) {
-  const [imageFailed, setImageFailed] = useState(false)
-  const source = imageFailed ? null : coverUrl(book.cover_path)
+interface CoverProps {
+  title: string
+  authors: string[]
+  src?: string | null
+  showText?: boolean
+  className?: string
+}
 
-  if (source) {
+export function Cover({ title, authors, src, showText = true, className = '' }: CoverProps) {
+  const [brokenSrc, setBrokenSrc] = useState<string | null>(null)
+
+  if (src && src !== brokenSrc) {
     return (
       <img
-        src={source}
+        src={src}
         alt=""
         loading="lazy"
         decoding="async"
-        onError={() => setImageFailed(true)}
+        onError={() => setBrokenSrc(src)}
         className={`${COVER_SHAPE} bg-shade w-full object-cover ${className}`}
       />
     )
   }
 
-  const hue = hueFromTitle(book.title)
+  const hue = hueFromTitle(title)
   const background = `linear-gradient(150deg, hsl(${hue} 34% 40%), hsl(${(hue + 28) % 360} 30% 26%))`
 
   return (
@@ -41,10 +40,10 @@ export function Cover({ book, showText = true, className = '' }: CoverProps) {
       {showText && (
         <span className="relative">
           <span className="font-serif block text-sm leading-tight font-semibold text-balance">
-            {book.title}
+            {title}
           </span>
-          {book.authors.length > 0 && (
-            <span className="mt-1 block text-[10.5px] opacity-80">{book.authors.join(', ')}</span>
+          {authors.length > 0 && (
+            <span className="mt-1 block text-[10.5px] opacity-80">{authors.join(', ')}</span>
           )}
         </span>
       )}

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { Cover } from '../components/Cover'
+import { coverUrl } from '../lib/supabase'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { formatNumber, formatRange, readingDays } from '../utils/format'
 import { FORMAT_LABEL, PROVENANCE_LABEL, STATUS_LABEL } from '../types'
@@ -52,7 +53,11 @@ export function BookDetail() {
       <main className="mx-auto max-w-xl px-4 pt-5">
         <div className="mb-5 flex gap-4">
           <div className="w-29 shrink-0">
-            <Cover book={book} />
+            <Cover
+              title={book.title}
+              authors={book.authors}
+              src={coverUrl(book.cover_path)}
+            />
           </div>
           <div>
             <h2 className="font-serif text-xl leading-tight font-semibold tracking-tight">
