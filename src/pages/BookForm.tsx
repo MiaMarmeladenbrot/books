@@ -148,6 +148,17 @@ export function BookForm() {
         </label>
 
         <label className="mb-4 block">
+          <span className={labelClass}>
+            Untertitel <span className="text-ink-3 font-normal">(optional)</span>
+          </span>
+          <input
+            value={draft.subtitle ?? ''}
+            onChange={(event) => patch({ subtitle: event.target.value })}
+            className={fieldClass}
+          />
+        </label>
+
+        <label className="mb-4 block">
           <span className={labelClass}>Autorin oder Autor</span>
           <input
             value={authorText}

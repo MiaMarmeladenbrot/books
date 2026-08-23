@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useBooks } from '../store/useBooks'
+import { ExportPanel } from '../components/ExportPanel'
 import { formatCompact, formatNumber, monthNarrow, monthShort, readingDays } from '../utils/format'
 import {
   BookStatus,
@@ -282,6 +283,8 @@ export function Stats() {
             ))}
           </ul>
         </Panel>
+
+        <ExportPanel books={books} />
       </main>
     </div>
   )
