@@ -284,7 +284,7 @@ export function Stats() {
           </ul>
         </Panel>
 
-        <ExportPanel books={books} />
+        {year === ALL_YEARS && <ExportPanel books={books} />}
       </main>
     </div>
   )
