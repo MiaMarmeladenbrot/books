@@ -216,7 +216,7 @@ export function Shelf() {
 
       <button
         type="button"
-        onClick={() => navigate('/buch/neu')}
+        onClick={() => navigate('/buch/suchen')}
         aria-label="Buch erfassen"
         className="bg-accent fixed right-4 bottom-24 z-20 flex size-14 items-center justify-center rounded-full text-white shadow-[0_8px_20px_-6px_rgb(180_85_47/0.7)]"
       >

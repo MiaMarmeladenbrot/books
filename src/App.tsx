@@ -8,6 +8,7 @@ import { Shelf } from './pages/Shelf'
 import { Stats } from './pages/Stats'
 import { BookDetail } from './pages/BookDetail'
 import { BookForm } from './pages/BookForm'
+import { BookSearch } from './pages/BookSearch'
 
 function TabLayout() {
   return (
@@ -39,6 +40,7 @@ function AppRoutes() {
             <Route index element={<Shelf />} />
             <Route path="statistik" element={<Stats />} />
           </Route>
+          <Route path="buch/suchen" element={<BookSearch />} />
           <Route path="buch/neu" element={<BookForm />} />
           <Route path="buch/:id" element={<BookDetail />} />
           <Route path="buch/:id/bearbeiten" element={<BookForm />} />

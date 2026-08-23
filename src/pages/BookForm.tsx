@@ -4,7 +4,8 @@ import { X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { CoverPicker } from '../components/CoverPicker'
 import { removeCover, uploadCover } from '../lib/supabase'
-import { MAX_UPLOAD_BYTES, toCoverJpeg } from '../utils/image'
+import type { Candidate } from '../lib/lookup'
+import { MAX_UPLOAD_BYTES, fetchCoverJpeg, toCoverJpeg } from '../utils/image'
 import { todayIso } from '../utils/format'
 import {
   BookStatus,
@@ -59,7 +60,12 @@ export function BookForm() {
 
   const existing = useMemo(() => books.find((book) => book.id === id), [books, id])
   const isEdit = Boolean(id)
-  const cameFromDetail = useLocation().key !== 'default'
+  const location = useLocation()
+  const cameFromDetail = location.key !== 'default'
+  const { prefill, fallbackTitle } = (location.state ?? {}) as {
+    prefill?: Candidate
+    fallbackTitle?: string
+  }
 
   const [draft, setDraft] = useState<BookDraft>(() => {
     if (existing) {
@@ -72,9 +78,25 @@ export function BookForm() {
       } = existing
       return rest
     }
-    return { ...EMPTY, finished_on: todayIso(), started_on: todayIso() }
+    const blank = { ...EMPTY, finished_on: todayIso(), started_on: todayIso() }
+    if (!prefill) return { ...blank, title: fallbackTitle ?? '' }
+    return {
+      ...blank,
+      title: prefill.title,
+      subtitle: prefill.subtitle,
+      authors: prefill.authors,
+      series: prefill.series,
+      series_volume: prefill.series_volume,
+      isbn: prefill.isbn,
+      published_year: prefill.published_year,
+      page_count: prefill.page_count,
+      source_meta: { lookup: prefill.source, publisher: prefill.publisher },
+    }
   })
-  const [authorText, setAuthorText] = useState(() => (existing?.authors ?? []).join(', '))
+  const [authorText, setAuthorText] = useState(() =>
+    (existing?.authors ?? prefill?.authors ?? []).join(', ')
+  )
+  const [candidateCover, setCandidateCover] = useState<string | null>(prefill?.cover_url ?? null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [coverImage, setCoverImage] = useState<Blob | null>(null)
@@ -96,6 +118,7 @@ export function BookForm() {
       const image = await toCoverJpeg(file)
       setCoverImage(image)
       setCoverRemoved(false)
+      setCandidateCover(null)
       setCoverPreview(URL.createObjectURL(image))
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Bild konnte nicht gelesen werden.')
@@ -105,6 +128,7 @@ export function BookForm() {
   const dropCover = () => {
     setCoverImage(null)
     setCoverPreview(null)
+    setCandidateCover(null)
     setCoverRemoved(true)
   }
 
@@ -147,6 +171,12 @@ export function BookForm() {
         const path = await uploadCover(payload.isbn ?? saved.id, coverImage)
         await updateBook(saved.id, { cover_path: path })
         if (previousCover) await removeCover(previousCover)
+      } else if (candidateCover) {
+        const image = await fetchCoverJpeg(candidateCover)
+        if (image) {
+          const path = await uploadCover(payload.isbn ?? saved.id, image)
+          await updateBook(saved.id, { cover_path: path })
+        }
       } else if (coverRemoved && previousCover) {
         await updateBook(saved.id, { cover_path: null })
         await removeCover(previousCover)
@@ -187,7 +217,7 @@ export function BookForm() {
             authors: authorText ? [authorText] : [],
             cover_path: existing?.cover_path ?? null,
           }}
-          previewUrl={coverPreview}
+          previewUrl={coverPreview ?? candidateCover}
           removed={coverRemoved}
           onPick={pickCover}
           onRemove={dropCover}
