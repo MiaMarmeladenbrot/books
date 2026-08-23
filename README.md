@@ -88,11 +88,32 @@ backup including `source_meta`, CSV with German headers for a spreadsheet. Both
 are generated in the browser. The covers are not part of it, but they can be
 fetched again from their ISBN.
 
+## Adding a book
+
+Adding starts with a search rather than an empty form. One field takes both an
+ISBN and a title: ten or thirteen digits are looked up exactly, anything else is
+searched as a title and offers the matches. The book form then opens prefilled
+and save-ready, with today's dates and the status set to read, so a book found in
+the catalogue is one tap away.
+
+Both catalogues are queried straight from the browser — the DNB and Open Library
+each send permissive CORS headers, so no server sits in between and nothing has
+to be deployed alongside the app. The DNB is asked first because it carries the
+German editions; Open Library answers for most of the rest, and adds the covers.
+
+Three filters come from reconciling the imported library against these same
+catalogues. Field 700 of a MARC record holds translators and name-title entries
+as often as further authors, so entries carrying a `$t` or a non-`aut` relator
+are dropped. Series names are checked against publisher imprints, or books end
+up in a series called `KiWi` or `Goldmann`. And study guides and audio editions
+are filtered out of title matches.
+
+Covers can only be taken from Open Library, whose images are readable across
+origins; the better scans behind the DNB portal are not, which is why a German
+new arrival sometimes has no proposed cover. Uploading one by hand covers that
+case.
+
 ## Planned
 
-- Look up an ISBN while adding a book, so recording one takes a single field
-  instead of eight. The DNB sends no CORS headers, so this needs an edge function
-  rather than a call from the browser. Series names have to be filtered against
-  publisher imprints, or books end up in a series called `KiWi`.
-- A barcode scanner feeding that same lookup.
+- A barcode scanner feeding the same search field.
 - A web app manifest, so the app sits on the home screen without browser chrome.
