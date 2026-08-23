@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { supabase } from '../lib/supabase'
+import { removeCover, supabase } from '../lib/supabase'
 import type { Book, BookDraft } from '../types'
 import { BooksContext } from './booksContextValue'
 
@@ -60,9 +60,15 @@ export function BooksProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const removeBook = useCallback(async (id: string) => {
-    const { error: deleteError } = await supabase.from('books').delete().eq('id', id)
+    const { data, error: deleteError } = await supabase
+      .from('books')
+      .delete()
+      .eq('id', id)
+      .select('cover_path')
+      .single()
     if (deleteError) throw new Error(deleteError.message)
     setBooks((current) => current.filter((book) => book.id !== id))
+    if (data?.cover_path) await removeCover(data.cover_path)
   }, [])
 
   return (
