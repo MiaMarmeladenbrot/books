@@ -1,7 +1,7 @@
 import { createContext } from 'react'
 import type { Book, BookDraft } from '../types'
 
-export interface BooksValue {
+interface BooksValue {
   books: Book[]
   loading: boolean
   error: string | null

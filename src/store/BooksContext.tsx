@@ -17,11 +17,7 @@ export function BooksProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
-    setLoading(true)
-    const { data, error: queryError } = await supabase
-      .from('books')
-      .select(COLUMNS)
-      .order('finished_on', { ascending: false, nullsFirst: true })
+    const { data, error: queryError } = await supabase.from('books').select(COLUMNS)
     if (queryError) setError(queryError.message)
     else {
       setError(null)
@@ -31,6 +27,7 @@ export function BooksProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react/set-state-in-effect -- reload only sets state after awaiting
     void reload()
   }, [reload])
 

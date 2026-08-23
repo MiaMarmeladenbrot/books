@@ -73,4 +73,7 @@ export interface Book {
   updated_at: string
 }
 
-export type BookDraft = Omit<Book, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+export type BookDraft = Omit<
+  Book,
+  'id' | 'user_id' | 'created_at' | 'updated_at' | 'cover_path'
+> & { cover_path?: string | null }
