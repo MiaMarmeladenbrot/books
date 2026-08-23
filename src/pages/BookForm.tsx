@@ -246,16 +246,27 @@ export function BookForm() {
           </select>
         </label>
 
-        <label className="mb-4 block">
-          <span className={labelClass}>ISBN</span>
-          <input
-            inputMode="numeric"
-            value={draft.isbn ?? ''}
-            onChange={(event) => patch({ isbn: event.target.value })}
-            placeholder="978…"
-            className={fieldClass}
-          />
-        </label>
+        <div className="mb-4 grid grid-cols-[1fr_6rem] gap-3">
+          <label className="block">
+            <span className={labelClass}>ISBN</span>
+            <input
+              inputMode="numeric"
+              value={draft.isbn ?? ''}
+              onChange={(event) => patch({ isbn: event.target.value })}
+              placeholder="978…"
+              className={fieldClass}
+            />
+          </label>
+          <label className="block">
+            <span className={labelClass}>Erschienen</span>
+            <input
+              inputMode="numeric"
+              value={draft.published_year ?? ''}
+              onChange={(event) => patch({ published_year: numberOrNull(event.target.value) })}
+              className={fieldClass}
+            />
+          </label>
+        </div>
 
         <div className="mb-4 grid grid-cols-[1fr_5rem] gap-3">
           <label className="block">

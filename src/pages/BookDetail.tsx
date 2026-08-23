@@ -10,9 +10,9 @@ import { FORMAT_LABEL, PROVENANCE_LABEL, STATUS_LABEL } from '../types'
 function Row({ label, value }: { label: string; value: string | null }) {
   if (!value) return null
   return (
-    <div className="border-line text-ink-2 flex justify-between border-b py-2.5 text-sm last:border-b-0">
-      <span>{label}</span>
-      <b className="text-ink font-semibold">{value}</b>
+    <div className="border-line text-ink-2 flex justify-between gap-6 border-b py-2.5 text-sm last:border-b-0">
+      <span className="shrink-0">{label}</span>
+      <b className="text-ink text-right font-semibold text-balance">{value}</b>
     </div>
   )
 }
