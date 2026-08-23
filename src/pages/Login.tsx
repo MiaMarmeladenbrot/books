@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 import { useAuth } from '../store/useAuth'
 import { hueFromTitle } from '../utils/format'
 
@@ -34,7 +34,7 @@ export function Login() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (event: SyntheticEvent) => {
     event.preventDefault()
     setError('')
     setBusy(true)
