@@ -64,8 +64,8 @@ export function BookDetail() {
               {book.title}
             </h2>
             {book.subtitle && <p className="text-ink-2 mt-1 text-sm">{book.subtitle}</p>}
-            <p className="text-ink-2 mt-1 text-[15px]">{book.authors.join(', ')}</p>
-            <span className="bg-accent-soft text-accent mt-2.5 inline-block rounded-full px-2.5 py-1 text-[11.5px] font-semibold">
+            <p className="text-ink-2 mt-1 text-sm">{book.authors.join(', ')}</p>
+            <span className="bg-accent-soft text-accent mt-2.5 inline-block rounded-full px-2.5 py-1 text-xs font-semibold">
               {STATUS_LABEL[book.status]}
             </span>
           </div>
@@ -100,10 +100,10 @@ export function BookDetail() {
 
         {book.notes && (
           <div className="border-accent/35 mt-6 border-l-2 pl-4">
-            <p className="text-ink-3 mb-1 text-[11.5px] font-bold tracking-[0.09em] uppercase">
+            <p className="text-ink-3 mb-1 text-xs font-bold tracking-widest uppercase">
               Notiz
             </p>
-            <p className="font-serif text-[15px] leading-relaxed whitespace-pre-line italic">
+            <p className="font-serif text-sm leading-relaxed whitespace-pre-line italic">
               {book.notes}
             </p>
           </div>
@@ -112,14 +112,14 @@ export function BookDetail() {
         <div className="mt-8 flex flex-col">
           <Link
             to={`/buch/${book.id}/bearbeiten`}
-            className="bg-accent w-full rounded-xl py-3.5 text-center text-[15px] font-bold text-white"
+            className="bg-accent w-full rounded-xl py-3.5 text-center text-sm font-bold text-white"
           >
             Bearbeiten
           </Link>
           <button
             type="button"
             onClick={() => setConfirming(true)}
-            className="text-ink-3 mt-2 self-center px-4 py-2 text-[13.5px] font-medium"
+            className="text-ink-3 mt-2 self-center px-4 py-2 text-sm font-medium"
           >
             Löschen
           </button>

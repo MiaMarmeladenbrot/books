@@ -42,7 +42,7 @@ function Panel({
 }) {
   return (
     <section className="border-line bg-card mb-3.5 rounded-2xl border px-4 py-4">
-      <h2 className="text-ink-3 mb-3.5 flex items-baseline text-[11.5px] font-bold tracking-[0.09em] uppercase">
+      <h2 className="text-ink-3 mb-3.5 flex items-baseline text-xs font-bold tracking-widest uppercase">
         {title}
         {extra ? <span className="ml-auto">{extra}</span> : null}
       </h2>
@@ -56,7 +56,7 @@ function Ranking({ rows }: { rows: { label: string; value: number }[] }) {
   return (
     <div>
       {rows.map((row) => (
-        <div key={row.label} className="text-ink-2 flex items-center gap-2.5 py-1.5 text-[13.5px]">
+        <div key={row.label} className="text-ink-2 flex items-center gap-2.5 py-1.5 text-sm">
           <span className="w-26 shrink-0">{row.label}</span>
           <span className="bg-shade h-2 flex-1 overflow-hidden rounded-full">
             <span
@@ -147,7 +147,7 @@ export function Stats() {
                 key={value}
                 type="button"
                 onClick={() => setYear(value)}
-                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium ${
+                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium ${
                   (year || years[0]) === value
                     ? 'border-ink bg-ink text-paper'
                     : 'border-line bg-card text-ink-2'
@@ -191,7 +191,7 @@ export function Stats() {
                     type="button"
                     aria-pressed={metric === value}
                     onClick={() => setMetric(value)}
-                    className={`rounded-full px-3 py-1 text-[11.5px] font-semibold tracking-normal normal-case ${
+                    className={`rounded-full px-3 py-1 text-xs font-semibold tracking-normal normal-case ${
                       metric === value ? 'bg-ink text-paper' : 'text-ink-2'
                     }`}
                   >
@@ -207,16 +207,16 @@ export function Stats() {
                   key={index}
                   className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
                 >
-                  <span className="text-ink-2 text-[10.5px] font-bold">
+                  <span className="text-ink-2 text-2xs font-bold">
                     {entry[metric] ? formatCompact(entry[metric]) : ''}
                   </span>
                   <span
-                    className={`w-full rounded-t-[3px] ${
+                    className={`w-full rounded-t-xs ${
                       index === peakMonth ? 'bg-leaf' : 'bg-accent'
                     }`}
                     style={{ height: `${Math.max((entry[metric] / monthMax) * 100, 2)}%` }}
                   />
-                  <span className="text-ink-3 text-[10px] font-medium">{monthNarrow(index)}</span>
+                  <span className="text-ink-3 text-2xs font-medium">{monthNarrow(index)}</span>
                 </div>
               ))}
             </div>
@@ -227,17 +227,17 @@ export function Stats() {
           <div className="grid grid-cols-2 gap-x-3 gap-y-3.5">
             <div>
               <div className="font-serif text-2xl font-semibold tracking-tight">{averagePages}</div>
-              <div className="text-ink-2 text-[11.5px]">⌀ Seiten pro Buch</div>
+              <div className="text-ink-2 text-xs">⌀ Seiten pro Buch</div>
             </div>
             <div>
               <div className="font-serif text-2xl font-semibold tracking-tight">{averageDays}</div>
-              <div className="text-ink-2 text-[11.5px]">⌀ Tage pro Buch</div>
+              <div className="text-ink-2 text-xs">⌀ Tage pro Buch</div>
             </div>
             <div>
               <div className="font-serif text-2xl font-semibold tracking-tight">
                 {longest?.page_count ?? '—'}
               </div>
-              <div className="text-ink-2 text-[11.5px] truncate">
+              <div className="text-ink-2 text-xs truncate">
                 {longest ? `längstes: ${longest.title}` : 'längstes Buch'}
               </div>
             </div>
@@ -245,7 +245,7 @@ export function Stats() {
               <div className="font-serif text-2xl font-semibold tracking-tight">
                 {monthShort(peakMonth)}
               </div>
-              <div className="text-ink-2 text-[11.5px]">
+              <div className="text-ink-2 text-xs">
                 stärkster Monat, {perMonth[peakMonth].books} Bücher
               </div>
             </div>
@@ -273,12 +273,12 @@ export function Stats() {
         <Panel title={`Meistgelesene Autor:innen ${year === ALL_YEARS ? '' : `${activeYear}`}`}>
           <ul>
             {topAuthors.map(([author, count], index) => (
-              <li key={author} className="flex items-center gap-2.5 py-1 text-[13.5px]">
-                <span className="font-serif text-accent w-6 text-[15px] font-semibold">
+              <li key={author} className="flex items-center gap-2.5 py-1 text-sm">
+                <span className="font-serif text-accent w-6 text-sm font-semibold">
                   {index + 1}
                 </span>
                 <span className="flex-1 truncate">{author}</span>
-                <span className="text-ink-3 text-[12.5px]">{count}</span>
+                <span className="text-ink-3 text-xs">{count}</span>
               </li>
             ))}
           </ul>

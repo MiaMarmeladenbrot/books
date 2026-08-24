@@ -11,10 +11,8 @@ export function ExportPanel({ books }: { books: Book[] }) {
 
   return (
     <section className="border-line bg-card mb-3.5 rounded-2xl border px-4 py-4">
-      <h2 className="text-ink-3 mb-1.5 text-[11.5px] font-bold tracking-[0.09em] uppercase">
-        Sicherung
-      </h2>
-      <p className="text-ink-2 mb-3.5 text-[13px] leading-relaxed">
+      <h2 className="text-ink-3 mb-1.5 text-xs font-bold tracking-widest uppercase">Sicherung</h2>
+      <p className="text-ink-2 mb-3.5 text-sm leading-relaxed">
         {formatNumber(books.length)} Bücher herunterladen. Die JSON-Datei ist die vollständige
         Sicherung, die CSV-Datei zum Anschauen in Numbers oder Excel.
       </p>

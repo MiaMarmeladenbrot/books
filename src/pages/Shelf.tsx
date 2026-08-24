@@ -70,7 +70,7 @@ function MetaLine({ book }: { book: Book }) {
   if (book.status === BookStatus.Reading) {
     const since = formatDay(book.started_on)
     return (
-      <p className="text-leaf text-[11.5px] font-medium">
+      <p className="text-leaf text-xs font-medium">
         {since ? `seit ${since}` : STATUS_LABEL[book.status]}
       </p>
     )
@@ -78,10 +78,10 @@ function MetaLine({ book }: { book: Book }) {
 
   const text =
     book.status === BookStatus.Read
-      ? formatDay(book.finished_on ?? book.started_on) ?? '—'
+      ? (formatDay(book.finished_on ?? book.started_on) ?? '—')
       : [STATUS_LABEL[book.status], formatDay(book.finished_on)].filter(Boolean).join(', ')
 
-  return <p className="text-ink-3 text-[11.5px]">{text}</p>
+  return <p className="text-ink-3 text-xs">{text}</p>
 }
 
 function groupByMonth(books: Book[]) {
@@ -154,7 +154,7 @@ export function Shelf() {
               value={query}
               onChange={(event) => updateParams({ q: event.target.value })}
               placeholder="Titel oder Autorin suchen…"
-              className="placeholder:text-ink-3 w-full bg-transparent text-[15px] outline-none"
+              className="placeholder:text-ink-3 w-full bg-transparent text-sm outline-none"
             />
           </div>
 
@@ -164,7 +164,7 @@ export function Shelf() {
                 key={filter.key}
                 type="button"
                 onClick={() => updateParams({ filter: filter.key })}
-                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium ${
+                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium ${
                   activeFilter === filter.key
                     ? 'border-ink bg-ink text-paper'
                     : 'border-line bg-card text-ink-2'
@@ -181,12 +181,12 @@ export function Shelf() {
         {error && (
           <div className="py-8 text-center">
             <p className="text-danger mb-1 text-sm">Deine Bücher konnten nicht geladen werden.</p>
-            <p className="text-ink-3 mb-4 text-[12.5px]">{error}</p>
+            <p className="text-ink-3 mb-4 text-xs">{error}</p>
             <button
               type="button"
               onClick={() => void retry()}
               disabled={retrying}
-              className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-[14px] font-semibold disabled:opacity-50"
+              className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-sm font-semibold disabled:opacity-50"
             >
               {retrying ? 'Lädt…' : 'Nochmal versuchen'}
             </button>
@@ -201,9 +201,9 @@ export function Shelf() {
 
         {groups.map((group) => (
           <section key={group.key} className="mt-9 first:mt-0">
-            <h2 className="font-serif mb-2.5 flex items-baseline gap-2.5 text-[15px] font-semibold">
+            <h2 className="font-serif mb-2.5 flex items-baseline gap-2.5 text-sm font-semibold">
               <span>{group.key === NO_DATE_KEY ? 'Ohne Datum' : monthLabel(group.key)}</span>
-              <span className="text-ink-3 font-sans text-[11.5px] font-medium">
+              <span className="text-ink-3 font-sans text-xs font-medium">
                 {group.books.length}
               </span>
               <span className="bg-line h-px flex-1" />
@@ -219,14 +219,14 @@ export function Shelf() {
                       src={coverUrl(book.cover_path)}
                       className={
                         book.status === BookStatus.Reading
-                          ? 'outline-leaf outline-2 outline-offset-[3px]'
+                          ? 'outline-leaf outline-2 outline-offset-3'
                           : ''
                       }
                     />
-                    <h3 className="mt-2.5 line-clamp-2 text-[13.5px] leading-snug font-semibold">
+                    <h3 className="mt-2.5 line-clamp-2 text-sm leading-snug font-semibold">
                       {book.title}
                     </h3>
-                    <p className="text-ink-2 truncate text-[12.5px]">{book.authors.join(', ')}</p>
+                    <p className="text-ink-2 truncate text-xs">{book.authors.join(', ')}</p>
                     <MetaLine book={book} />
                   </Link>
                 </li>
@@ -236,14 +236,18 @@ export function Shelf() {
         ))}
       </main>
 
-      <button
-        type="button"
-        onClick={() => navigate('/buch/suchen')}
-        aria-label="Buch erfassen"
-        className="bg-accent fixed right-4 bottom-24 z-20 flex size-14 items-center justify-center rounded-full text-white shadow-[0_8px_20px_-6px_rgb(180_85_47/0.7)]"
-      >
-        <Plus size={26} />
-      </button>
+      <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20">
+        <div className="mx-auto flex max-w-296 justify-end px-4">
+          <button
+            type="button"
+            onClick={() => navigate('/buch/suchen')}
+            aria-label="Buch erfassen"
+            className="bg-accent pointer-events-auto flex size-14 items-center justify-center rounded-full text-white shadow-[0_8px_20px_-6px_rgb(180_85_47/0.7)]"
+          >
+            <Plus size={26} />
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -44,7 +44,7 @@ export function ConfirmDialog({
         <button
           type="button"
           onClick={onConfirm}
-          className="border-danger text-danger rounded-xl border py-3.5 text-[15px] font-semibold"
+          className="border-danger text-danger rounded-xl border py-3.5 text-sm font-semibold"
         >
           {confirmLabel}
         </button>
@@ -52,7 +52,7 @@ export function ConfirmDialog({
           type="button"
           autoFocus
           onClick={onCancel}
-          className="bg-ink text-paper rounded-xl py-3.5 text-[15px] font-semibold"
+          className="bg-ink text-paper rounded-xl py-3.5 text-sm font-semibold"
         >
           {cancelLabel}
         </button>

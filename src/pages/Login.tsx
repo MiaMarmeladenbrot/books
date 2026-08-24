@@ -52,7 +52,7 @@ export function Login() {
             return (
               <span
                 key={seed}
-                className="flex-1 rounded-t-[3px]"
+                className="flex-1 rounded-t-xs"
                 style={{
                   height: `${55 + (hue % 45)}%`,
                   background: `linear-gradient(150deg, hsl(${hue} 34% 40%), hsl(${(hue + 28) % 360} 30% 26%))`,

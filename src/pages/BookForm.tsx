@@ -203,7 +203,7 @@ export function BookForm() {
         <button
           type="submit"
           disabled={busy}
-          className="text-accent ml-auto text-[15px] font-bold disabled:opacity-50"
+          className="text-accent ml-auto text-sm font-bold disabled:opacity-50"
         >
           {busy ? 'Sichert…' : 'Sichern'}
         </button>

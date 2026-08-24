@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { hueFromTitle } from '../utils/format'
 
 export const COVER_SHAPE =
-  'relative aspect-[5/8] overflow-hidden rounded-[5px] shadow-[0_1px_2px_rgb(30_26_21/0.18),0_10px_20px_-10px_rgb(30_26_21/0.45)]'
+  'relative aspect-[5/8] overflow-hidden rounded-sm shadow-[0_1px_2px_rgb(30_26_21/0.18),0_10px_20px_-10px_rgb(30_26_21/0.45)]'
 
 interface CoverProps {
   title: string
@@ -43,7 +43,7 @@ export function Cover({ title, authors, src, showText = true, className = '' }: 
             {title}
           </span>
           {authors.length > 0 && (
-            <span className="mt-1 block text-[10.5px] opacity-80">{authors.join(', ')}</span>
+            <span className="mt-1 block text-xs opacity-80">{authors.join(', ')}</span>
           )}
         </span>
       )}

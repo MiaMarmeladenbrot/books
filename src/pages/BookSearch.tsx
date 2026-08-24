@@ -86,7 +86,7 @@ export function BookSearch() {
               className="placeholder:text-ink-3 w-full bg-transparent text-base outline-none"
             />
           </div>
-          <p className="text-ink-3 mt-2 text-[12.5px] leading-relaxed">
+          <p className="text-ink-3 mt-2 text-xs leading-relaxed">
             {looksLikeIsbn(term)
               ? 'Wird als ISBN exakt gesucht.'
               : 'Ziffern werden als ISBN gesucht, alles andere als Titel.'}
@@ -94,7 +94,7 @@ export function BookSearch() {
           <button
             type="submit"
             disabled={term.trim().length < 3 || phase === 'searching'}
-            className="bg-accent mt-3 w-full rounded-xl py-3.5 text-[15px] font-bold text-white disabled:opacity-40"
+            className="bg-accent mt-3 w-full rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-40"
           >
             {phase === 'searching' ? 'Sucht…' : 'Suchen'}
           </button>
@@ -107,14 +107,14 @@ export function BookSearch() {
             <p className="font-serif mb-1.5 text-base font-semibold">
               Dazu weiß der Katalog nichts
             </p>
-            <p className="text-ink-2 mx-auto mb-5 max-w-[34ch] text-[13px] leading-relaxed">
+            <p className="text-ink-2 mx-auto mb-5 max-w-[34ch] text-sm leading-relaxed">
               Neuerscheinungen und englische Ausgaben fehlen oft. Deine Angaben sind dann die
               besseren.
             </p>
             <button
               type="button"
               onClick={() => openForm(undefined, term.trim())}
-              className="bg-accent w-full rounded-xl py-3.5 text-[15px] font-bold text-white"
+              className="bg-accent w-full rounded-xl py-3.5 text-sm font-bold text-white"
             >
               Von Hand eintragen
             </button>
@@ -139,15 +139,15 @@ export function BookSearch() {
                     />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-[14.5px] leading-snug font-semibold">
+                    <span className="block text-sm leading-snug font-semibold">
                       {candidate.title}
                     </span>
                     {candidate.authors.length > 0 && (
-                      <span className="text-ink-2 block truncate text-[13px]">
+                      <span className="text-ink-2 block truncate text-sm">
                         {candidate.authors.join(', ')}
                       </span>
                     )}
-                    <span className="text-ink-3 mt-0.5 block text-[11.5px]">
+                    <span className="text-ink-3 mt-0.5 block text-xs">
                       {describe(candidate)}
                     </span>
                   </span>
@@ -161,25 +161,25 @@ export function BookSearch() {
           <button
             type="button"
             onClick={() => setVisible((current) => current + PAGE_SIZE)}
-            className="border-line text-ink-2 mt-5 w-full rounded-xl border py-3 text-[14px] font-semibold"
+            className="border-line text-ink-2 mt-5 w-full rounded-xl border py-3 text-sm font-semibold"
           >
             Mehr laden ({results.length - visible} weitere)
           </button>
         )}
 
         {phase === 'results' && visible >= results.length && moreAvailable && (
-          <p className="text-ink-3 mt-5 text-center text-[12.5px] leading-relaxed">
+          <p className="text-ink-3 mt-5 text-center text-xs leading-relaxed">
             Der Katalog hat noch mehr Ausgaben. Suche verfeinern, etwa mit dem Autorennamen.
           </p>
         )}
 
         {phase === 'results' && (
           <div className="border-line mt-6 border-t pt-5 text-center">
-            <p className="text-ink-2 mb-3 text-[13px]">Nichts davon passt?</p>
+            <p className="text-ink-2 mb-3 text-sm">Nichts davon passt?</p>
             <button
               type="button"
               onClick={() => openForm(undefined, term.trim())}
-              className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-[14px] font-semibold"
+              className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-sm font-semibold"
             >
               Von Hand eintragen
             </button>
@@ -196,11 +196,11 @@ export function BookSearch() {
             <button
               type="button"
               onClick={() => openForm()}
-              className="border-line text-ink-2 w-full rounded-xl border py-3.5 text-[14.5px] font-semibold"
+              className="border-line text-ink-2 w-full rounded-xl border py-3.5 text-sm font-semibold"
             >
               Ohne Suche eintragen
             </button>
-            <p className="text-ink-3 mt-2 text-[12.5px] leading-relaxed">
+            <p className="text-ink-3 mt-2 text-xs leading-relaxed">
               Für Bücher ohne ISBN — Bibliotheksleihen, alte Ausgaben.
             </p>
           </>

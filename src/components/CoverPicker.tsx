@@ -13,7 +13,7 @@ interface CoverPickerProps {
   onRemove: () => void
 }
 
-const linkClass = 'text-accent text-[13.5px] font-semibold'
+const linkClass = 'text-accent text-sm font-semibold'
 
 export function CoverPicker({
   title,
@@ -34,18 +34,18 @@ export function CoverPicker({
       </div>
 
       <div className="flex flex-col items-start gap-2 pt-1">
-        <span className="text-ink-2 text-[12.5px] font-semibold">Cover</span>
+        <span className="text-ink-2 text-xs font-semibold">Cover</span>
         <button type="button" onClick={() => input.current?.click()} className={linkClass}>
           <ImagePlus size={15} className="mr-1.5 inline align-[-2px]" />
           {shown ? 'Ersetzen' : 'Bild wählen'}
         </button>
         {shown && (
-          <button type="button" onClick={onRemove} className="text-ink-3 text-[13.5px] font-medium">
+          <button type="button" onClick={onRemove} className="text-ink-3 text-sm font-medium">
             <Trash2 size={15} className="mr-1.5 inline align-[-2px]" />
             Entfernen
           </button>
         )}
-        {previewUrl && <span className="text-leaf text-[12px]">Wird beim Sichern hochgeladen</span>}
+        {previewUrl && <span className="text-leaf text-xs">Wird beim Sichern hochgeladen</span>}
 
         <input
           ref={input}

@@ -15,6 +15,9 @@
 
   --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, serif;
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: calc(0.875 / 0.625);
 }
 
 @layer base {
