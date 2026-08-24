@@ -107,10 +107,16 @@ function cleanSeries(name: string | null) {
   return looksLikeImprint(trimmed.toLowerCase()) ? null : trimmed
 }
 
+const STUDY_GUIDE_PATTERNS = STUDY_GUIDE_MARKERS.map(
+  (marker) => new RegExp(`(^|[^\\p{L}])${marker}($|[^\\p{L}])`, 'u')
+)
+
 function looksLikeStudyGuide(text: string) {
   const lowered = text.toLowerCase()
-  return STUDY_GUIDE_MARKERS.some((marker) => lowered.includes(marker))
+  return STUDY_GUIDE_PATTERNS.some((pattern) => pattern.test(lowered))
 }
+
+const PRINTED_EXTENT = /\b(s\.|seite|seiten|bl\.|blatt|bll\.|p\.|pp\.|pages)/i
 
 const VOLUME_WORDS = ['band', 'bd', 'book', 'teil', 'vol', 'nr']
 
@@ -183,7 +189,9 @@ function parseDnbRecord(record: Element): Candidate | null {
 
   let pages: number | null = null
   for (const field of fields(record, '300')) {
-    pages = firstNumber(subfield(field, 'a'), /(\d{2,4})/)
+    const extent = subfield(field, 'a')
+    if (!PRINTED_EXTENT.test(extent)) continue
+    pages = firstNumber(extent, /(\d{2,4})/)
     if (pages) break
   }
 
