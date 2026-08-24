@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { removeCover, supabase } from '../lib/supabase'
+import { releaseCover, supabase } from '../lib/supabase'
 import type { Book, BookDraft } from '../types'
 import { BooksContext } from './booksContextValue'
 
@@ -65,7 +65,7 @@ export function BooksProvider({ children }: { children: ReactNode }) {
       .single()
     if (deleteError) throw new Error(deleteError.message)
     setBooks((current) => current.filter((book) => book.id !== id))
-    if (data?.cover_path) await removeCover(data.cover_path)
+    if (data?.cover_path) await releaseCover(data.cover_path)
   }, [])
 
   return (

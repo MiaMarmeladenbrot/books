@@ -26,7 +26,8 @@ npm run dev
 Three things are prepared in Supabase itself:
 
 1. Run `supabase/schema.sql` once in the SQL editor. It creates the enums, the
-   `books` table, its indexes, four RLS policies and the `updated_at` trigger.
+   `books` table, its indexes, four RLS policies, the `updated_at` trigger and
+   `cover_is_orphaned`, the one function a browser cannot answer for itself.
 2. Create each account by hand under Authentication. The app has no sign-up on
    purpose, so a new reader is one row in `auth.users` and nothing else.
 3. Create a public storage bucket named `cover` and grant the accounts access to
@@ -59,10 +60,15 @@ The bucket is shared by both accounts, so naming a file after its ISBN means one
 file for an edition both of them own — which is the point, but it also means an
 import cannot assume it may write. Supabase answers such an upload with HTTP 400
 and a 409 body, `KeyAlreadyExists`, and the honest reaction is to leave the file
-alone and point the new row at it. Deleting a book therefore deletes a cover the
-other account may still be pointing at; with two readers and the seven files they
-share that is a rare enough loss to accept, and the picture can be fetched again
-from its ISBN.
+alone and point the new row at it.
+
+Sharing files makes deleting one a question about other people's rows, which is
+exactly what row level security stops a browser from asking. Deleting a book or
+replacing its picture therefore gives up the pointer first and asks
+`public.cover_is_orphaned`, a `security definer` function that counts references
+across both accounts, whether anything still points at the file; only then is it
+removed. When that call fails nothing is deleted, because an orphaned file costs
+a few kilobytes and a wrongly deleted one costs somebody their cover.
 
 Tiles are 5:8 rather than the obvious 2:3. Measured over the first 412 covers, a
 2:3 box cropped 87 percent of them at top and bottom, which is where the title

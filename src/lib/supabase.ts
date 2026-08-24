@@ -29,6 +29,8 @@ export async function uploadCover(stem: string, image: Blob) {
   return path
 }
 
-export async function removeCover(path: string) {
+export async function releaseCover(path: string) {
+  const { data, error } = await supabase.rpc('cover_is_orphaned', { wanted: path })
+  if (error || data !== true) return
   await supabase.storage.from(COVER_BUCKET).remove([path])
 }

@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { CoverPicker } from '../components/CoverPicker'
-import { removeCover, uploadCover } from '../lib/supabase'
+import { releaseCover, uploadCover } from '../lib/supabase'
 import type { Candidate } from '../lib/lookup'
 import { MAX_UPLOAD_BYTES, fetchCoverJpeg, toCoverJpeg } from '../utils/image'
 import { todayIso } from '../utils/format'
@@ -171,16 +171,17 @@ export function BookForm() {
       if (coverImage) {
         const path = await uploadCover(payload.isbn ?? saved.id, coverImage)
         await updateBook(saved.id, { cover_path: path })
-        if (previousCover) await removeCover(previousCover)
+        if (previousCover) await releaseCover(previousCover)
       } else if (candidateCover) {
         const image = await fetchCoverJpeg(candidateCover)
         if (image) {
           const path = await uploadCover(payload.isbn ?? saved.id, image)
           await updateBook(saved.id, { cover_path: path })
+          if (previousCover) await releaseCover(previousCover)
         }
       } else if (coverRemoved && previousCover) {
         await updateBook(saved.id, { cover_path: null })
-        await removeCover(previousCover)
+        await releaseCover(previousCover)
       }
 
       if (existing && cameFromDetail) navigate(-1)

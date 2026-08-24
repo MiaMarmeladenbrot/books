@@ -68,3 +68,19 @@ $$;
 create trigger books_touch_updated_at
   before update on public.books
   for each row execute function public.touch_updated_at();
+
+create function public.cover_is_orphaned(wanted text)
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select not exists (select 1 from public.books where cover_path = wanted);
+$$;
+
+revoke execute on function public.cover_is_orphaned(text) from public, anon;
+grant execute on function public.cover_is_orphaned(text) to authenticated;
+
+create index books_cover_path_idx on public.books (cover_path)
+  where cover_path is not null;
