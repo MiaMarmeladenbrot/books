@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './store/AuthContext'
 import { BooksProvider } from './store/BooksContext'
@@ -9,6 +10,10 @@ import { Stats } from './pages/Stats'
 import { BookDetail } from './pages/BookDetail'
 import { BookForm } from './pages/BookForm'
 import { BookSearch } from './pages/BookSearch'
+
+const CameraDiagnose = lazy(() =>
+  import('./pages/CameraDiagnose').then((module) => ({ default: module.CameraDiagnose }))
+)
 
 function TabLayout() {
   return (
@@ -44,6 +49,14 @@ function AppRoutes() {
           <Route path="buch/neu" element={<BookForm />} />
           <Route path="buch/:id" element={<BookDetail />} />
           <Route path="buch/:id/bearbeiten" element={<BookForm />} />
+          <Route
+            path="diagnose"
+            element={
+              <Suspense fallback={<div className="fixed inset-0 bg-black" />}>
+                <CameraDiagnose />
+              </Suspense>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </BooksProvider>
