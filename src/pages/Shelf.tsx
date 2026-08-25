@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { Cover } from '../components/Cover'
 import { coverUrl } from '../lib/supabase'
@@ -156,6 +156,16 @@ export function Shelf() {
               placeholder="Titel oder Autorin suchen…"
               className="placeholder:text-ink-3 w-full bg-transparent text-sm outline-none"
             />
+            {query && (
+              <button
+                type="button"
+                onClick={() => updateParams({ q: '' })}
+                aria-label="Suche zurücksetzen"
+                className="text-ink-3 -mr-1 shrink-0 p-1"
+              >
+                <X size={17} />
+              </button>
+            )}
           </div>
 
           <div className="no-scrollbar -mx-4 mt-2.5 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
