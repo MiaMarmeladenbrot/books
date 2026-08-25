@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { loadDecoder, scanFrame } from '../lib/barcode'
 import { coverCrop } from '../lib/frame'
+import { focusOnce, keepFocusing, videoTrack } from '../lib/camera'
 
 const SCAN_WIDTH = 1024
 const BOX_PADDING = 0.12
@@ -11,12 +12,13 @@ const SIGHTED_FOR = 1200
 const STALLED_AFTER = 6000
 
 type Phase = 'starting' | 'scanning' | 'denied' | 'unavailable'
-type Hint = 'aiming' | 'sighted' | 'stalled'
+type Hint = 'aiming' | 'sighted' | 'stalled' | 'turn'
 
 const HINTS: Record<Hint, string> = {
   aiming: 'Barcode auf der Rückseite in den Rahmen halten',
   sighted: 'Barcode erkannt — kurz ruhig halten',
-  stalled: 'Noch nichts gefunden. Etwas näher heran und einen Moment ruhig halten.',
+  stalled: 'Noch nichts gefunden. Etwas Abstand halten, bis das Bild scharf wird.',
+  turn: 'Quer halten hilft — dann nutzt die Kamera die ganze Bildbreite.',
 }
 
 interface Props {
@@ -30,7 +32,8 @@ function stopStream(stream: MediaStream | null) {
 
 export function BarcodeScanner({ onDetected, onClose }: Props) {
   const video = useRef<HTMLVideoElement>(null)
-  const box = useRef<HTMLDivElement>(null)
+  const box = useRef<HTMLSpanElement>(null)
+  const track = useRef<MediaStreamTrack | null>(null)
   const detected = useRef(onDetected)
   const [phase, setPhase] = useState<Phase>('starting')
   const [hint, setHint] = useState<Hint>('aiming')
@@ -111,11 +114,16 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
           }
         }
 
+        const crosswise =
+          element.videoWidth > element.videoHeight && window.innerHeight > window.innerWidth
+
         const nextHint: Hint =
           now - lastSymbolAt < SIGHTED_FOR
             ? 'sighted'
             : now - scanningSince > STALLED_AFTER
-              ? 'stalled'
+              ? crosswise
+                ? 'turn'
+                : 'stalled'
               : 'aiming'
         if (nextHint !== shownHint) {
           shownHint = nextHint
@@ -165,6 +173,9 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
       }
       if (stopped) return
 
+      track.current = videoTrack(stream)
+      void keepFocusing(track.current)
+
       scanningSince = performance.now()
       setPhase('scanning')
       void scan()
@@ -176,6 +187,7 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
       stopped = true
       window.clearTimeout(timer)
       stopStream(stream)
+      track.current = null
       if (element) element.srcObject = null
     }
   }, [])
@@ -224,17 +236,25 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col items-center justify-center">
-          <div
+        <button
+          type="button"
+          onClick={() => void focusOnce(track.current)}
+          aria-label="Scharfstellen"
+          className="flex flex-1 flex-col items-center justify-center"
+        >
+          <span
             ref={box}
-            className={`aspect-[3/2] w-[80%] max-w-[40rem] rounded-lg ring-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
+            className={`block aspect-[3/2] w-[80%] max-w-[40rem] rounded-lg ring-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
               phase === 'scanning' && hint === 'sighted' ? 'ring-leaf' : 'ring-white/80'
             }`}
           />
-          <p className="mt-6 max-w-[30ch] text-center text-sm leading-relaxed text-white/90">
+          <span className="mt-6 block max-w-[30ch] text-center text-sm leading-relaxed text-white/90">
             {phase === 'starting' ? 'Kamera startet…' : HINTS[hint]}
-          </p>
-        </div>
+          </span>
+          {phase === 'scanning' && (
+            <span className="mt-2 block text-xs text-white/60">Zum Scharfstellen tippen</span>
+          )}
+        </button>
       </div>
     </div>
   )

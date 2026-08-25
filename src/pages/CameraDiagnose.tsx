@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { loadDecoder, scanFrame } from '../lib/barcode'
 import { coverCrop } from '../lib/frame'
+import { apply, describeCamera, focusOnce, keepFocusing, videoTrack } from '../lib/camera'
 
 const SCAN_WIDTH = 1024
 const SCAN_PAUSE = 90
@@ -36,6 +37,8 @@ async function cameraCount() {
 export function CameraDiagnose() {
   const video = useRef<HTMLVideoElement>(null)
   const guide = useRef<HTMLDivElement>(null)
+  const live = useRef<MediaStream | null>(null)
+  const [zoom, setZoom] = useState(1)
   const [shape, setShape] = useState<Shape>(
     window.innerHeight >= window.innerWidth ? 'upright' : 'wide'
   )
@@ -131,6 +134,8 @@ export function CameraDiagnose() {
 
       setReport(
         [
+          ...describeCamera(videoTrack(stream)),
+          '',
           `Stream       ${size.width}×${size.height}   angefragt ${shape === 'upright' ? 'hochkant' : 'quer'}`,
           `Fenster      ${Math.round(view.width)}×${Math.round(view.height)} CSS, DPR ${devicePixelRatio}`,
           `cover        ×${cover.toFixed(3)}`,
@@ -194,6 +199,8 @@ export function CameraDiagnose() {
         return
       }
 
+      live.current = stream
+      void keepFocusing(videoTrack(stream))
       void scan()
     })()
 
@@ -201,6 +208,7 @@ export function CameraDiagnose() {
       stopped = true
       window.clearTimeout(timer)
       stop()
+      live.current = null
       if (element) element.srcObject = null
     }
   }, [attempt, shape, region])
@@ -240,6 +248,24 @@ export function CameraDiagnose() {
           className={buttonClass}
         >
           Liest: {region === 'guide' ? 'Rahmen' : 'ganzes Bild'}
+        </button>
+        <button
+          type="button"
+          onClick={() => void focusOnce(videoTrack(live.current))}
+          className={buttonClass}
+        >
+          Scharfstellen
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const next = zoom >= 3 ? 1 : zoom + 1
+            setZoom(next)
+            void apply(videoTrack(live.current), { zoom: next })
+          }}
+          className={buttonClass}
+        >
+          Zoom {zoom}×
         </button>
         <button
           type="button"

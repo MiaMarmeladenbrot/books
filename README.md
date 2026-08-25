@@ -196,10 +196,20 @@ centimetre of distance decided.
 
 Two things follow. The stream is requested in the orientation of the window, so
 `object-cover` has nothing to magnify, and the guide is capped at 640 rather than
-384 pixels. Together that is 7.5 pixels per module on a laptop and 9.1 on a
-phone, against the 2.5 it had before. A barcode may be small in the frame again;
-it does not have to fill the guide, which was only ever a way of asking the
-reader to compensate for arithmetic.
+384 pixels. On a laptop that is 7.5 pixels per module against the 2.5 it had
+before, and a barcode may be small in the frame again; it does not have to fill
+the guide, which was only ever a way of asking the reader to compensate for
+arithmetic.
+
+A phone may refuse the orientation. Measured on an Android one, a portrait
+request came back 1920×1080 all the same, leaving 33 percent of the width visible
+and 5.3 pixels per module — enough, but with the discarded two thirds still
+discarded. The axis that gets thrown away is always the one across the device, so
+turning the phone sideways puts 96 percent of the width in view and 15.5 pixels
+per module, which is why the scanner suggests it after a while of finding nothing.
+The point is not the pixels; it is that all that headroom can be spent on
+distance, and distance is what a slow autofocus needs to settle. Sharpness, not
+resolution, is what a phone actually runs out of.
 
 A number is accepted only once it arrives twice in a row, which is what keeps
 those unstable frames out of the form and costs a tenth of a second. While it
