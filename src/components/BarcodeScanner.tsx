@@ -14,9 +14,9 @@ type Phase = 'starting' | 'scanning' | 'denied' | 'unavailable'
 type Hint = 'aiming' | 'sighted' | 'stalled'
 
 const HINTS: Record<Hint, string> = {
-  aiming: 'Barcode in den Rahmen legen und ihn möglichst ausfüllen',
+  aiming: 'Barcode auf der Rückseite in den Rahmen halten',
   sighted: 'Barcode erkannt — kurz ruhig halten',
-  stalled: 'Noch nichts gefunden. Näher heran, bis der Barcode den Rahmen ausfüllt.',
+  stalled: 'Noch nichts gefunden. Etwas näher heran und einen Moment ruhig halten.',
 }
 
 interface Props {
@@ -134,13 +134,14 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
 
       void loadDecoder()
 
+      const upright = window.innerHeight >= window.innerWidth
+      const shape = upright
+        ? { width: { ideal: 1080 }, height: { ideal: 1920 } }
+        : { width: { ideal: 1920 }, height: { ideal: 1080 } }
+
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: 'environment' },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-          },
+          video: { facingMode: { ideal: 'environment' }, ...shape },
         })
       } catch (caught) {
         if (stopped) return
@@ -226,7 +227,7 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
         <div className="flex flex-1 flex-col items-center justify-center">
           <div
             ref={box}
-            className={`aspect-[3/2] w-[80%] max-w-sm rounded-lg ring-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
+            className={`aspect-[3/2] w-[80%] max-w-[40rem] rounded-lg ring-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
               phase === 'scanning' && hint === 'sighted' ? 'ring-leaf' : 'ring-white/80'
             }`}
           />

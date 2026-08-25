@@ -180,21 +180,26 @@ with 978 or 979 and its check digit holds. Books carry a second, smaller barcode
 for the price, and without that rule a scan succeeds cheerfully with `52799`.
 
 Only the area under the framing guide is read, mapped from screen coordinates
-back into the camera frame in `src/lib/frame.ts`. `object-cover` hides a good
-part of a landscape stream on a portrait phone, so scanning the whole frame meant
-the guide did not describe what was actually decoded. The camera is asked for
-1920 pixels and the crop is decoded at up to 1024 of them, which is both sharper
-and cheaper than the full frame was.
+back into the camera frame by `coverCrop` in `src/lib/frame.ts`. That mapping is
+a pure function, which is what finally ended the guessing: it predicted 240
+source pixels and 2.53 pixels per module for a measured case that turned out to
+be exactly 240 and 2.53.
 
-Everything about those numbers comes down to one threshold: a barcode needs
-roughly two pixels per module to decode at all. Scanning whole frames 640 wide
-was plenty on a photograph but lost the left half of a 16:9 video frame — the
-first digit is not printed as bars, it is carried by the parity pattern of the
-left group, so a soft left edge produced a different number almost every frame
-and one of them even satisfied the check digit. That steadied at 960. On a phone
-the frame was big enough and the guide was the fault: at 5:2 it was far wider
-than a barcode's own 1.6:1, so it could not be filled, and a barcode centred in
-it reached 1.7 pixels per module. The guide is 3:2 now, and filling it gives 5.5.
+Everything here comes down to one threshold: a barcode needs roughly two pixels
+per module to decode at all. The trap is that a guide's size on screen says
+almost nothing about its size in camera pixels, because `object-cover` has to
+magnify the stream to fill a window it does not match. A 384 pixel guide over a
+portrait stream on a landscape screen is magnified 1.6 times, so it covers only
+240 real camera pixels — it looks generous and is not. Which is why the scanner
+worked sometimes and not others: it sat just above the floor, and focus or a
+centimetre of distance decided.
+
+Two things follow. The stream is requested in the orientation of the window, so
+`object-cover` has nothing to magnify, and the guide is capped at 640 rather than
+384 pixels. Together that is 7.5 pixels per module on a laptop and 9.1 on a
+phone, against the 2.5 it had before. A barcode may be small in the frame again;
+it does not have to fill the guide, which was only ever a way of asking the
+reader to compensate for arithmetic.
 
 A number is accepted only once it arrives twice in a row, which is what keeps
 those unstable frames out of the form and costs a tenth of a second. While it
