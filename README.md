@@ -168,12 +168,19 @@ The same field also takes a scan. Every barcode on a book is a Bookland EAN-13,
 which is the ISBN-13 itself, so a read feeds the exact lookup a typed number
 does and nothing behind the field had to change.
 
-Decoding is zbar compiled to WebAssembly. The browser's own `BarcodeDetector`
-costs no bytes at all, but Safari does not implement it, and a second decoder
-that only ever runs on the other reader's phone is a path that rots untested —
-so the one that works everywhere is the only one. It loads on the first scan and
-not before, 175 KB of WASM and its wrapper as their own chunks, and the shelf
-therefore starts exactly as fast as it did.
+Decoding asks the browser first. Chromium has `BarcodeDetector`, which on Android
+is the system's own barcode reader, and it costs nothing to download. Where it is
+missing — Safari, and therefore every browser on iOS — zbar compiled to
+WebAssembly stands in, loaded on the first scan and not before, 175 KB as its own
+chunks. On a phone that never happens, because the native reader answers first.
+
+This is the reverse of how it started. zbar was chosen alone on the reasoning
+that a second decoder only ever exercised on someone else's device is a path that
+rots untested. That was maintenance logic applied to what turned out to be a
+capability question: the device where scanning kept failing was the one where the
+native reader exists, and a WebAssembly build of a decoder from 2009 is not the
+equal of what the platform ships. Both paths carry real traffic now, so neither
+is the untested one.
 
 Only EAN-13 is enabled, and a decoded number counts as a book when it begins
 with 978 or 979 and its check digit holds. Books carry a second, smaller barcode

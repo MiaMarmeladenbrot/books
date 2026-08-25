@@ -1,19 +1,33 @@
 import { useEffect, useRef, useState } from 'react'
-import { loadDecoder, scanFrame } from '../lib/barcode'
+import { nativeReader, wasmReader, type Reader } from '../lib/barcode'
 import { coverCrop } from '../lib/frame'
-import { apply, describeCamera, focusOnce, keepFocusing, videoTrack } from '../lib/camera'
+import { describeCamera, focusOnce, keepFocusing, preferZoom, videoTrack } from '../lib/camera'
+import { isbnFromEan13 } from '../lib/isbn'
 
 const SCAN_WIDTH = 1024
-const SCAN_PAUSE = 90
+const SCAN_PAUSE = 60
 const CAMERA_TIMEOUT = 12000
 
-type Shape = 'upright' | 'wide'
 type Region = 'guide' | 'full'
 
-function shapeFor(shape: Shape) {
-  return shape === 'upright'
-    ? { width: { ideal: 1080 }, height: { ideal: 1920 } }
-    : { width: { ideal: 1920 }, height: { ideal: 1080 } }
+interface Score {
+  scans: number
+  hits: number
+  isbns: number
+  ms: number
+  last: string
+}
+
+function emptyScore(): Score {
+  return { scans: 0, hits: 0, isbns: 0, ms: 0, last: '' }
+}
+
+function line(label: string, score: Score, available: boolean) {
+  if (!available) return `${label.padEnd(8)} nicht verfügbar`
+  if (score.scans === 0) return `${label.padEnd(8)} noch nichts`
+  const rate = Math.round((score.hits / score.scans) * 100)
+  const good = Math.round((score.isbns / score.scans) * 100)
+  return `${label.padEnd(8)} ${String(rate).padStart(3)}% gelesen, ${String(good).padStart(3)}% als ISBN, ${(score.ms / score.scans).toFixed(1)} ms  ${score.last}`
 }
 
 async function permissionState() {
@@ -25,47 +39,14 @@ async function permissionState() {
   }
 }
 
-async function cameraCount() {
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices()
-    return String(devices.filter((device) => device.kind === 'videoinput').length)
-  } catch {
-    return 'nicht abfragbar'
-  }
-}
-
 export function CameraDiagnose() {
   const video = useRef<HTMLVideoElement>(null)
   const guide = useRef<HTMLDivElement>(null)
   const live = useRef<MediaStream | null>(null)
-  const [zoom, setZoom] = useState(1)
-  const [shape, setShape] = useState<Shape>(
-    window.innerHeight >= window.innerWidth ? 'upright' : 'wide'
-  )
   const [region, setRegion] = useState<Region>('guide')
+  const [zoom, setZoom] = useState(1)
   const [attempt, setAttempt] = useState(0)
   const [report, setReport] = useState('Auf „Kamera starten" tippen.')
-
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      const lines = [
-        'Bereit. Auf „Kamera starten" tippen.',
-        '',
-        `isSecureContext   ${isSecureContext}`,
-        `mediaDevices      ${navigator.mediaDevices ? 'da' : 'FEHLT'}`,
-        `Kameras           ${await cameraCount()}`,
-        `Berechtigung      ${await permissionState()}`,
-        `Fenster           ${innerWidth}×${innerHeight} CSS, DPR ${devicePixelRatio}`,
-        '',
-        navigator.userAgent,
-      ]
-      if (!cancelled) setReport(lines.join('\n'))
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   useEffect(() => {
     if (attempt === 0) return
@@ -73,19 +54,36 @@ export function CameraDiagnose() {
     let stopped = false
     let stream: MediaStream | null = null
     let timer: number | undefined
-    let scans = 0
-    let seen = 0
-    let totalMs = 0
-    const tally = new Map<string, number>()
 
     const element = video.current
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d', { willReadFrequently: true })
 
+    const scores: Record<'native' | 'wasm', Score> = { native: emptyScore(), wasm: emptyScore() }
+    let readers: { native: Reader | null; wasm: Reader } | null = null
+
     const stop = () => stream?.getTracks().forEach((track) => track.stop())
 
+    const measure = async (key: 'native' | 'wasm', reader: Reader, image: ImageData) => {
+      const started = performance.now()
+      const values = await reader(image)
+      const score = scores[key]
+      score.ms += performance.now() - started
+      score.scans += 1
+      if (values.length > 0) {
+        score.hits += 1
+        const isbn = values.map(isbnFromEan13).find(Boolean)
+        if (isbn) {
+          score.isbns += 1
+          score.last = isbn
+        } else {
+          score.last = `${values[0]} verworfen`
+        }
+      }
+    }
+
     const scan = async () => {
-      if (stopped || !context || !element || element.videoWidth === 0) {
+      if (stopped || !context || !element || !readers || element.videoWidth === 0) {
         timer = window.setTimeout(scan, SCAN_PAUSE)
         return
       }
@@ -119,37 +117,26 @@ export function CameraDiagnose() {
         canvas.height
       )
 
-      const started = performance.now()
-      const result = await scanFrame(context.getImageData(0, 0, canvas.width, canvas.height))
-      totalMs += performance.now() - started
-      scans += 1
-      if (result.symbols > 0) seen += 1
-      if (result.isbn) tally.set(result.isbn, (tally.get(result.isbn) ?? 0) + 1)
+      const image = context.getImageData(0, 0, canvas.width, canvas.height)
+      if (readers.native) await measure('native', readers.native, image)
+      await measure('wasm', readers.wasm, image)
       if (stopped) return
 
       const cover = Math.max(view.width / size.width, view.height / size.height)
-      const visible = view.width / cover
-      const guidePixels = target ? target.width / cover : view.width / cover
-      const ranked = [...tally.entries()].sort((first, second) => second[1] - first[1]).slice(0, 4)
+      const guidePixels = (target?.width ?? view.width) / cover
 
       setReport(
         [
+          'GLEICHE BILDER, BEIDE DECODER',
+          line('native', scores.native, readers.native !== null),
+          line('zbar', scores.wasm, true),
+          '',
+          `Stream    ${size.width}×${size.height}   Zoom ${zoom}×`,
+          `sichtbar  ${Math.round((view.width / cover / size.width) * 100)}% der Breite`,
+          `Rahmen    ${(guidePixels / 95).toFixed(2)} px/Modul`,
+          `liest     ${region === 'guide' ? 'Rahmen' : 'ganzes Bild'} → ${canvas.width}×${canvas.height}`,
+          '',
           ...describeCamera(videoTrack(stream)),
-          '',
-          `Stream       ${size.width}×${size.height}   angefragt ${shape === 'upright' ? 'hochkant' : 'quer'}`,
-          `Fenster      ${Math.round(view.width)}×${Math.round(view.height)} CSS, DPR ${devicePixelRatio}`,
-          `cover        ×${cover.toFixed(3)}`,
-          `SICHTBAR     ${Math.round(visible)} von ${size.width} px = ${Math.round((visible / size.width) * 100)}% der Breite`,
-          `Rahmen       ${Math.round(target?.width ?? 0)} CSS → ${Math.round(guidePixels)} Quellpixel`,
-          `GEFÜLLT      ${(guidePixels / 95).toFixed(2)} px/Modul   (unter 2 geht nichts)`,
-          '',
-          `liest        ${region === 'guide' ? 'Rahmen' : 'ganzes Bild'} ${Math.round(crop.width)}×${Math.round(crop.height)} → ${canvas.width}×${canvas.height}`,
-          `Scans        ${scans}, Symbol in ${Math.round((seen / scans) * 100)}%`,
-          `Ø            ${(totalMs / scans).toFixed(1)} ms`,
-          '',
-          ...(ranked.length
-            ? ranked.map(([value, count]) => `  ${count}× ${value}`)
-            : ['  noch kein Code gelesen']),
         ].join('\n')
       )
 
@@ -159,16 +146,20 @@ export function CameraDiagnose() {
     void (async () => {
       setReport('Kamera wird angefragt…')
       if (!navigator.mediaDevices?.getUserMedia || !context) {
-        setReport(`KEINE KAMERA-API\n\nisSecureContext ${isSecureContext}\n${location.href}`)
+        setReport(`KEINE KAMERA-API\n\nisSecureContext ${isSecureContext}`)
         return
       }
 
-      void loadDecoder()
+      readers = { native: await nativeReader(), wasm: await wasmReader() }
 
       try {
         stream = await Promise.race([
           navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: 'environment' }, ...shapeFor(shape) },
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
           }),
           new Promise<never>((_, reject) => {
             setTimeout(() => reject(new Error('Timeout')), CAMERA_TIMEOUT)
@@ -176,12 +167,7 @@ export function CameraDiagnose() {
         ])
       } catch (caught) {
         const name = caught instanceof Error ? caught.name : 'unbekannt'
-        const message = caught instanceof Error ? caught.message : ''
-        setReport(
-          message === 'Timeout'
-            ? `KAMERA ANTWORTET NICHT\n\nNach ${CAMERA_TIMEOUT / 1000} s kam weder Freigabe noch Ablehnung.\nMeist unterdrückte Abfrage oder eine andere Seite hält die Kamera.\n\nBerechtigung ${await permissionState()}`
-            : `KAMERA ABGELEHNT\n\n${name}\n${message}\n\nBerechtigung ${await permissionState()}`
-        )
+        setReport(`KAMERA NICHT DA\n\n${name}\n\nBerechtigung ${await permissionState()}`)
         return
       }
 
@@ -194,8 +180,8 @@ export function CameraDiagnose() {
       element.muted = true
       try {
         await element.play()
-      } catch (caught) {
-        setReport(`VIDEO STARTET NICHT\n\n${caught instanceof Error ? caught.name : 'unbekannt'}`)
+      } catch {
+        setReport('VIDEO STARTET NICHT')
         return
       }
 
@@ -211,66 +197,54 @@ export function CameraDiagnose() {
       live.current = null
       if (element) element.srcObject = null
     }
-  }, [attempt, shape, region])
+  }, [attempt, region, zoom])
 
-  const buttonClass = 'border-line rounded-lg border bg-black/60 px-3 py-3 text-xs text-white'
+  const buttonClass = 'border-line rounded-lg border bg-black/60 px-2 py-3 text-xs text-white'
 
   return (
     <div className="fixed inset-0 bg-black">
       <video ref={video} playsInline autoPlay muted className="h-full w-full object-cover" />
 
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="aspect-[3/2] w-[80%] max-w-[40rem] rounded-lg ring-2 ring-white/80" ref={guide} />
+        <div
+          ref={guide}
+          className="aspect-[3/2] w-[80%] max-w-[40rem] rounded-lg ring-2 ring-white/80"
+        />
       </div>
 
-      <pre className="absolute top-0 right-0 left-0 m-0 bg-black/75 p-2.5 text-[11px] leading-snug whitespace-pre-wrap text-white">
+      <pre className="absolute top-0 right-0 left-0 m-0 bg-black/80 p-2.5 text-[11px] leading-snug whitespace-pre-wrap text-white">
         {report}
       </pre>
 
-      <div className="absolute right-0 bottom-0 left-0 grid grid-cols-2 gap-2 bg-black/75 p-2.5">
+      <div className="absolute right-0 bottom-0 left-0 grid grid-cols-3 gap-2 bg-black/80 p-2.5">
         <button
           type="button"
           onClick={() => setAttempt((value) => value + 1)}
-          className="bg-accent col-span-2 rounded-lg py-3 text-sm font-bold text-white"
+          className="bg-accent col-span-3 rounded-lg py-3 text-sm font-bold text-white"
         >
           Kamera starten
         </button>
-        <button
-          type="button"
-          onClick={() => setShape(shape === 'upright' ? 'wide' : 'upright')}
-          className={buttonClass}
-        >
-          Stream: {shape === 'upright' ? 'hochkant' : 'quer'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setRegion(region === 'guide' ? 'full' : 'guide')}
-          className={buttonClass}
-        >
-          Liest: {region === 'guide' ? 'Rahmen' : 'ganzes Bild'}
-        </button>
-        <button
-          type="button"
-          onClick={() => void focusOnce(videoTrack(live.current))}
-          className={buttonClass}
-        >
-          Scharfstellen
+        <button type="button" onClick={() => setRegion(region === 'guide' ? 'full' : 'guide')} className={buttonClass}>
+          {region === 'guide' ? 'Rahmen' : 'ganzes Bild'}
         </button>
         <button
           type="button"
           onClick={() => {
-            const next = zoom >= 3 ? 1 : zoom + 1
+            const next = zoom >= 4 ? 1 : zoom + 1
             setZoom(next)
-            void apply(videoTrack(live.current), { zoom: next })
+            void preferZoom(videoTrack(live.current), next)
           }}
           className={buttonClass}
         >
           Zoom {zoom}×
         </button>
+        <button type="button" onClick={() => void focusOnce(videoTrack(live.current))} className={buttonClass}>
+          Fokus
+        </button>
         <button
           type="button"
           onClick={() => void navigator.clipboard.writeText(report)}
-          className={`${buttonClass} col-span-2`}
+          className={`${buttonClass} col-span-3`}
         >
           Text kopieren
         </button>
