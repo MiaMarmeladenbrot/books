@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { loadDecoder, scanFrame } from '../lib/barcode'
+import { coverCrop } from '../lib/frame'
 
-const SCAN_WIDTH = 1280
+const SCAN_WIDTH = 1024
+const BOX_PADDING = 0.12
 const SCAN_PAUSE = 90
 const CONFIRMATIONS = 2
 const SIGHTED_FOR = 1200
@@ -12,9 +14,9 @@ type Phase = 'starting' | 'scanning' | 'denied' | 'unavailable'
 type Hint = 'aiming' | 'sighted' | 'stalled'
 
 const HINTS: Record<Hint, string> = {
-  aiming: 'Barcode auf der Rückseite in den Rahmen halten',
+  aiming: 'Barcode in den Rahmen legen und ihn möglichst ausfüllen',
   sighted: 'Barcode erkannt — kurz ruhig halten',
-  stalled: 'Noch nichts gefunden. Buch flach halten und den Barcode ganz ins Bild bringen.',
+  stalled: 'Noch nichts gefunden. Näher heran, bis der Barcode den Rahmen ausfüllt.',
 }
 
 interface Props {
@@ -28,6 +30,7 @@ function stopStream(stream: MediaStream | null) {
 
 export function BarcodeScanner({ onDetected, onClose }: Props) {
   const video = useRef<HTMLVideoElement>(null)
+  const box = useRef<HTMLDivElement>(null)
   const detected = useRef(onDetected)
   const [phase, setPhase] = useState<Phase>('starting')
   const [hint, setHint] = useState<Hint>('aiming')
@@ -47,17 +50,43 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
     let shownHint: Hint = 'aiming'
 
     const element = video.current
+    const target = box.current
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d', { willReadFrequently: true })
+
+    const cropForFrame = (source: HTMLVideoElement) => {
+      const size = { width: source.videoWidth, height: source.videoHeight }
+      const view = source.getBoundingClientRect()
+      const guide = target?.getBoundingClientRect()
+      if (!guide || view.width === 0) return { x: 0, y: 0, ...size }
+
+      return coverCrop(size, view, {
+        x: guide.left - view.left - guide.width * BOX_PADDING,
+        y: guide.top - view.top - guide.height * BOX_PADDING,
+        width: guide.width * (1 + BOX_PADDING * 2),
+        height: guide.height * (1 + BOX_PADDING * 2),
+      })
+    }
 
     const scan = async () => {
       if (stopped || !context) return
 
       if (element && element.videoWidth > 0) {
-        const scale = Math.min(1, SCAN_WIDTH / element.videoWidth)
-        canvas.width = Math.round(element.videoWidth * scale)
-        canvas.height = Math.round(element.videoHeight * scale)
-        context.drawImage(element, 0, 0, canvas.width, canvas.height)
+        const crop = cropForFrame(element)
+        const scale = Math.min(1, SCAN_WIDTH / crop.width)
+        canvas.width = Math.round(crop.width * scale)
+        canvas.height = Math.round(crop.height * scale)
+        context.drawImage(
+          element,
+          crop.x,
+          crop.y,
+          crop.width,
+          crop.height,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        )
 
         let result
         try {
@@ -109,8 +138,8 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
           },
         })
       } catch (caught) {
@@ -196,7 +225,8 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
 
         <div className="flex flex-1 flex-col items-center justify-center">
           <div
-            className={`aspect-[5/2] w-[78%] max-w-sm rounded-lg ring-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
+            ref={box}
+            className={`aspect-[3/2] w-[80%] max-w-sm rounded-lg ring-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
               phase === 'scanning' && hint === 'sighted' ? 'ring-leaf' : 'ring-white/80'
             }`}
           />
