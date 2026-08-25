@@ -9,6 +9,9 @@ const stats = document.querySelector<HTMLPreElement>('#stats')!
 const startButton = document.querySelector<HTMLButtonElement>('#start')!
 const shapeButton = document.querySelector<HTMLButtonElement>('#shape')!
 const regionButton = document.querySelector<HTMLButtonElement>('#region')!
+const copyButton = document.querySelector<HTMLButtonElement>('#copy')!
+
+const CAMERA_TIMEOUT = 12000
 
 const canvas = document.createElement('canvas')
 const context = canvas.getContext('2d', { willReadFrequently: true })!
@@ -27,6 +30,36 @@ const tally = new Map<string, number>()
 
 function show(lines: string[]) {
   stats.textContent = lines.join('\n')
+}
+
+async function permissionLine() {
+  try {
+    const status = await navigator.permissions.query({ name: 'camera' as PermissionName })
+    return `Berechtigung laut Browser: ${status.state}`
+  } catch {
+    return 'Berechtigung: dieser Browser sagt es nicht'
+  }
+}
+
+async function environment() {
+  let cameras = '?'
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    cameras = String(devices.filter((device) => device.kind === 'videoinput').length)
+  } catch {
+    cameras = 'nicht abfragbar'
+  }
+  return [
+    'Modul läuft. Auf „Kamera starten" tippen.',
+    '',
+    `isSecureContext   ${isSecureContext}`,
+    `mediaDevices      ${navigator.mediaDevices ? 'da' : 'FEHLT'}`,
+    `Kameras gefunden  ${cameras}`,
+    await permissionLine(),
+    `Viewport          ${innerWidth}×${innerHeight} CSS, DPR ${devicePixelRatio}`,
+    '',
+    navigator.userAgent,
+  ]
 }
 
 function reset() {
@@ -105,18 +138,59 @@ async function start() {
   running = false
   show(['Kamera wird angefragt…'])
 
+  if (!navigator.mediaDevices?.getUserMedia) {
+    show([
+      'DIESER BROWSER GIBT KEINE KAMERA HER',
+      '',
+      `navigator.mediaDevices: ${navigator.mediaDevices ? 'da' : 'fehlt'}`,
+      `isSecureContext: ${isSecureContext}`,
+      `Adresse: ${location.protocol}//${location.host}`,
+    ])
+    return
+  }
+
   const shape = portraitStream
     ? { width: { ideal: 1080 }, height: { ideal: 1920 } }
     : { width: { ideal: 1920 }, height: { ideal: 1080 } }
 
+  shapeButton.textContent = portraitStream ? 'Stream: hochkant' : 'Stream: quer'
+
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, ...shape },
-    })
+    stream = await Promise.race([
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, ...shape },
+      }),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout')), CAMERA_TIMEOUT)
+      }),
+    ])
   } catch (caught) {
     const name = caught instanceof Error ? caught.name : 'unbekannt'
     const text = caught instanceof Error ? caught.message : ''
-    show(['KAMERA ABGELEHNT', '', `Fehler: ${name}`, text, '', 'Nochmal auf „Kamera starten" tippen.'])
+    show(
+      text === 'Timeout'
+        ? [
+            'KAMERA ANTWORTET NICHT',
+            '',
+            `Nach ${CAMERA_TIMEOUT / 1000} Sekunden kam weder eine Freigabe`,
+            'noch eine Ablehnung. Meist heißt das: die Abfrage',
+            'wurde unterdrückt, oder eine andere Seite hält die',
+            'Kamera noch. Andere Tabs schließen und neu laden.',
+            '',
+            await permissionLine(),
+          ]
+        : [
+            'KAMERA ABGELEHNT',
+            '',
+            `Fehler: ${name}`,
+            text,
+            '',
+            await permissionLine(),
+            '',
+            'Im Schloss-Symbol der Adressleiste die Kamera',
+            'freigeben, dann neu laden.',
+          ]
+    )
     return
   }
 
@@ -159,9 +233,16 @@ regionButton.addEventListener('click', () => {
   reset()
 })
 
-show([
-  'Auf „Kamera starten" tippen.',
-  '',
-  'Browser geben die Kamera nur nach einem Tap frei,',
-  'darum startet die Seite nicht von selbst.',
-])
+copyButton.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(stats.textContent ?? '')
+    copyButton.textContent = 'kopiert ✓'
+    setTimeout(() => {
+      copyButton.textContent = 'Text kopieren'
+    }, 1500)
+  } catch {
+    copyButton.textContent = 'ging nicht'
+  }
+})
+
+void environment().then(show)

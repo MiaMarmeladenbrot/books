@@ -32,7 +32,7 @@
       }
       #guide {
         width: 80%;
-        max-width: 24rem;
+        max-width: 40rem;
         aspect-ratio: 3 / 2;
         border-radius: 8px;
         outline: 2px solid rgba(255, 255, 255, 0.85);
@@ -85,9 +85,29 @@
     <pre id="stats"></pre>
     <div id="controls">
       <button id="start">Kamera starten</button>
+      <button id="copy">Text kopieren</button>
       <button id="shape">Stream: hochkant</button>
       <button id="region">Liest: Rahmen</button>
     </div>
+
+    <script>
+      var box = document.getElementById('stats')
+      box.textContent = 'Seite geladen. Modul lädt…'
+      function fail(label, detail) {
+        box.textContent = 'FEHLER BEIM LADEN\n\n' + label + '\n' + detail
+      }
+      window.addEventListener('error', function (event) {
+        fail(String(event.message), (event.filename || '') + ':' + (event.lineno || ''))
+      })
+      window.addEventListener('unhandledrejection', function (event) {
+        fail('Unbehandelte Rejection', String(event.reason))
+      })
+      setTimeout(function () {
+        if (box.textContent.indexOf('Modul lädt') === 0 || box.textContent === 'Seite geladen. Modul lädt…') {
+          fail('Das Modul hat sich nie gemeldet.', 'Vermutlich wurde das Skript blockiert.')
+        }
+      }, 6000)
+    </script>
     <script type="module" src="/src/dev/cameraTest.ts"></script>
   </body>
 </html>
