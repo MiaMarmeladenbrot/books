@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { loadDecoder, scanFrame } from '../lib/barcode'
 import { coverCrop } from '../lib/frame'
-import { focusOnce, keepFocusing, videoTrack } from '../lib/camera'
+import { keepFocusing, videoTrack } from '../lib/camera'
 
 const SCAN_WIDTH = 1024
 const BOX_PADDING = 0.12
@@ -31,7 +31,7 @@ function stopStream(stream: MediaStream | null) {
 
 export function BarcodeScanner({ onDetected, onClose }: Props) {
   const video = useRef<HTMLVideoElement>(null)
-  const box = useRef<HTMLSpanElement>(null)
+  const box = useRef<HTMLDivElement>(null)
   const track = useRef<MediaStreamTrack | null>(null)
   const detected = useRef(onDetected)
   const [phase, setPhase] = useState<Phase>('starting')
@@ -230,25 +230,17 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => void focusOnce(track.current)}
-          aria-label="Scharfstellen"
-          className="flex flex-1 flex-col items-center justify-center"
-        >
-          <span
+        <div className="flex flex-1 flex-col items-center justify-center">
+          <div
             ref={box}
-            className={`block aspect-[3/2] w-[80%] max-w-[40rem] rounded-lg ring-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
+            className={`aspect-[3/2] w-[80%] max-w-[40rem] rounded-lg ring-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
               phase === 'scanning' && hint === 'sighted' ? 'ring-leaf' : 'ring-white/80'
             }`}
           />
-          <span className="mt-6 block max-w-[30ch] text-center text-sm leading-relaxed text-white/90">
+          <p className="mt-6 max-w-[30ch] text-center text-sm leading-relaxed text-white/90">
             {phase === 'starting' ? 'Kamera startet…' : HINTS[hint]}
-          </span>
-          {phase === 'scanning' && (
-            <span className="mt-2 block text-xs text-white/60">Zum Scharfstellen tippen</span>
-          )}
-        </button>
+          </p>
+        </div>
       </div>
     </div>
   )

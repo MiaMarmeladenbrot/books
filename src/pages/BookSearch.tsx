@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, type SyntheticEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ScanBarcode, Search, X } from 'lucide-react'
 import { Cover } from '../components/Cover'
 import { lookupBooks, looksLikeIsbn, type Candidate } from '../lib/lookup'
@@ -25,13 +25,16 @@ function describe(candidate: Candidate) {
 
 export function BookSearch() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [term, setTerm] = useState('')
   const [phase, setPhase] = useState<Phase>('idle')
   const [results, setResults] = useState<Candidate[]>([])
   const [visible, setVisible] = useState(PAGE_SIZE)
   const [moreAvailable, setMoreAvailable] = useState(false)
   const [error, setError] = useState('')
-  const [scanning, setScanning] = useState(false)
+  const [scanning, setScanning] = useState(
+    Boolean((location.state as { scan?: boolean } | null)?.scan)
+  )
 
   const openForm = (prefill?: Candidate, fallbackTitle?: string) => {
     navigate('/buch/neu', { state: { prefill, fallbackTitle }, replace: true })

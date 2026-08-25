@@ -1,15 +1,12 @@
 import wasmUrl from '@undecaf/zbar-wasm/dist/zbar.wasm?url'
 import { isbnFromEan13 } from './isbn'
 
-export type Engine = 'native' | 'wasm'
-
-export type Reader = (image: ImageData) => Promise<string[]>
-
 export interface ScanResult {
   isbn: string | null
   symbols: number
-  engine: Engine
 }
+
+type Reader = (image: ImageData) => Promise<string[]>
 
 interface NativeDetector {
   detect: (source: ImageData) => Promise<{ rawValue: string }[]>
@@ -47,31 +44,18 @@ async function createWasm(): Promise<Reader> {
     (await zbar.scanImageData(image, scanner)).map((symbol) => symbol.decode())
 }
 
-let native: Promise<Reader | null> | null = null
-let wasm: Promise<Reader> | null = null
+let reader: Promise<Reader> | null = null
 
-export function nativeReader() {
-  native = native ?? createNative()
-  return native
+export function loadDecoder() {
+  reader = reader ?? createNative().then((native) => native ?? createWasm())
+  return reader
 }
 
-export function wasmReader() {
-  wasm = wasm ?? createWasm()
-  return wasm
-}
-
-export async function loadDecoder() {
-  return (await nativeReader()) ?? wasmReader()
-}
-
-export async function scanFrame(image: ImageData, prefer?: Engine): Promise<ScanResult> {
-  const read = prefer === 'wasm' ? null : await nativeReader()
-  const engine: Engine = read ? 'native' : 'wasm'
-  const values = await (read ?? (await wasmReader()))(image)
-
+export async function scanFrame(image: ImageData): Promise<ScanResult> {
+  const values = await (await loadDecoder())(image)
   for (const value of values) {
     const isbn = isbnFromEan13(value)
-    if (isbn) return { isbn, symbols: values.length, engine }
+    if (isbn) return { isbn, symbols: values.length }
   }
-  return { isbn: null, symbols: values.length, engine }
+  return { isbn: null, symbols: values.length }
 }

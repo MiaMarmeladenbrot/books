@@ -182,51 +182,37 @@ native reader exists, and a WebAssembly build of a decoder from 2009 is not the
 equal of what the platform ships. Both paths carry real traffic now, so neither
 is the untested one.
 
+Which leaves iOS on the weaker decoder, and that is a known limitation rather
+than a solved problem: zbar wants a sharper frame than a hand-held phone usually
+gives. If scanning there turns out to be as poor as it was on Android, the answer
+is a better WebAssembly decoder, not more pixels.
+
 Only EAN-13 is enabled, and a decoded number counts as a book when it begins
 with 978 or 979 and its check digit holds. Books carry a second, smaller barcode
 for the price, and without that rule a scan succeeds cheerfully with `52799`.
 
 Only the area under the framing guide is read, mapped from screen coordinates
-back into the camera frame by `coverCrop` in `src/lib/frame.ts`. That mapping is
-a pure function, which is what finally ended the guessing: it predicted 240
-source pixels and 2.53 pixels per module for a measured case that turned out to
-be exactly 240 and 2.53.
+back into camera pixels by `coverCrop` in `src/lib/frame.ts`, which keeps the
+guide honest about what is decoded and keeps the decoder off the rest of the
+frame. The stream is requested in the orientation of the window so `object-cover`
+has little to crop, though a phone is free to hand over whatever it likes and
+often does.
 
-Everything here comes down to one threshold: a barcode needs roughly two pixels
-per module to decode at all. The trap is that a guide's size on screen says
-almost nothing about its size in camera pixels, because `object-cover` has to
-magnify the stream to fill a window it does not match. A 384 pixel guide over a
-portrait stream on a landscape screen is magnified 1.6 times, so it covers only
-240 real camera pixels — it looks generous and is not. Which is why the scanner
-worked sometimes and not others: it sat just above the floor, and focus or a
-centimetre of distance decided.
-
-Two things follow. The stream is requested in the orientation of the window, so
-`object-cover` has nothing to magnify, and the guide is capped at 640 rather than
-384 pixels. On a laptop that is 7.5 pixels per module against the 2.5 it had
-before, and a barcode may be small in the frame again; it does not have to fill
-the guide, which was only ever a way of asking the reader to compensate for
-arithmetic.
-
-A phone may refuse the orientation. Measured on an Android one, a portrait
-request came back 1920×1080 all the same, giving 5.3 pixels per module — plenty
-against a floor of two, and still only five percent of frames read anything,
-where a laptop had managed fourteen on less than half of that. Which settles what
-a phone actually runs out of: not resolution, sharpness.
-
-So the camera is asked about itself rather than assumed. That one reports
-continuous autofocus already in force and refuses to be set to anything else, so
-there is nothing to win there — but it offers zoom up to four. Two is requested,
-which halves the field of view and therefore doubles how much of the frame a
-barcode covers at the same distance. Spent the other way round, it is the same
-barcode at twice the distance, and distance is exactly what an autofocus needs to
-settle on a dark cover with a small white label. Asking for the guide to be
-filled had been pushing books inside the lens's near limit all along.
-
-A number is accepted only once it arrives twice in a row, which is what keeps
-those unstable frames out of the form and costs a tenth of a second. While it
+A number is accepted only once it arrives twice, which need not be twice in a
+row. A single misread that satisfies the check digit is rare but possible, and
+one wrong book quietly prefilled is worse than a second of waiting. While it
 looks, the overlay separates nothing in view from a code it has seen but cannot
 confirm yet, because silence is indistinguishable from a broken feature.
+
+The reason to prefer the platform reader is worth writing down, because the
+arithmetic misleads. A barcode needs about two pixels per module to decode, and
+that number is easy to compute and easy to chase: measured on an Android phone
+the guide offered nine pixels per module, four times the floor, over a stream
+whose full width was visible. On those same frames the native reader recognised
+85 percent and zbar none at all. Resolution had been sufficient for a long time
+while a decoder that could not read a phone's slightly soft frames was being
+handed better and better pictures. Geometry is cheap to measure, which is exactly
+why it kept looking like the answer.
 
 A camera needs a secure context. `npm run dev` on localhost qualifies, so
 scanning can be developed locally, but trying it from a phone means a deployed

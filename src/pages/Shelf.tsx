@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Search, X } from 'lucide-react'
+import { Plus, ScanBarcode, Search, X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { Cover } from '../components/Cover'
 import { coverUrl } from '../lib/supabase'
@@ -161,11 +161,19 @@ export function Shelf() {
                 type="button"
                 onClick={() => updateParams({ q: '' })}
                 aria-label="Suche zurücksetzen"
-                className="text-ink-3 -mr-1 shrink-0 p-1"
+                className="text-ink-3 shrink-0 p-1"
               >
                 <X size={17} />
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => navigate('/buch/suchen', { state: { scan: true } })}
+              aria-label="Barcode scannen"
+              className="text-ink-2 -mr-1 shrink-0 p-1"
+            >
+              <ScanBarcode size={19} />
+            </button>
           </div>
 
           <div className="no-scrollbar -mx-4 mt-2.5 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
