@@ -158,7 +158,39 @@ origins; the better scans behind the DNB portal are not, which is why a German
 new arrival sometimes has no proposed cover. Uploading one by hand covers that
 case.
 
+## Scanning the barcode
+
+The same field also takes a scan. Every barcode on a book is a Bookland EAN-13,
+which is the ISBN-13 itself, so a read feeds the exact lookup a typed number
+does and nothing behind the field had to change.
+
+Decoding is zbar compiled to WebAssembly. The browser's own `BarcodeDetector`
+costs no bytes at all, but Safari does not implement it, and a second decoder
+that only ever runs on the other reader's phone is a path that rots untested —
+so the one that works everywhere is the only one. It loads on the first scan and
+not before, 175 KB of WASM and its wrapper as their own chunks, and the shelf
+therefore starts exactly as fast as it did.
+
+Only EAN-13 is enabled, and a decoded number counts as a book when it begins
+with 978 or 979 and its check digit holds. Books carry a second, smaller barcode
+for the price, and without that rule a scan succeeds cheerfully with `52799`.
+
+Frames are scanned 1280 pixels wide. 640 measured as plenty on photographs, but
+a 16:9 video frame reduced that far loses the left half of the code: the first
+digit is not printed as bars at all, it is carried by the parity pattern of the
+left group, so a soft left edge produced a different number almost every frame
+and one of them even satisfied the check digit. Reading turned stable at 960 and
+holds with margin at 1280, which costs about 30 ms a frame.
+
+A number is accepted only once it arrives twice in a row, which is what keeps
+those unstable frames out of the form and costs a tenth of a second. While it
+looks, the overlay separates nothing in view from a code it has seen but cannot
+confirm yet, because silence is indistinguishable from a broken feature.
+
+A camera needs a secure context. `npm run dev` on localhost qualifies, so
+scanning can be developed locally, but trying it from a phone means a deployed
+preview rather than a LAN address.
+
 ## Planned
 
-- A barcode scanner feeding the same search field.
 - A web app manifest, so the app sits on the home screen without browser chrome.
