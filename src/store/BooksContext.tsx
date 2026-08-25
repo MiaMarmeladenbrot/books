@@ -6,8 +6,13 @@ import { BooksContext } from './booksContextValue'
 const COLUMNS = '*'
 
 function byRecency(a: Book, b: Book) {
-  const left = a.finished_on ?? a.started_on ?? a.created_at
-  const right = b.finished_on ?? b.started_on ?? b.created_at
+  const left = a.finished_on ?? a.started_on
+  const right = b.finished_on ?? b.started_on
+  if (!left || !right) {
+    if (left) return -1
+    if (right) return 1
+    return b.created_at.localeCompare(a.created_at)
+  }
   return right.localeCompare(left)
 }
 
