@@ -25,4 +25,12 @@ function serveApiRoutesInDevelopment() {
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), serveApiRoutesInDevelopment()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        camera: 'camera-test.html',
+      },
+    },
+  },
 })
