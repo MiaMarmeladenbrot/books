@@ -6,7 +6,7 @@ import { coverCrop } from '../lib/frame'
 const video = document.querySelector<HTMLVideoElement>('#video')!
 const guide = document.querySelector<HTMLDivElement>('#guide')!
 const stats = document.querySelector<HTMLPreElement>('#stats')!
-const report = document.querySelector<HTMLDivElement>('#report')!
+const startButton = document.querySelector<HTMLButtonElement>('#start')!
 const shapeButton = document.querySelector<HTMLButtonElement>('#shape')!
 const regionButton = document.querySelector<HTMLButtonElement>('#region')!
 
@@ -25,10 +25,8 @@ let hits = 0
 let totalMs = 0
 const tally = new Map<string, number>()
 
-function log(text: string) {
-  const row = document.createElement('div')
-  row.textContent = text
-  report.prepend(row)
+function show(lines: string[]) {
+  stats.textContent = lines.join('\n')
 }
 
 function reset() {
@@ -38,46 +36,30 @@ function reset() {
   tally.clear()
 }
 
-function guideCrop() {
-  const size = { width: video.videoWidth, height: video.videoHeight }
-  const view = video.getBoundingClientRect()
-  const box = guide.getBoundingClientRect()
-  return coverCrop(size, view, {
-    x: box.left - view.left,
-    y: box.top - view.top,
-    width: box.width,
-    height: box.height,
-  })
-}
-
 async function loop() {
   if (!running || !scanner) return
 
   if (video.videoWidth > 0) {
     const size = { width: video.videoWidth, height: video.videoHeight }
     const view = video.getBoundingClientRect()
-    const crop = cropToGuide ? guideCrop() : { x: 0, y: 0, ...size }
-    const scale = Math.min(1, 1024 / crop.width)
+    const box = guide.getBoundingClientRect()
 
+    const crop = cropToGuide
+      ? coverCrop(size, view, {
+          x: box.left - view.left,
+          y: box.top - view.top,
+          width: box.width,
+          height: box.height,
+        })
+      : { x: 0, y: 0, ...size }
+
+    const scale = Math.min(1, 1024 / crop.width)
     canvas.width = Math.round(crop.width * scale)
     canvas.height = Math.round(crop.height * scale)
-    context.drawImage(
-      video,
-      crop.x,
-      crop.y,
-      crop.width,
-      crop.height,
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    )
+    context.drawImage(video, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height)
 
     const started = performance.now()
-    const symbols = await scanImageData(
-      context.getImageData(0, 0, canvas.width, canvas.height),
-      scanner
-    )
+    const symbols = await scanImageData(context.getImageData(0, 0, canvas.width, canvas.height), scanner)
     totalMs += performance.now() - started
     scans += 1
 
@@ -89,27 +71,30 @@ async function loop() {
       }
     }
 
-    const coverScale = Math.max(view.width / size.width, view.height / size.height)
-    const visibleWidth = view.width / coverScale
-    const box = guide.getBoundingClientRect()
-    const filledModules = (box.width / coverScale) / 95
+    const cover = Math.max(view.width / size.width, view.height / size.height)
+    const visible = view.width / cover
+    const guidePixels = box.width / cover
+    const modules = guidePixels / 95
+
+    const track = stream?.getVideoTracks()[0]?.getSettings() ?? {}
     const ranked = [...tally.entries()].sort((first, second) => second[1] - first[1]).slice(0, 4)
 
-    stats.textContent = [
-      `Stream        ${size.width}×${size.height}  (${portraitStream ? 'hochkant angefragt' : 'quer angefragt'})`,
-      `Viewport CSS  ${Math.round(view.width)}×${Math.round(view.height)}   DPR ${devicePixelRatio}`,
-      `cover-Faktor  ${coverScale.toFixed(3)}`,
-      `sichtbar      ${Math.round(visibleWidth)} von ${size.width} px Breite  (${Math.round((visibleWidth / size.width) * 100)}%)`,
-      `Rahmen        ${Math.round(box.width)} CSS → ${Math.round(box.width / coverScale)} Quellpixel`,
-      `gefüllt wären ${filledModules.toFixed(2)} px pro Modul   (2 ist die Grenze)`,
+    show([
+      `Stream      ${size.width}×${size.height}   angefragt: ${portraitStream ? 'hochkant' : 'quer'}`,
+      `Track sagt  ${track.width ?? '?'}×${track.height ?? '?'} @ ${track.frameRate ?? '?'} fps`,
+      `Viewport    ${Math.round(view.width)}×${Math.round(view.height)} CSS   DPR ${devicePixelRatio}`,
+      `cover       ×${cover.toFixed(3)}`,
+      `SICHTBAR    ${Math.round(visible)} von ${size.width} px  =  ${Math.round((visible / size.width) * 100)}% der Breite`,
+      `Rahmen      ${Math.round(box.width)} CSS  →  ${Math.round(guidePixels)} Quellpixel`,
+      `GEFÜLLT     ${modules.toFixed(2)} px/Modul   (unter 2 geht nichts)`,
       ``,
-      `gelesen       ${cropToGuide ? `Rahmen ${Math.round(crop.width)}×${Math.round(crop.height)}` : 'ganzes Bild'} → ${canvas.width}×${canvas.height}`,
-      `Scans         ${scans},  Symbol in ${scans ? Math.round((hits / scans) * 100) : 0}%`,
-      `Ø pro Scan    ${scans ? (totalMs / scans).toFixed(1) : '0'} ms`,
+      `liest       ${cropToGuide ? 'Rahmen' : 'ganzes Bild'} ${Math.round(crop.width)}×${Math.round(crop.height)} → ${canvas.width}×${canvas.height}`,
+      `Scans       ${scans},  Symbol in ${Math.round((hits / scans) * 100)}%`,
+      `Ø           ${(totalMs / scans).toFixed(1)} ms`,
       ...(ranked.length
-        ? ['', ...ranked.map(([value, count]) => `  ${String(count).padStart(4)}×  ${value}  ${isbnFromEan13(value) ? 'ISBN ok' : 'verworfen'}`)]
-        : ['', 'noch kein Code gelesen']),
-    ].join('\n')
+        ? ranked.map(([value, count]) => `  ${String(count).padStart(4)}× ${value} ${isbnFromEan13(value) ? 'ok' : 'verworfen'}`)
+        : ['  noch kein Code gelesen']),
+    ])
   }
 
   setTimeout(loop, 90)
@@ -118,6 +103,7 @@ async function loop() {
 async function start() {
   stream?.getTracks().forEach((track) => track.stop())
   running = false
+  show(['Kamera wird angefragt…'])
 
   const shape = portraitStream
     ? { width: { ideal: 1080 }, height: { ideal: 1920 } }
@@ -128,36 +114,54 @@ async function start() {
       video: { facingMode: { ideal: 'environment' }, ...shape },
     })
   } catch (caught) {
-    log(`getUserMedia abgelehnt: ${caught instanceof Error ? caught.name : 'unbekannt'}`)
+    const name = caught instanceof Error ? caught.name : 'unbekannt'
+    const text = caught instanceof Error ? caught.message : ''
+    show(['KAMERA ABGELEHNT', '', `Fehler: ${name}`, text, '', 'Nochmal auf „Kamera starten" tippen.'])
     return
   }
 
   video.srcObject = stream
   video.muted = true
-  await video.play()
+
+  try {
+    await video.play()
+  } catch (caught) {
+    show(['VIDEO STARTET NICHT', '', `Fehler: ${caught instanceof Error ? caught.name : 'unbekannt'}`])
+    return
+  }
 
   if (!scanner) {
-    scanner = await ZBarScanner.create()
-    log('Decoder bereit, alle Symbologien aktiv')
+    try {
+      scanner = await ZBarScanner.create()
+    } catch (caught) {
+      show(['DECODER LÄDT NICHT', '', `Fehler: ${caught instanceof Error ? caught.message : 'unbekannt'}`])
+      return
+    }
   }
 
   reset()
   running = true
+  startButton.textContent = 'Neu starten'
   void loop()
 }
+
+startButton.addEventListener('click', () => void start())
 
 shapeButton.addEventListener('click', () => {
   portraitStream = !portraitStream
   shapeButton.textContent = portraitStream ? 'Stream: hochkant' : 'Stream: quer'
-  log(`--- Stream neu angefragt: ${portraitStream ? 'hochkant' : 'quer'} ---`)
-  void start()
+  if (running || stream) void start()
 })
 
 regionButton.addEventListener('click', () => {
   cropToGuide = !cropToGuide
   regionButton.textContent = cropToGuide ? 'Liest: Rahmen' : 'Liest: ganzes Bild'
   reset()
-  log(`--- liest jetzt ${cropToGuide ? 'nur den Rahmen' : 'das ganze Bild'} ---`)
 })
 
-void start()
+show([
+  'Auf „Kamera starten" tippen.',
+  '',
+  'Browser geben die Kamera nur nach einem Tap frei,',
+  'darum startet die Seite nicht von selbst.',
+])
