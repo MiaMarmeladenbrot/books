@@ -2,23 +2,23 @@ import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { loadDecoder, scanFrame } from '../lib/barcode'
 import { coverCrop } from '../lib/frame'
-import { focusOnce, keepFocusing, videoTrack } from '../lib/camera'
+import { focusOnce, keepFocusing, preferZoom, videoTrack } from '../lib/camera'
 
 const SCAN_WIDTH = 1024
 const BOX_PADDING = 0.12
+const ZOOM = 2
 const SCAN_PAUSE = 90
 const CONFIRMATIONS = 2
 const SIGHTED_FOR = 1200
 const STALLED_AFTER = 6000
 
 type Phase = 'starting' | 'scanning' | 'denied' | 'unavailable'
-type Hint = 'aiming' | 'sighted' | 'stalled' | 'turn'
+type Hint = 'aiming' | 'sighted' | 'stalled'
 
 const HINTS: Record<Hint, string> = {
   aiming: 'Barcode auf der Rückseite in den Rahmen halten',
   sighted: 'Barcode erkannt — kurz ruhig halten',
   stalled: 'Noch nichts gefunden. Etwas Abstand halten, bis das Bild scharf wird.',
-  turn: 'Quer halten hilft — dann nutzt die Kamera die ganze Bildbreite.',
 }
 
 interface Props {
@@ -114,16 +114,11 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
           }
         }
 
-        const crosswise =
-          element.videoWidth > element.videoHeight && window.innerHeight > window.innerWidth
-
         const nextHint: Hint =
           now - lastSymbolAt < SIGHTED_FOR
             ? 'sighted'
             : now - scanningSince > STALLED_AFTER
-              ? crosswise
-                ? 'turn'
-                : 'stalled'
+              ? 'stalled'
               : 'aiming'
         if (nextHint !== shownHint) {
           shownHint = nextHint
@@ -175,6 +170,7 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
 
       track.current = videoTrack(stream)
       void keepFocusing(track.current)
+      void preferZoom(track.current, ZOOM)
 
       scanningSince = performance.now()
       setPhase('scanning')

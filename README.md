@@ -202,14 +202,19 @@ the guide, which was only ever a way of asking the reader to compensate for
 arithmetic.
 
 A phone may refuse the orientation. Measured on an Android one, a portrait
-request came back 1920×1080 all the same, leaving 33 percent of the width visible
-and 5.3 pixels per module — enough, but with the discarded two thirds still
-discarded. The axis that gets thrown away is always the one across the device, so
-turning the phone sideways puts 96 percent of the width in view and 15.5 pixels
-per module, which is why the scanner suggests it after a while of finding nothing.
-The point is not the pixels; it is that all that headroom can be spent on
-distance, and distance is what a slow autofocus needs to settle. Sharpness, not
-resolution, is what a phone actually runs out of.
+request came back 1920×1080 all the same, giving 5.3 pixels per module — plenty
+against a floor of two, and still only five percent of frames read anything,
+where a laptop had managed fourteen on less than half of that. Which settles what
+a phone actually runs out of: not resolution, sharpness.
+
+So the camera is asked about itself rather than assumed. That one reports
+continuous autofocus already in force and refuses to be set to anything else, so
+there is nothing to win there — but it offers zoom up to four. Two is requested,
+which halves the field of view and therefore doubles how much of the frame a
+barcode covers at the same distance. Spent the other way round, it is the same
+barcode at twice the distance, and distance is exactly what an autofocus needs to
+settle on a dark cover with a small white label. Asking for the guide to be
+filled had been pushing books inside the lens's near limit all along.
 
 A number is accepted only once it arrives twice in a row, which is what keeps
 those unstable frames out of the form and costs a tenth of a second. While it

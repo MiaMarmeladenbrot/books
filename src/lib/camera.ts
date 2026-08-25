@@ -34,6 +34,18 @@ export async function focusOnce(track: MediaStreamTrack | null) {
   return true
 }
 
+export async function preferZoom(track: MediaStreamTrack | null, wanted: number) {
+  if (!track) return 0
+  const capabilities = (track.getCapabilities?.() ?? {}) as {
+    zoom?: { min?: number; max?: number }
+  }
+  const range = capabilities.zoom
+  if (!range || typeof range.max !== 'number') return 0
+
+  const value = Math.max(range.min ?? 1, Math.min(wanted, range.max))
+  return (await apply(track, { zoom: value })) ? value : 0
+}
+
 export function describeCamera(track: MediaStreamTrack | null) {
   if (!track) return ['keine Spur']
   const capabilities = (track.getCapabilities?.() ?? {}) as Record<string, unknown>
