@@ -137,9 +137,13 @@ fetched again from their ISBN.
 
 Adding starts with a search rather than an empty form. One field takes both an
 ISBN and a title: ten or thirteen digits are looked up exactly, anything else is
-searched as a title and offers the matches. The book form then opens prefilled
-and save-ready, with today's dates and the status set to read, so a book found in
-the catalogue is one tap away.
+searched as a title and offers the matches. The book form then opens prefilled,
+with the status set to read.
+
+The dates stay empty. Guessing today is right often enough to be tempting, but
+entering a date costs less than noticing a wrong one and clearing it, and a read
+book carrying no finish date stays out of every yearly figure until it gets one
+— which is the honest state for a book whose date nobody has said yet.
 
 Both catalogues are queried straight from the browser — the DNB and Open Library
 each send permissive CORS headers, so no server sits in between and nothing has

@@ -6,7 +6,6 @@ import { CoverPicker } from '../components/CoverPicker'
 import { releaseCover, uploadCover } from '../lib/supabase'
 import type { Candidate } from '../lib/lookup'
 import { MAX_UPLOAD_BYTES, fetchCoverJpeg, toCoverJpeg } from '../utils/image'
-import { todayIso } from '../utils/format'
 import {
   BookStatus,
   FORMAT_LABEL,
@@ -78,10 +77,9 @@ export function BookForm() {
       } = existing
       return rest
     }
-    const blank = { ...EMPTY, finished_on: todayIso(), started_on: todayIso() }
-    if (!prefill) return { ...blank, title: fallbackTitle ?? '' }
+    if (!prefill) return { ...EMPTY, title: fallbackTitle ?? '' }
     return {
-      ...blank,
+      ...EMPTY,
       title: prefill.title,
       subtitle: prefill.subtitle,
       authors: prefill.authors,
