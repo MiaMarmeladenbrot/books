@@ -1,9 +1,13 @@
-import { useState, type SyntheticEvent } from 'react'
+import { lazy, Suspense, useState, type SyntheticEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, X } from 'lucide-react'
+import { ScanBarcode, Search, X } from 'lucide-react'
 import { Cover } from '../components/Cover'
 import { lookupBooks, looksLikeIsbn, type Candidate } from '../lib/lookup'
 import { formatNumber } from '../utils/format'
+
+const BarcodeScanner = lazy(() =>
+  import('../components/BarcodeScanner').then((module) => ({ default: module.BarcodeScanner }))
+)
 
 type Phase = 'idle' | 'searching' | 'results' | 'empty'
 
@@ -27,14 +31,14 @@ export function BookSearch() {
   const [visible, setVisible] = useState(PAGE_SIZE)
   const [moreAvailable, setMoreAvailable] = useState(false)
   const [error, setError] = useState('')
+  const [scanning, setScanning] = useState(false)
 
   const openForm = (prefill?: Candidate, fallbackTitle?: string) => {
     navigate('/buch/neu', { state: { prefill, fallbackTitle }, replace: true })
   }
 
-  const runSearch = async (event: SyntheticEvent) => {
-    event.preventDefault()
-    const trimmed = term.trim()
+  const search = async (value: string) => {
+    const trimmed = value.trim()
     if (trimmed.length < 3) return
 
     setError('')
@@ -64,6 +68,25 @@ export function BookSearch() {
     }
   }
 
+  const runSearch = (event: SyntheticEvent) => {
+    event.preventDefault()
+    void search(term)
+  }
+
+  const acceptScan = (isbn: string) => {
+    setScanning(false)
+    setTerm(isbn)
+    void search(isbn)
+  }
+
+  if (scanning) {
+    return (
+      <Suspense fallback={<div className="fixed inset-0 z-50 bg-black" />}>
+        <BarcodeScanner onDetected={acceptScan} onClose={() => setScanning(false)} />
+      </Suspense>
+    )
+  }
+
   return (
     <div className="pb-16">
       <header className="border-line sticky top-0 z-10 flex items-center gap-3 border-b bg-paper/95 px-4 py-3 backdrop-blur">
@@ -85,6 +108,14 @@ export function BookSearch() {
               inputMode="search"
               className="placeholder:text-ink-3 w-full bg-transparent text-base outline-none"
             />
+            <button
+              type="button"
+              onClick={() => setScanning(true)}
+              aria-label="Barcode scannen"
+              className="text-ink-2 shrink-0 p-0.5"
+            >
+              <ScanBarcode size={20} />
+            </button>
           </div>
           <p className="text-ink-3 mt-2 text-xs leading-relaxed">
             {looksLikeIsbn(term)
