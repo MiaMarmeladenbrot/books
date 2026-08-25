@@ -124,7 +124,10 @@ export function BookSearch() {
         {phase === 'results' && (
           <ul className="mt-6">
             {results.slice(0, visible).map((candidate, index) => (
-              <li key={`${candidate.title}-${index}`} className="border-line border-b last:border-b-0">
+              <li
+                key={`${candidate.title}-${index}`}
+                className="border-line border-b last:border-b-0"
+              >
                 <button
                   type="button"
                   onClick={() => openForm(candidate)}
@@ -147,9 +150,7 @@ export function BookSearch() {
                         {candidate.authors.join(', ')}
                       </span>
                     )}
-                    <span className="text-ink-3 mt-0.5 block text-xs">
-                      {describe(candidate)}
-                    </span>
+                    <span className="text-ink-3 mt-0.5 block text-xs">{describe(candidate)}</span>
                   </span>
                 </button>
               </li>
@@ -198,11 +199,8 @@ export function BookSearch() {
               onClick={() => openForm()}
               className="border-line text-ink-2 w-full rounded-xl border py-3.5 text-sm font-semibold"
             >
-              Ohne Suche eintragen
+              Manuell eintragen
             </button>
-            <p className="text-ink-3 mt-2 text-xs leading-relaxed">
-              Für Bücher ohne ISBN — Bibliotheksleihen, alte Ausgaben.
-            </p>
           </>
         )}
       </main>
