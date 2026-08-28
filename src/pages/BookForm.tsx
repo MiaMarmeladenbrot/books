@@ -48,6 +48,12 @@ function numberOrNull(value: string) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
+function statusForFinishedOn(status: BookStatus, finishedOn: string | null): BookStatus {
+  if (!finishedOn) return status
+  if (status === BookStatus.Abandoned) return status
+  return BookStatus.Read
+}
+
 const fieldClass =
   'border-line bg-card focus:border-accent w-full rounded-xl border px-3.5 py-3 text-base outline-none'
 const labelClass = 'text-ink-2 mb-1.5 block text-xs font-semibold'
@@ -139,6 +145,15 @@ export function BookForm() {
   }
 
   const patch = (changes: Partial<BookDraft>) => setDraft((current) => ({ ...current, ...changes }))
+
+  const patchFinishedOn = (value: string) => {
+    const finished_on = textOrNull(value)
+    setDraft((current) => ({
+      ...current,
+      finished_on,
+      status: statusForFinishedOn(current.status, finished_on),
+    }))
+  }
 
   const handleSubmit = async (event: SyntheticEvent) => {
     event.preventDefault()
@@ -291,7 +306,7 @@ export function BookForm() {
             <input
               type="date"
               value={draft.finished_on ?? ''}
-              onChange={(event) => patch({ finished_on: textOrNull(event.target.value) })}
+              onChange={(event) => patchFinishedOn(event.target.value)}
               className={fieldClass}
             />
           </label>
