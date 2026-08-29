@@ -43,3 +43,91 @@
     display: none;
   }
 }
+
+@keyframes book-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(var(--step) * -3)) rotate(calc(var(--tilt) * 3));
+    animation-timing-function: cubic-bezier(0.45, 0, 0.9, 0.5);
+  }
+  4% {
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.9, 0.5);
+  }
+  10% {
+    transform: translateY(0) rotate(var(--tilt));
+    animation-timing-function: ease-out;
+  }
+  13% {
+    transform: translateY(-4.5px) rotate(var(--tilt));
+    animation-timing-function: ease-in;
+  }
+  16% {
+    transform: translateY(0) rotate(var(--tilt));
+  }
+  28% {
+    transform: translateY(0) rotate(var(--tilt));
+    animation-timing-function: ease-in-out;
+  }
+  32% {
+    transform: translateY(var(--step)) rotate(var(--tilt));
+  }
+  48% {
+    transform: translateY(var(--step)) rotate(var(--tilt));
+    animation-timing-function: ease-in-out;
+  }
+  52% {
+    transform: translateY(calc(var(--step) * 2)) rotate(var(--tilt));
+  }
+  68% {
+    transform: translateY(calc(var(--step) * 2)) rotate(var(--tilt));
+    animation-timing-function: ease-in-out;
+  }
+  72% {
+    transform: translateY(calc(var(--step) * 3)) rotate(var(--tilt));
+  }
+  88% {
+    opacity: 1;
+    transform: translateY(calc(var(--step) * 3)) rotate(var(--tilt));
+    animation-timing-function: ease-in-out;
+  }
+  92% {
+    transform: translateY(calc(var(--step) * 4)) rotate(var(--tilt));
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(calc(var(--step) * 4)) rotate(var(--tilt));
+  }
+}
+
+@keyframes loader-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.falling-book {
+  --step: 24px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 19.5px;
+  border-radius: 3px;
+  will-change: transform;
+  animation: book-drop var(--cycle, 3s) linear infinite;
+}
+
+.loader-appear {
+  animation: loader-appear 0.25s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .falling-book {
+    opacity: 1;
+    transform: translateY(calc(var(--step) * var(--i))) rotate(var(--tilt));
+    animation: none;
+  }
+}
