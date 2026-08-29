@@ -76,6 +76,14 @@ export function BookSearch() {
     void search(term)
   }
 
+  const clearTerm = () => {
+    setTerm('')
+    setResults([])
+    setMoreAvailable(false)
+    setError('')
+    setPhase('idle')
+  }
+
   const acceptScan = (isbn: string) => {
     setScanning(false)
     setTerm(isbn)
@@ -111,6 +119,16 @@ export function BookSearch() {
               inputMode="search"
               className="placeholder:text-ink-3 w-full bg-transparent text-base outline-none"
             />
+            {term && (
+              <button
+                type="button"
+                onClick={clearTerm}
+                aria-label="Suche zurücksetzen"
+                className="text-ink-3 shrink-0 p-0.5"
+              >
+                <X size={18} />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setScanning(true)}
