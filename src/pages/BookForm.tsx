@@ -28,7 +28,7 @@ const EMPTY: BookDraft = {
   page_count: null,
   format: null,
   provenance: null,
-  status: BookStatus.Read,
+  status: BookStatus.WantToRead,
   started_on: null,
   finished_on: null,
   acquired_on: null,
@@ -48,10 +48,21 @@ function numberOrNull(value: string) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
-function statusForFinishedOn(status: BookStatus, finishedOn: string | null): BookStatus {
-  if (!finishedOn) return status
-  if (status === BookStatus.Abandoned) return status
-  return BookStatus.Read
+const DATES_FOR_STATUS: Record<BookStatus, { started: boolean; finished: boolean }> = {
+  [BookStatus.WantToRead]: { started: false, finished: false },
+  [BookStatus.Reading]: { started: true, finished: false },
+  [BookStatus.Read]: { started: true, finished: true },
+  [BookStatus.Abandoned]: { started: true, finished: true },
+}
+
+function draftForStatus(draft: BookDraft, status: BookStatus): BookDraft {
+  const dates = DATES_FOR_STATUS[status]
+  return {
+    ...draft,
+    status,
+    started_on: dates.started ? draft.started_on : null,
+    finished_on: dates.finished ? draft.finished_on : null,
+  }
 }
 
 const fieldClass =
@@ -98,7 +109,7 @@ export function BookForm() {
     }
   })
   const [authorText, setAuthorText] = useState(() =>
-    (existing?.authors ?? prefill?.authors ?? []).join(', ')
+    (existing?.authors ?? prefill?.authors ?? []).join(', '),
   )
   const [candidateCover, setCandidateCover] = useState<string | null>(prefill?.cover_url ?? null)
   const [error, setError] = useState('')
@@ -146,14 +157,9 @@ export function BookForm() {
 
   const patch = (changes: Partial<BookDraft>) => setDraft((current) => ({ ...current, ...changes }))
 
-  const patchFinishedOn = (value: string) => {
-    const finished_on = textOrNull(value)
-    setDraft((current) => ({
-      ...current,
-      finished_on,
-      status: statusForFinishedOn(current.status, finished_on),
-    }))
-  }
+  const pickStatus = (status: BookStatus) => setDraft((current) => draftForStatus(current, status))
+
+  const dates = DATES_FOR_STATUS[draft.status]
 
   const handleSubmit = async (event: SyntheticEvent) => {
     event.preventDefault()
@@ -278,7 +284,7 @@ export function BookForm() {
                 key={status}
                 type="button"
                 aria-pressed={draft.status === status}
-                onClick={() => patch({ status })}
+                onClick={() => pickStatus(status)}
                 className={`rounded-xl border py-3 text-sm font-medium ${
                   draft.status === status
                     ? 'border-ink bg-ink text-paper'
@@ -291,26 +297,30 @@ export function BookForm() {
           </div>
         </div>
 
-        <div className="mb-4 grid grid-cols-2 gap-3">
-          <label className="block">
-            <span className={labelClass}>Gelesen von</span>
-            <input
-              type="date"
-              value={draft.started_on ?? ''}
-              onChange={(event) => patch({ started_on: textOrNull(event.target.value) })}
-              className={fieldClass}
-            />
-          </label>
-          <label className="block">
-            <span className={labelClass}>bis</span>
-            <input
-              type="date"
-              value={draft.finished_on ?? ''}
-              onChange={(event) => patchFinishedOn(event.target.value)}
-              className={fieldClass}
-            />
-          </label>
-        </div>
+        {dates.started && (
+          <div className={`mb-4 grid gap-3 ${dates.finished ? 'grid-cols-2' : ''}`}>
+            <label className="block">
+              <span className={labelClass}>{dates.finished ? 'Gelesen von' : 'Angefangen am'}</span>
+              <input
+                type="date"
+                value={draft.started_on ?? ''}
+                onChange={(event) => patch({ started_on: textOrNull(event.target.value) })}
+                className={fieldClass}
+              />
+            </label>
+            {dates.finished && (
+              <label className="block">
+                <span className={labelClass}>bis</span>
+                <input
+                  type="date"
+                  value={draft.finished_on ?? ''}
+                  onChange={(event) => patch({ finished_on: textOrNull(event.target.value) })}
+                  className={fieldClass}
+                />
+              </label>
+            )}
+          </div>
+        )}
 
         <div className="mb-4 grid grid-cols-2 gap-3">
           <label className="block">
