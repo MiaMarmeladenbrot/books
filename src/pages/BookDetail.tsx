@@ -82,7 +82,7 @@ export function BookDetail() {
           value={
             book.series
               ? book.series_volume
-                ? `${book.series}, Band ${book.series_volume}`
+                ? `${book.series}, Band ${formatNumber(book.series_volume)}`
                 : book.series
               : null
           }

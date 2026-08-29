@@ -48,6 +48,16 @@ function numberOrNull(value: string) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
+function volumeOrNull(value: string) {
+  const parsed = Number.parseFloat(value.replace(',', '.'))
+  if (!Number.isFinite(parsed) || parsed <= 0) return null
+  return Math.round(parsed * 100) / 100
+}
+
+function volumeToText(volume: number | null) {
+  return volume === null ? '' : String(Number(volume)).replace('.', ',')
+}
+
 const DATES_FOR_STATUS: Record<BookStatus, { started: boolean; finished: boolean }> = {
   [BookStatus.WantToRead]: { started: false, finished: false },
   [BookStatus.Reading]: { started: true, finished: false },
@@ -110,6 +120,9 @@ export function BookForm() {
   })
   const [authorText, setAuthorText] = useState(() =>
     (existing?.authors ?? prefill?.authors ?? []).join(', '),
+  )
+  const [volumeText, setVolumeText] = useState(() =>
+    volumeToText(existing?.series_volume ?? prefill?.series_volume ?? null),
   )
   const [candidateCover, setCandidateCover] = useState<string | null>(prefill?.cover_url ?? null)
   const [error, setError] = useState('')
@@ -182,6 +195,7 @@ export function BookForm() {
         subtitle: textOrNull(draft.subtitle ?? ''),
         isbn: textOrNull(draft.isbn ?? ''),
         series: textOrNull(draft.series ?? ''),
+        series_volume: volumeOrNull(volumeText),
         notes: textOrNull(draft.notes ?? ''),
       }
       const saved = existing ? await updateBook(existing.id, payload) : await addBook(payload)
@@ -403,9 +417,10 @@ export function BookForm() {
           <label className="block">
             <span className={labelClass}>Band</span>
             <input
-              inputMode="numeric"
-              value={draft.series_volume ?? ''}
-              onChange={(event) => patch({ series_volume: numberOrNull(event.target.value) })}
+              inputMode="decimal"
+              value={volumeText}
+              onChange={(event) => setVolumeText(event.target.value)}
+              placeholder="5,6"
               className={fieldClass}
             />
           </label>

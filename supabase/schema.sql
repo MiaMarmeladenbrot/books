@@ -9,7 +9,7 @@ create table public.books (
   subtitle text,
   authors text[] not null default '{}',
   series text,
-  series_volume smallint,
+  series_volume numeric(5, 2),
   isbn text,
   published_year smallint,
   page_count integer check (page_count > 0),
