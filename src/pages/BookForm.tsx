@@ -59,7 +59,7 @@ function volumeOrNull(value: string) {
 }
 
 function volumeToText(volume: number | null) {
-  return volume === null ? '' : String(Number(volume)).replace('.', ',')
+  return volume === null ? '' : String(Number(volume))
 }
 
 const DATES_FOR_STATUS: Record<BookStatus, { started: boolean; finished: boolean }> = {
@@ -445,7 +445,7 @@ export function BookForm() {
               inputMode="decimal"
               value={volumeText}
               onChange={(event) => setVolumeText(event.target.value)}
-              placeholder="5,6"
+              placeholder="5.6"
               className={fieldClass}
             />
           </label>
