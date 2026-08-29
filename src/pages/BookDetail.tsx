@@ -6,7 +6,7 @@ import { Cover } from '../components/Cover'
 import { coverUrl } from '../lib/supabase'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { formatNumber, formatRange, readingDays } from '../utils/format'
-import { FORMAT_LABEL, PROVENANCE_LABEL, STATUS_LABEL } from '../types'
+import { FORMAT_LABEL, PROVENANCE_LABEL, STATUS_LABEL, languageLabel } from '../types'
 
 function Row({ label, value }: { label: string; value: string | null }) {
   if (!value) return null
@@ -88,6 +88,7 @@ export function BookDetail() {
           }
         />
         <Row label="Format" value={book.format ? FORMAT_LABEL[book.format] : null} />
+        <Row label="Sprache" value={book.language ? languageLabel(book.language) : null} />
         <Row
           label="Erhalten als"
           value={book.provenance ? PROVENANCE_LABEL[book.provenance] : null}

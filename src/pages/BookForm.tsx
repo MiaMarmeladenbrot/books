@@ -10,10 +10,13 @@ import {
   BookStatus,
   FORMAT_LABEL,
   FORMAT_ORDER,
+  LANGUAGE_LABEL,
+  LANGUAGE_ORDER,
   PROVENANCE_LABEL,
   PROVENANCE_ORDER,
   STATUS_LABEL,
   STATUS_ORDER,
+  languageLabel,
 } from '../types'
 import type { BookDraft, BookFormat, BookProvenance } from '../types'
 
@@ -28,6 +31,7 @@ const EMPTY: BookDraft = {
   page_count: null,
   format: null,
   provenance: null,
+  language: null,
   status: BookStatus.WantToRead,
   started_on: null,
   finished_on: null,
@@ -115,6 +119,7 @@ export function BookForm() {
       isbn: prefill.isbn,
       published_year: prefill.published_year,
       page_count: prefill.page_count,
+      language: prefill.language,
       source_meta: { lookup: prefill.source, publisher: prefill.publisher },
     }
   })
@@ -365,23 +370,43 @@ export function BookForm() {
           </label>
         </div>
 
-        <label className="mb-4 block">
-          <span className={labelClass}>Erhalten als</span>
-          <select
-            value={draft.provenance ?? ''}
-            onChange={(event) =>
-              patch({ provenance: textOrNull(event.target.value) as BookProvenance | null })
-            }
-            className={fieldClass}
-          >
-            <option value="">—</option>
-            {PROVENANCE_ORDER.map((source) => (
-              <option key={source} value={source}>
-                {PROVENANCE_LABEL[source]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="mb-4 grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className={labelClass}>Erhalten als</span>
+            <select
+              value={draft.provenance ?? ''}
+              onChange={(event) =>
+                patch({ provenance: textOrNull(event.target.value) as BookProvenance | null })
+              }
+              className={fieldClass}
+            >
+              <option value="">—</option>
+              {PROVENANCE_ORDER.map((source) => (
+                <option key={source} value={source}>
+                  {PROVENANCE_LABEL[source]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className={labelClass}>Sprache</span>
+            <select
+              value={draft.language ?? ''}
+              onChange={(event) => patch({ language: textOrNull(event.target.value) })}
+              className={fieldClass}
+            >
+              <option value="">—</option>
+              {LANGUAGE_ORDER.map((code) => (
+                <option key={code} value={code}>
+                  {LANGUAGE_LABEL[code]}
+                </option>
+              ))}
+              {draft.language && !LANGUAGE_ORDER.includes(draft.language) && (
+                <option value={draft.language}>{languageLabel(draft.language)}</option>
+              )}
+            </select>
+          </label>
+        </div>
 
         <div className="mb-4 grid grid-cols-[1fr_6rem] gap-3">
           <label className="block">

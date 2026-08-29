@@ -15,6 +15,7 @@ create table public.books (
   page_count integer check (page_count > 0),
   format book_format,
   provenance book_provenance,
+  language text,
   status book_status not null default 'read',
   started_on date,
   finished_on date,

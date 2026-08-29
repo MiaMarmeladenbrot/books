@@ -81,8 +81,35 @@ export interface Candidate {
   published_year: number | null
   page_count: number | null
   publisher: string | null
+  language: string | null
   cover_url: string | null
   source: 'DNB' | 'OpenLibrary'
+}
+
+const MARC_LANGUAGES: Record<string, string> = {
+  ger: 'de',
+  deu: 'de',
+  eng: 'en',
+  fre: 'fr',
+  fra: 'fr',
+  spa: 'es',
+  ita: 'it',
+  dut: 'nl',
+  nld: 'nl',
+  swe: 'sv',
+  dan: 'da',
+  nor: 'no',
+  fin: 'fi',
+  pol: 'pl',
+  por: 'pt',
+  rus: 'ru',
+  tur: 'tr',
+  jpn: 'ja',
+  lat: 'la',
+}
+
+function languageFromMarc(code: string) {
+  return MARC_LANGUAGES[code.trim().toLowerCase()] ?? null
 }
 
 export function looksLikeIsbn(input: string) {
@@ -223,6 +250,10 @@ function parseDnbRecord(record: Element): Candidate | null {
       .map((field) => subfield(field, 'a').replace(/\D/g, ''))
       .find((value) => value.length === 13 || value.length === 10) ?? null
 
+  const language = fields(record, '041')
+    .map((field) => languageFromMarc(subfield(field, 'a')))
+    .find((code) => code !== null)
+
   return {
     title,
     subtitle: titleField ? subfield(titleField, 'b').replace(/\s*[/:]$/, '').trim() || null : null,
@@ -233,6 +264,7 @@ function parseDnbRecord(record: Element): Candidate | null {
     published_year: year,
     page_count: pages,
     publisher,
+    language: language ?? null,
     cover_url: coverForIsbn(isbn),
     source: 'DNB',
   }
@@ -286,6 +318,7 @@ async function searchOpenLibraryIsbn(isbn: string): Promise<Candidate[]> {
       published_year: firstNumber(String(record.publish_date ?? ''), /(1[4-9]\d{2}|20[0-4]\d)/),
       page_count: record.number_of_pages ?? null,
       publisher: record.publishers?.[0]?.name ?? null,
+      language: null,
       cover_url: coverForIsbn(isbn),
       source: 'OpenLibrary',
     },
@@ -296,7 +329,8 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
   const parameters = new URLSearchParams({
     q: text,
     fields:
-      'title,subtitle,author_name,first_publish_year,number_of_pages_median,publisher,isbn,cover_i',
+      'title,subtitle,author_name,first_publish_year,number_of_pages_median,publisher,isbn,' +
+      'cover_i,language',
     limit: String(limit),
   })
   const response = await fetchCatalogue(`${OPENLIBRARY_SEARCH}?${parameters}`)
@@ -315,6 +349,10 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
         published_year: (document.first_publish_year as number) ?? null,
         page_count: (document.number_of_pages_median as number) ?? null,
         publisher: ((document.publisher as string[]) ?? [])[0] ?? null,
+        language:
+          ((document.language as string[]) ?? [])
+            .map(languageFromMarc)
+            .find((code) => code !== null) ?? null,
         cover_url: coverId ? `${OPENLIBRARY_COVER}/id/${coverId}-L.jpg` : null,
         source: 'OpenLibrary' as const,
       }

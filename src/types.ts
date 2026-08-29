@@ -48,6 +48,31 @@ export const PROVENANCE_LABEL: Record<BookProvenance, string> = {
   [BookProvenance.Borrowed]: 'Leihe',
 }
 
+export const LANGUAGE_LABEL: Record<string, string> = {
+  de: 'Deutsch',
+  en: 'Englisch',
+  fr: 'Französisch',
+  es: 'Spanisch',
+  it: 'Italienisch',
+  nl: 'Niederländisch',
+  sv: 'Schwedisch',
+  da: 'Dänisch',
+  no: 'Norwegisch',
+  fi: 'Finnisch',
+  pl: 'Polnisch',
+  pt: 'Portugiesisch',
+  ru: 'Russisch',
+  tr: 'Türkisch',
+  ja: 'Japanisch',
+  la: 'Latein',
+}
+
+export const LANGUAGE_ORDER = Object.keys(LANGUAGE_LABEL)
+
+export function languageLabel(code: string) {
+  return LANGUAGE_LABEL[code] ?? code.toUpperCase()
+}
+
 export interface Book {
   id: string
   user_id: string
@@ -61,6 +86,7 @@ export interface Book {
   page_count: number | null
   format: BookFormat | null
   provenance: BookProvenance | null
+  language: string | null
   status: BookStatus
   started_on: string | null
   finished_on: string | null

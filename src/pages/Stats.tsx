@@ -8,6 +8,7 @@ import {
   FORMAT_ORDER,
   PROVENANCE_LABEL,
   PROVENANCE_ORDER,
+  languageLabel,
 } from '../types'
 import type { Book } from '../types'
 
@@ -48,6 +49,26 @@ function Panel({
       </h2>
       {children}
     </section>
+  )
+}
+
+function Ranking({ rows }: { rows: { label: string; value: number }[] }) {
+  const max = Math.max(...rows.map((row) => row.value), 1)
+  return (
+    <div>
+      {rows.map((row) => (
+        <div key={row.label} className="text-ink-2 flex items-center gap-2.5 py-1.5 text-sm">
+          <span className="w-26 shrink-0">{row.label}</span>
+          <span className="bg-shade h-2 flex-1 overflow-hidden rounded-full">
+            <span
+              className="bg-accent block h-full rounded-full"
+              style={{ width: `${(row.value / max) * 100}%` }}
+            />
+          </span>
+          <b className="text-ink w-8 text-right font-semibold">{formatNumber(row.value)}</b>
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -197,6 +218,15 @@ export function Stats() {
     (best, entry, index) => (entry.books > perMonth[best].books ? index : best),
     0,
   )
+
+  const languages = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const book of scope)
+      if (book.language) counts.set(book.language, (counts.get(book.language) ?? 0) + 1)
+    return [...counts.entries()]
+      .map(([code, count]) => ({ label: languageLabel(code), value: count }))
+      .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
+  }, [scope])
 
   const topAuthors = useMemo(() => {
     const counts = new Map<string, number>()
@@ -358,6 +388,12 @@ export function Stats() {
             />
           </Panel>
         </div>
+
+        {languages.length > 0 && (
+          <Panel title="Sprache">
+            <Ranking rows={languages} />
+          </Panel>
+        )}
 
         {year === ALL_YEARS && <ExportPanel books={books} />}
       </main>

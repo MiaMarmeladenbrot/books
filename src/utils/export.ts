@@ -1,4 +1,4 @@
-import { FORMAT_LABEL, PROVENANCE_LABEL, STATUS_LABEL } from '../types'
+import { FORMAT_LABEL, PROVENANCE_LABEL, STATUS_LABEL, languageLabel } from '../types'
 import type { Book } from '../types'
 
 const UTF8_BOM = String.fromCharCode(0xfeff)
@@ -13,6 +13,7 @@ const CSV_COLUMNS: { header: string; value: (book: Book) => string }[] = [
   { header: 'Erschienen', value: (book) => book.published_year?.toString() ?? '' },
   { header: 'Seiten', value: (book) => book.page_count?.toString() ?? '' },
   { header: 'Format', value: (book) => (book.format ? FORMAT_LABEL[book.format] : '') },
+  { header: 'Sprache', value: (book) => (book.language ? languageLabel(book.language) : '') },
   {
     header: 'Erhalten als',
     value: (book) => (book.provenance ? PROVENANCE_LABEL[book.provenance] : ''),
