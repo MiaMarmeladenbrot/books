@@ -44,6 +44,11 @@ function buildFilters(books: Book[]): Filter[] {
       label: 'Wunschliste',
       matches: (book) => book.status === BookStatus.WantToRead,
     },
+    {
+      key: 'abandoned',
+      label: 'Abgebrochen',
+      matches: (book) => book.status === BookStatus.Abandoned,
+    },
     ...years.map((year) => ({
       key: `year-${year}`,
       label: year,
