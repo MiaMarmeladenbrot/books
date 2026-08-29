@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useBooks } from '../store/useBooks'
 import { ExportPanel } from '../components/ExportPanel'
-import { formatCompact, formatNumber, monthNarrow, monthShort, readingDays } from '../utils/format'
+import { formatCompact, formatNumber, monthNarrow, readingDays } from '../utils/format'
 import {
   BookStatus,
   FORMAT_LABEL,
@@ -51,22 +51,91 @@ function Panel({
   )
 }
 
-function Ranking({ rows }: { rows: { label: string; value: number }[] }) {
-  const max = Math.max(...rows.map((row) => row.value), 1)
+const SLICE_COLORS = [
+  { fill: '#b4552f', text: '#fffefb' },
+  { fill: '#17709f', text: '#fffefb' },
+  { fill: '#d8a743', text: '#1e1a15' },
+  { fill: '#5f9e6a', text: '#1e1a15' },
+]
+
+const CENTER = 50
+const PIE_RADIUS = 47
+const LABEL_RADIUS = 30
+const SMALLEST_LABELLED_SHARE = 0.07
+
+type Slice = { label: string; value: number; color: (typeof SLICE_COLORS)[number] }
+
+function pointOn(radius: number, turns: number) {
+  const angle = turns * 2 * Math.PI - Math.PI / 2
+  return [CENTER + radius * Math.cos(angle), CENTER + radius * Math.sin(angle)] as const
+}
+
+function wedgePath(from: number, to: number) {
+  const [startX, startY] = pointOn(PIE_RADIUS, from)
+  const [endX, endY] = pointOn(PIE_RADIUS, to)
+  const sweptHalf = to - from > 0.5 ? 1 : 0
+  return `M ${CENTER} ${CENTER} L ${startX} ${startY} A ${PIE_RADIUS} ${PIE_RADIUS} 0 ${sweptHalf} 1 ${endX} ${endY} Z`
+}
+
+function Pie({ rows }: { rows: Slice[] }) {
+  const total = rows.reduce((sum, row) => sum + row.value, 0)
+  if (total === 0) return null
+
+  const ordered = [...rows].sort((a, b) => b.value - a.value)
+  const slices = ordered.map((row, index) => {
+    const before = ordered.slice(0, index).reduce((sum, previous) => sum + previous.value, 0)
+    return { ...row, from: before / total, to: (before + row.value) / total }
+  })
+
   return (
-    <div>
-      {rows.map((row) => (
-        <div key={row.label} className="text-ink-2 flex items-center gap-2.5 py-1.5 text-sm">
-          <span className="w-26 shrink-0">{row.label}</span>
-          <span className="bg-shade h-2 flex-1 overflow-hidden rounded-full">
+    <div className="flex items-center gap-4">
+      <svg viewBox="0 0 100 100" aria-hidden="true" className="size-32 shrink-0">
+        {slices.map((slice) => {
+          const [labelX, labelY] = pointOn(LABEL_RADIUS, (slice.from + slice.to) / 2)
+          return (
+            <g key={slice.label}>
+              {slices.length === 1 ? (
+                <circle cx={CENTER} cy={CENTER} r={PIE_RADIUS} fill={slice.color.fill} />
+              ) : (
+                <path
+                  d={wedgePath(slice.from, slice.to)}
+                  fill={slice.color.fill}
+                  stroke="var(--color-card)"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+              )}
+              {slice.to - slice.from >= SMALLEST_LABELLED_SHARE && (
+                <text
+                  x={labelX}
+                  y={labelY}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill={slice.color.text}
+                  className="text-[9px] font-semibold"
+                >
+                  {formatNumber(slice.value)}
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+
+      <ul className="min-w-0 flex-1">
+        {slices.map((slice) => (
+          <li key={slice.label} className="flex items-center gap-2.5 py-1 text-sm">
             <span
-              className="bg-accent block h-full rounded-full"
-              style={{ width: `${(row.value / max) * 100}%` }}
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: slice.color.fill }}
             />
-          </span>
-          <b className="text-ink w-8 text-right font-semibold">{formatNumber(row.value)}</b>
-        </div>
-      ))}
+            <span className="min-w-0 flex-1 truncate">{slice.label}</span>
+            {slice.to - slice.from < SMALLEST_LABELLED_SHARE && (
+              <b className="text-ink-2 font-semibold">{formatNumber(slice.value)}</b>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
@@ -223,66 +292,72 @@ export function Stats() {
           </Panel>
         )}
 
-        <Panel title="Auf einen Blick">
-          <div className="grid grid-cols-2 gap-x-3 gap-y-3.5">
-            <div>
-              <div className="font-serif text-2xl font-semibold tracking-tight">{averagePages}</div>
-              <div className="text-ink-2 text-xs">⌀ Seiten pro Buch</div>
-            </div>
-            <div>
-              <div className="font-serif text-2xl font-semibold tracking-tight">{averageDays}</div>
-              <div className="text-ink-2 text-xs">⌀ Tage pro Buch</div>
-            </div>
-            <div>
-              <div className="font-serif text-2xl font-semibold tracking-tight">
-                {longest?.page_count ?? '—'}
+        <div className="grid gap-x-3.5 md:grid-cols-2">
+          <Panel title="Auf einen Blick">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-3.5">
+              <div>
+                <div className="font-serif text-2xl font-semibold tracking-tight">
+                  {averagePages}
+                </div>
+                <div className="text-ink-2 text-xs">⌀ Seiten pro Buch</div>
               </div>
-              <div className="text-ink-2 text-xs truncate">
-                {longest ? `längstes: ${longest.title}` : 'längstes Buch'}
+              <div>
+                <div className="font-serif text-2xl font-semibold tracking-tight">
+                  {averageDays}
+                </div>
+                <div className="text-ink-2 text-xs">⌀ Tage pro Buch</div>
               </div>
             </div>
-            <div>
-              <div className="font-serif text-2xl font-semibold tracking-tight">
-                {monthShort(peakMonth)}
-              </div>
-              <div className="text-ink-2 text-xs">
-                stärkster Monat, {perMonth[peakMonth].books} Bücher
-              </div>
-            </div>
-          </div>
-        </Panel>
 
-        <Panel title="Format">
-          <Ranking
-            rows={FORMAT_ORDER.map((format) => ({
-              label: FORMAT_LABEL[format],
-              value: scope.filter((book) => book.format === format).length,
-            })).filter((row) => row.value > 0)}
-          />
-        </Panel>
+            {longest?.page_count ? (
+              <div className="border-line mt-4 border-t pt-3.5">
+                <div className="text-ink-2 text-xs">Dickstes Buch</div>
+                <div className="mt-1 text-sm leading-snug font-semibold">
+                  {longest.title}
+                  <span className="text-ink-2 ml-2 text-xs font-normal whitespace-nowrap">
+                    {formatNumber(longest.page_count)} Seiten
+                  </span>
+                </div>
+              </div>
+            ) : null}
+          </Panel>
 
-        <Panel title="Woher">
-          <Ranking
-            rows={PROVENANCE_ORDER.map((source) => ({
-              label: PROVENANCE_LABEL[source],
-              value: scope.filter((book) => book.provenance === source).length,
-            })).filter((row) => row.value > 0)}
-          />
-        </Panel>
+          <Panel title={`Meistgelesene Autor:innen ${year === ALL_YEARS ? '' : `${activeYear}`}`}>
+            <ul>
+              {topAuthors.map(([author, count], index) => (
+                <li key={author} className="flex items-center gap-2.5 py-1 text-sm">
+                  <span className="font-serif text-accent w-6 text-sm font-semibold">
+                    {index + 1}
+                  </span>
+                  <span className="flex-1 truncate">{author}</span>
+                  <span className="text-ink-3 text-xs">{count}</span>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </div>
 
-        <Panel title={`Meistgelesene Autor:innen ${year === ALL_YEARS ? '' : `${activeYear}`}`}>
-          <ul>
-            {topAuthors.map(([author, count], index) => (
-              <li key={author} className="flex items-center gap-2.5 py-1 text-sm">
-                <span className="font-serif text-accent w-6 text-sm font-semibold">
-                  {index + 1}
-                </span>
-                <span className="flex-1 truncate">{author}</span>
-                <span className="text-ink-3 text-xs">{count}</span>
-              </li>
-            ))}
-          </ul>
-        </Panel>
+        <div className="grid gap-x-3.5 md:grid-cols-2">
+          <Panel title="Format">
+            <Pie
+              rows={FORMAT_ORDER.map((format, index) => ({
+                label: FORMAT_LABEL[format],
+                value: scope.filter((book) => book.format === format).length,
+                color: SLICE_COLORS[index],
+              })).filter((row) => row.value > 0)}
+            />
+          </Panel>
+
+          <Panel title="Woher">
+            <Pie
+              rows={PROVENANCE_ORDER.map((source, index) => ({
+                label: PROVENANCE_LABEL[source],
+                value: scope.filter((book) => book.provenance === source).length,
+                color: SLICE_COLORS[index],
+              })).filter((row) => row.value > 0)}
+            />
+          </Panel>
+        </div>
 
         {year === ALL_YEARS && <ExportPanel books={books} />}
       </main>

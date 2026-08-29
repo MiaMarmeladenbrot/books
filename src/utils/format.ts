@@ -4,7 +4,6 @@ const numbers = new Intl.NumberFormat(LOCALE)
 const dayShort = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })
 const dayLong = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })
 const monthAndYear = new Intl.DateTimeFormat(LOCALE, { month: 'long', year: 'numeric' })
-const monthShortFormat = new Intl.DateTimeFormat(LOCALE, { month: 'short' })
 const monthNarrowFormat = new Intl.DateTimeFormat(LOCALE, { month: 'narrow' })
 
 function parseIsoDate(iso: string) {
@@ -48,10 +47,6 @@ export function monthKey(iso: string) {
 
 export function monthLabel(key: string) {
   return monthAndYear.format(parseIsoDate(`${key}-01`))
-}
-
-export function monthShort(monthIndex: number) {
-  return monthShortFormat.format(monthReference(monthIndex))
 }
 
 export function monthNarrow(monthIndex: number) {
