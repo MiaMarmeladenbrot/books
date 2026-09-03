@@ -33,27 +33,15 @@ function buildDimensions(books: Book[]): Dimension[] {
       param: 'status',
       all: 'Jeder Status',
       choices: [
-        {
-          value: BookStatus.Read,
-          label: 'Gelesen',
-          matches: (book) => book.status === BookStatus.Read,
-        },
-        {
-          value: BookStatus.Reading,
-          label: 'Am Lesen',
-          matches: (book) => book.status === BookStatus.Reading,
-        },
-        {
-          value: BookStatus.WantToRead,
-          label: 'Wunschliste',
-          matches: (book) => book.status === BookStatus.WantToRead,
-        },
-        {
-          value: BookStatus.Abandoned,
-          label: 'Abgebrochen',
-          matches: (book) => book.status === BookStatus.Abandoned,
-        },
-      ],
+        BookStatus.Read,
+        BookStatus.Reading,
+        BookStatus.WantToRead,
+        BookStatus.Abandoned,
+      ].map((status) => ({
+        value: status,
+        label: STATUS_LABEL[status],
+        matches: (book: Book) => book.status === status,
+      })),
     },
     {
       param: 'year',

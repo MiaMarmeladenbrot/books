@@ -28,9 +28,9 @@ export const FORMAT_ORDER = Object.values(BookFormat)
 export const PROVENANCE_ORDER = Object.values(BookProvenance)
 
 export const STATUS_LABEL: Record<BookStatus, string> = {
-  [BookStatus.WantToRead]: 'Will ich lesen',
-  [BookStatus.Reading]: 'Am Lesen',
-  [BookStatus.Read]: 'Gelesen',
+  [BookStatus.WantToRead]: 'Irgendwann',
+  [BookStatus.Reading]: 'Mittendrin',
+  [BookStatus.Read]: 'Fertig',
   [BookStatus.Abandoned]: 'Abgebrochen',
 }
 
