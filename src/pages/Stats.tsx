@@ -267,7 +267,7 @@ export function Stats() {
               {formatNumber(scope.length)}
             </div>
             <div className="text-ink-2 mt-1.5 text-xs">
-              Bücher {year === ALL_YEARS ? 'insgesamt' : activeYear}
+              {year === ALL_YEARS ? 'Bücher insgesamt' : 'Bücher'}
             </div>
           </div>
           <div>
@@ -275,7 +275,7 @@ export function Stats() {
               {formatNumber(pages)}
             </div>
             <div className="text-ink-2 mt-1.5 text-xs">
-              Seiten {year === ALL_YEARS ? 'insgesamt' : activeYear}
+              {year === ALL_YEARS ? 'Seiten insgesamt' : 'Seiten'}
             </div>
           </div>
         </div>
@@ -342,13 +342,10 @@ export function Stats() {
 
             {longest?.page_count ? (
               <div className="border-line mt-4 border-t pt-3.5">
-                <div className="text-ink-2 text-xs">Dickstes Buch</div>
-                <div className="mt-1 text-sm leading-snug font-semibold">
-                  {longest.title}
-                  <span className="text-ink-2 ml-2 text-xs font-normal whitespace-nowrap">
-                    {formatNumber(longest.page_count)} Seiten
-                  </span>
+                <div className="text-ink-2 text-xs">
+                  Dickstes Buch mit {formatNumber(longest.page_count)} Seiten
                 </div>
+                <div className="mt-1 text-sm leading-snug font-semibold">{longest.title}</div>
               </div>
             ) : null}
           </Panel>
