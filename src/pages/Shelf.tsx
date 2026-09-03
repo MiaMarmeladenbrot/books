@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, ScanBarcode, Search, X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { Cover } from '../components/Cover'
+import { Select } from '../components/Select'
 import { coverUrl } from '../lib/supabase'
 import { formatDay, formatNumber, monthKey, monthLabel } from '../utils/format'
 import {
@@ -16,59 +17,78 @@ import {
 import type { Book } from '../types'
 
 const NO_DATE_KEY = 'no-date'
-const DEFAULT_FILTER = 'all'
 
-type Filter = { key: string; label: string; matches: (book: Book) => boolean }
+type Choice = { value: string; label: string; matches: (book: Book) => boolean }
+type Dimension = { param: string; all: string; choices: Choice[] }
 
-function buildFilters(books: Book[]): Filter[] {
+function buildDimensions(books: Book[]): Dimension[] {
   const years = [
     ...new Set(books.map((book) => (book.finished_on ?? book.started_on)?.slice(0, 4))),
   ]
     .filter((year): year is string => Boolean(year))
     .sort((a, b) => b.localeCompare(a))
 
-  return [
-    { key: 'all', label: 'Alle', matches: () => true },
+  const dimensions: Dimension[] = [
     {
-      key: 'read',
-      label: 'Gelesen',
-      matches: (book) => book.status === BookStatus.Read,
+      param: 'status',
+      all: 'Jeder Status',
+      choices: [
+        {
+          value: BookStatus.Read,
+          label: 'Gelesen',
+          matches: (book) => book.status === BookStatus.Read,
+        },
+        {
+          value: BookStatus.Reading,
+          label: 'Am Lesen',
+          matches: (book) => book.status === BookStatus.Reading,
+        },
+        {
+          value: BookStatus.WantToRead,
+          label: 'Wunschliste',
+          matches: (book) => book.status === BookStatus.WantToRead,
+        },
+        {
+          value: BookStatus.Abandoned,
+          label: 'Abgebrochen',
+          matches: (book) => book.status === BookStatus.Abandoned,
+        },
+      ],
     },
     {
-      key: 'reading',
-      label: 'Am Lesen',
-      matches: (book) => book.status === BookStatus.Reading,
+      param: 'year',
+      all: 'Jedes Jahr',
+      choices: years.map((year) => ({
+        value: year,
+        label: year,
+        matches: (book: Book) => (book.finished_on ?? book.started_on ?? '').startsWith(year),
+      })),
     },
     {
-      key: 'want_to_read',
-      label: 'Wunschliste',
-      matches: (book) => book.status === BookStatus.WantToRead,
+      param: 'format',
+      all: 'Jedes Format',
+      choices: FORMAT_ORDER.filter((format) => books.some((book) => book.format === format)).map(
+        (format) => ({
+          value: format,
+          label: FORMAT_LABEL[format],
+          matches: (book: Book) => book.format === format,
+        }),
+      ),
     },
     {
-      key: 'abandoned',
-      label: 'Abgebrochen',
-      matches: (book) => book.status === BookStatus.Abandoned,
-    },
-    ...years.map((year) => ({
-      key: `year-${year}`,
-      label: year,
-      matches: (book: Book) => (book.finished_on ?? book.started_on ?? '').startsWith(year),
-    })),
-    ...FORMAT_ORDER.filter((format) => books.some((book) => book.format === format)).map(
-      (format) => ({
-        key: `format-${format}`,
-        label: FORMAT_LABEL[format],
-        matches: (book: Book) => book.format === format,
-      }),
-    ),
-    ...PROVENANCE_ORDER.filter((source) => books.some((book) => book.provenance === source)).map(
-      (source) => ({
-        key: `provenance-${source}`,
+      param: 'provenance',
+      all: 'Jede Herkunft',
+      choices: PROVENANCE_ORDER.filter((source) =>
+        books.some((book) => book.provenance === source),
+      ).map((source) => ({
+        value: source,
         label: PROVENANCE_LABEL[source],
         matches: (book: Book) => book.provenance === source,
-      }),
-    ),
+      })),
+    },
   ]
+
+  return dimensions.filter((dimension) => dimension.choices.length > 0)
 }
 
 function MetaLine({ book }: { book: Book }) {
@@ -113,24 +133,26 @@ export function Shelf() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
-  const activeFilter = params.get('filter') ?? DEFAULT_FILTER
 
-  const updateParams = (changes: { q?: string; filter?: string }) => {
+  const updateParams = (changes: Record<string, string>) => {
     const next = new URLSearchParams(params)
     for (const [key, value] of Object.entries(changes)) {
-      if (value && value !== DEFAULT_FILTER) next.set(key, value)
+      if (value) next.set(key, value)
       else next.delete(key)
     }
     setParams(next, { replace: true })
   }
 
-  const filters = useMemo(() => buildFilters(books), [books])
+  const dimensions = useMemo(() => buildDimensions(books), [books])
 
   const visible = useMemo(() => {
-    const filter = filters.find((entry) => entry.key === activeFilter) ?? filters[0]
+    const chosen = dimensions.flatMap((dimension) => {
+      const choice = dimension.choices.find((entry) => entry.value === params.get(dimension.param))
+      return choice ? [choice] : []
+    })
     const needle = query.trim().toLowerCase()
     return books.filter((book) => {
-      if (!filter.matches(book)) return false
+      if (!chosen.every((choice) => choice.matches(book))) return false
       if (!needle) return true
       const haystack = [book.title, book.subtitle, book.series, ...book.authors]
         .filter(Boolean)
@@ -138,9 +160,18 @@ export function Shelf() {
         .toLowerCase()
       return haystack.includes(needle)
     })
-  }, [books, filters, activeFilter, query])
+  }, [books, dimensions, params, query])
 
   const groups = useMemo(() => groupByMonth(visible), [visible])
+
+  const narrowed =
+    query.trim() !== '' || dimensions.some((dimension) => params.get(dimension.param))
+
+  const showEverything = () =>
+    updateParams({
+      q: '',
+      ...Object.fromEntries(dimensions.map((dimension) => [dimension.param, ''])),
+    })
 
   return (
     <div className="pb-28">
@@ -148,8 +179,21 @@ export function Shelf() {
         <div className="mx-auto flex max-w-5xl items-baseline gap-3">
           <h1 className="font-serif text-2xl font-semibold tracking-tight">Lesestapel</h1>
           <span className="text-ink-3 ml-auto text-xs font-medium">
-            {loading ? 'lädt…' : `${formatNumber(books.length)} Bücher`}
+            {loading
+              ? 'lädt…'
+              : visible.length === books.length
+                ? `${formatNumber(books.length)} Bücher`
+                : `${formatNumber(visible.length)} von ${formatNumber(books.length)}`}
           </span>
+          {narrowed && (
+            <button
+              type="button"
+              onClick={showEverything}
+              className="text-ink-2 decoration-line shrink-0 text-xs font-medium underline underline-offset-3"
+            >
+              Alles zeigen
+            </button>
+          )}
         </div>
 
         <div className="mx-auto mt-2.5 max-w-5xl">
@@ -182,20 +226,31 @@ export function Shelf() {
           </div>
 
           <div className="no-scrollbar -mx-4 mt-2.5 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
-            {filters.map((filter) => (
-              <button
-                key={filter.key}
-                type="button"
-                onClick={() => updateParams({ filter: filter.key })}
-                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium ${
-                  activeFilter === filter.key
-                    ? 'border-ink bg-ink text-paper'
-                    : 'border-line bg-card text-ink-2'
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
+            {dimensions.map((dimension) => {
+              const value = params.get(dimension.param) ?? ''
+              return (
+                <Select
+                  key={dimension.param}
+                  value={value}
+                  onChange={(event) => updateParams({ [dimension.param]: event.target.value })}
+                  aria-label={dimension.all}
+                  wrapper="shrink-0"
+                  chevron={value ? 'text-paper' : 'text-ink-3'}
+                  className={`rounded-full border py-1.5 pr-8 pl-3.5 text-sm font-medium ${
+                    value ? 'border-ink bg-ink text-paper' : 'border-line bg-card text-ink-2'
+                  }`}
+                >
+                  <option value="" className="bg-card text-ink">
+                    {dimension.all}
+                  </option>
+                  {dimension.choices.map((choice) => (
+                    <option key={choice.value} value={choice.value} className="bg-card text-ink">
+                      {choice.label}
+                    </option>
+                  ))}
+                </Select>
+              )
+            })}
           </div>
         </div>
       </header>
