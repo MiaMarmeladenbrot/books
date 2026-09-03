@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { CoverPicker } from '../components/CoverPicker'
+import { Select } from '../components/Select'
 import { releaseCover, uploadCover } from '../lib/supabase'
 import type { Candidate } from '../lib/lookup'
 import { MAX_UPLOAD_BYTES, fetchCoverJpeg, toCoverJpeg } from '../utils/image'
@@ -81,6 +82,7 @@ function draftForStatus(draft: BookDraft, status: BookStatus): BookDraft {
 
 const fieldClass =
   'border-line bg-card focus:border-accent w-full rounded-xl border px-3.5 py-3 text-base outline-none'
+const selectClass = `${fieldClass} pr-10`
 const labelClass = 'text-ink-2 mb-1.5 block text-xs font-semibold'
 
 export function BookForm() {
@@ -344,12 +346,13 @@ export function BookForm() {
         <div className="mb-4 grid grid-cols-2 gap-3">
           <label className="block">
             <span className={labelClass}>Format</span>
-            <select
+            <Select
               value={draft.format ?? ''}
               onChange={(event) =>
                 patch({ format: textOrNull(event.target.value) as BookFormat | null })
               }
-              className={fieldClass}
+              wrapper="block"
+              className={selectClass}
             >
               <option value="">—</option>
               {FORMAT_ORDER.map((format) => (
@@ -357,7 +360,7 @@ export function BookForm() {
                   {FORMAT_LABEL[format]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="block">
             <span className={labelClass}>Seiten</span>
@@ -373,12 +376,13 @@ export function BookForm() {
         <div className="mb-4 grid grid-cols-2 gap-3">
           <label className="block">
             <span className={labelClass}>Erhalten als</span>
-            <select
+            <Select
               value={draft.provenance ?? ''}
               onChange={(event) =>
                 patch({ provenance: textOrNull(event.target.value) as BookProvenance | null })
               }
-              className={fieldClass}
+              wrapper="block"
+              className={selectClass}
             >
               <option value="">—</option>
               {PROVENANCE_ORDER.map((source) => (
@@ -386,14 +390,15 @@ export function BookForm() {
                   {PROVENANCE_LABEL[source]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="block">
             <span className={labelClass}>Sprache</span>
-            <select
+            <Select
               value={draft.language ?? ''}
               onChange={(event) => patch({ language: textOrNull(event.target.value) })}
-              className={fieldClass}
+              wrapper="block"
+              className={selectClass}
             >
               <option value="">—</option>
               {LANGUAGE_ORDER.map((code) => (
@@ -404,7 +409,7 @@ export function BookForm() {
               {draft.language && !LANGUAGE_ORDER.includes(draft.language) && (
                 <option value={draft.language}>{languageLabel(draft.language)}</option>
               )}
-            </select>
+            </Select>
           </label>
         </div>
 
