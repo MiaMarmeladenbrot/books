@@ -71,7 +71,7 @@ export function BookDetail() {
           </div>
         </div>
 
-        <Row label="Gelesen" value={formatRange(book.started_on, book.finished_on)} />
+        <Row label="Zeitraum" value={formatRange(book.started_on, book.finished_on)} />
         <Row
           label="Dauer"
           value={days === null ? null : days === 0 ? 'an einem Tag' : `${days} Tage`}

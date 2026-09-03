@@ -350,7 +350,7 @@ export function Stats() {
             ) : null}
           </Panel>
 
-          <Panel title={`Meistgelesene Autor:innen ${year === ALL_YEARS ? '' : `${activeYear}`}`}>
+          <Panel title="Meistgelesene Autor:innen">
             <ul>
               {topAuthors.map(([author, count], index) => (
                 <li key={author} className="flex items-center gap-2.5 py-1 text-sm">
@@ -376,7 +376,7 @@ export function Stats() {
             />
           </Panel>
 
-          <Panel title="Woher">
+          <Panel title="Herkunft">
             <Pie
               rows={PROVENANCE_ORDER.map((source, index) => ({
                 label: PROVENANCE_LABEL[source],
