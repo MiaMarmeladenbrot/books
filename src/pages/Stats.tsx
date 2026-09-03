@@ -52,26 +52,6 @@ function Panel({
   )
 }
 
-function Ranking({ rows }: { rows: { label: string; value: number }[] }) {
-  const max = Math.max(...rows.map((row) => row.value), 1)
-  return (
-    <div>
-      {rows.map((row) => (
-        <div key={row.label} className="text-ink-2 flex items-center gap-2.5 py-1.5 text-sm">
-          <span className="w-26 shrink-0">{row.label}</span>
-          <span className="bg-shade h-2 flex-1 overflow-hidden rounded-full">
-            <span
-              className="bg-accent block h-full rounded-full"
-              style={{ width: `${(row.value / max) * 100}%` }}
-            />
-          </span>
-          <b className="text-ink w-8 text-right font-semibold">{formatNumber(row.value)}</b>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 const SLICE_COLORS = [
   { fill: '#b4552f', text: '#fffefb' },
   { fill: '#17709f', text: '#fffefb' },
@@ -85,6 +65,22 @@ const LABEL_RADIUS = 30
 const SMALLEST_LABELLED_SHARE = 0.07
 
 type Slice = { label: string; value: number; color: (typeof SLICE_COLORS)[number] }
+
+const REST_COLOR = SLICE_COLORS[SLICE_COLORS.length - 1]
+
+function countLanguages(books: Book[]) {
+  const counts = new Map<string, number>()
+  for (const book of books)
+    if (book.language) counts.set(book.language, (counts.get(book.language) ?? 0) + 1)
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+}
+
+function languageColors(books: Book[]) {
+  const ordered = countLanguages(books)
+  const named =
+    ordered.length > SLICE_COLORS.length ? ordered.slice(0, SLICE_COLORS.length - 1) : ordered
+  return new Map(named.map(([code], index) => [code, SLICE_COLORS[index]]))
+}
 
 function pointOn(radius: number, turns: number) {
   const angle = turns * 2 * Math.PI - Math.PI / 2
@@ -219,14 +215,19 @@ export function Stats() {
     0,
   )
 
+  const colorOfLanguage = useMemo(() => languageColors(finished), [finished])
+
   const languages = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const book of scope)
-      if (book.language) counts.set(book.language, (counts.get(book.language) ?? 0) + 1)
-    return [...counts.entries()]
-      .map(([code, count]) => ({ label: languageLabel(code), value: count }))
-      .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
-  }, [scope])
+    const slices: Slice[] = []
+    let rest = 0
+    for (const [code, count] of countLanguages(scope)) {
+      const color = colorOfLanguage.get(code)
+      if (color) slices.push({ label: languageLabel(code), value: count, color })
+      else rest += count
+    }
+    if (rest > 0) slices.push({ label: 'Andere', value: rest, color: REST_COLOR })
+    return slices
+  }, [scope, colorOfLanguage])
 
   const topAuthors = useMemo(() => {
     const counts = new Map<string, number>()
@@ -391,7 +392,7 @@ export function Stats() {
 
         {languages.length > 0 && (
           <Panel title="Sprache">
-            <Ranking rows={languages} />
+            <Pie rows={languages} />
           </Panel>
         )}
 
