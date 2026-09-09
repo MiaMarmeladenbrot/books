@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './store/AuthContext'
 import { BooksProvider } from './store/BooksContext'
@@ -13,51 +13,30 @@ import { BookDetail } from './pages/BookDetail'
 import { BookForm } from './pages/BookForm'
 import { BookSearch } from './pages/BookSearch'
 
-const SPLASH_DELAY = 350
-const SPLASH_MINIMUM = 600
+const SPLASH_MINIMUM = 900
 
 function useSplash(pending: boolean) {
-  const [shown, setShown] = useState(false)
-  const shownAt = useRef(0)
+  const [settled, setSettled] = useState(false)
 
   useEffect(() => {
-    if (!pending) return
-    const timer = setTimeout(() => {
-      shownAt.current = Date.now()
-      setShown(true)
-    }, SPLASH_DELAY)
+    const timer = setTimeout(() => setSettled(true), SPLASH_MINIMUM)
     return () => clearTimeout(timer)
-  }, [pending])
+  }, [])
 
-  useEffect(() => {
-    if (pending || !shown) return
-    const rest = SPLASH_MINIMUM - (Date.now() - shownAt.current)
-    if (rest <= 0) {
-      setShown(false)
-      return
-    }
-    const timer = setTimeout(() => setShown(false), rest)
-    return () => clearTimeout(timer)
-  }, [pending, shown])
-
-  return shown
+  return pending || !settled
 }
 
 function SplashGate({ pending, children }: { pending: boolean; children: ReactNode }) {
   const shown = useSplash(pending)
 
-  if (shown) {
-    return (
-      <div className="loader-appear flex min-h-dvh flex-col items-center justify-center gap-7">
-        <StackLoader />
-        <p className="text-ink-3 font-serif text-sm tracking-tight">Lesestapel</p>
-      </div>
-    )
-  }
+  if (!shown) return children
 
-  if (pending) return null
-
-  return children
+  return (
+    <div className="loader-appear flex min-h-dvh flex-col items-center justify-center gap-7">
+      <StackLoader />
+      <p className="text-ink-3 font-serif text-sm tracking-tight">Lesestapel</p>
+    </div>
+  )
 }
 
 function TabLayout() {
