@@ -7,6 +7,7 @@ import { Select } from '../components/Select'
 import { releaseCover, uploadCover } from '../lib/supabase'
 import type { Candidate } from '../lib/lookup'
 import { MAX_UPLOAD_BYTES, fetchCoverJpeg, toCoverJpeg } from '../utils/image'
+import { todayIso } from '../utils/format'
 import {
   BookStatus,
   FORMAT_LABEL,
@@ -70,13 +71,13 @@ const DATES_FOR_STATUS: Record<BookStatus, { started: boolean; finished: boolean
   [BookStatus.Abandoned]: { started: true, finished: true },
 }
 
-function draftForStatus(draft: BookDraft, status: BookStatus): BookDraft {
+function draftForStatus(draft: BookDraft, status: BookStatus, today: string): BookDraft {
   const dates = DATES_FOR_STATUS[status]
   return {
     ...draft,
     status,
-    started_on: dates.started ? draft.started_on : null,
-    finished_on: dates.finished ? draft.finished_on : null,
+    started_on: dates.started ? (draft.started_on ?? today) : null,
+    finished_on: dates.finished ? (draft.finished_on ?? today) : null,
   }
 }
 
@@ -131,6 +132,7 @@ export function BookForm() {
   const [volumeText, setVolumeText] = useState(() =>
     volumeToText(existing?.series_volume ?? prefill?.series_volume ?? null),
   )
+  const [finishedPicked, setFinishedPicked] = useState(() => Boolean(existing?.finished_on))
   const [candidateCover, setCandidateCover] = useState<string | null>(prefill?.cover_url ?? null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -177,7 +179,27 @@ export function BookForm() {
 
   const patch = (changes: Partial<BookDraft>) => setDraft((current) => ({ ...current, ...changes }))
 
-  const pickStatus = (status: BookStatus) => setDraft((current) => draftForStatus(current, status))
+  const pickStatus = (status: BookStatus) => {
+    if (!DATES_FOR_STATUS[status].finished) setFinishedPicked(false)
+    setDraft((current) => draftForStatus(current, status, todayIso()))
+  }
+
+  const pickStarted = (value: string) => {
+    const started = textOrNull(value)
+    setDraft((current) => {
+      const mirrors = DATES_FOR_STATUS[current.status].finished && !finishedPicked
+      return {
+        ...current,
+        started_on: started,
+        finished_on: mirrors ? started : current.finished_on,
+      }
+    })
+  }
+
+  const pickFinished = (value: string) => {
+    setFinishedPicked(true)
+    patch({ finished_on: textOrNull(value) })
+  }
 
   const dates = DATES_FOR_STATUS[draft.status]
 
@@ -325,7 +347,7 @@ export function BookForm() {
               <input
                 type="date"
                 value={draft.started_on ?? ''}
-                onChange={(event) => patch({ started_on: textOrNull(event.target.value) })}
+                onChange={(event) => pickStarted(event.target.value)}
                 className={fieldClass}
               />
             </label>
@@ -335,7 +357,7 @@ export function BookForm() {
                 <input
                   type="date"
                   value={draft.finished_on ?? ''}
-                  onChange={(event) => patch({ finished_on: textOrNull(event.target.value) })}
+                  onChange={(event) => pickFinished(event.target.value)}
                   className={fieldClass}
                 />
               </label>
