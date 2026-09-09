@@ -1,3 +1,5 @@
+import { BookFormat } from '../types'
+
 const DNB_ENDPOINT = 'https://services.dnb.de/sru/dnb'
 const OPENLIBRARY_ISBN = 'https://openlibrary.org/api/books'
 const OPENLIBRARY_SEARCH = 'https://openlibrary.org/search.json'
@@ -5,13 +7,16 @@ const OPENLIBRARY_COVER = 'https://covers.openlibrary.org/b'
 const MARC_NAMESPACE = 'http://www.loc.gov/MARC21/slim'
 
 const FETCH_LIMIT = 20
+const EXACT_LIMIT = 10
 const REQUEST_TIMEOUT = 8000
+const OPENLIBRARY_TIMEOUT = 4000
+const LATE_ANSWER_TIMEOUT = 10000
 
 class CatalogueUnavailable extends Error {}
 
-async function fetchCatalogue(url: string) {
+async function fetchCatalogue(url: string, timeout = REQUEST_TIMEOUT) {
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT)
+  const timer = setTimeout(() => controller.abort(), timeout)
   try {
     const response = await fetch(url, { signal: controller.signal })
     if (!response.ok) throw new CatalogueUnavailable(String(response.status))
@@ -82,6 +87,7 @@ export interface Candidate {
   page_count: number | null
   publisher: string | null
   language: string | null
+  format: BookFormat | null
   cover_url: string | null
   source: 'DNB' | 'OpenLibrary'
 }
@@ -205,7 +211,50 @@ function subfield(field: Element, code: string) {
   const match = [...field.getElementsByTagNameNS('*', 'subfield')].find(
     (entry) => entry.getAttribute('code') === code
   )
-  return (match?.textContent ?? '').trim()
+  return (match?.textContent ?? '').trim().normalize('NFC')
+}
+
+const PRODUCT_FORM = '(Produktform)'
+
+const BINDING_WORDS: [string, BookFormat][] = [
+  ['hardback', BookFormat.Hardcover],
+  ['festeinband', BookFormat.Hardcover],
+  ['gebunden', BookFormat.Hardcover],
+  ['leinen', BookFormat.Hardcover],
+  ['paperback', BookFormat.Paperback],
+  ['softback', BookFormat.Paperback],
+  ['broschur', BookFormat.Paperback],
+  ['broschiert', BookFormat.Paperback],
+  ['kartoniert', BookFormat.Paperback],
+  ['taschenbuch', BookFormat.Paperback],
+  ['electronic book', BookFormat.Ebook],
+  ['epub', BookFormat.Ebook],
+  ['audio', BookFormat.Audiobook],
+]
+
+function formatFromRecord(record: Element) {
+  const spoken = fields(record, '336').some((field) =>
+    subfield(field, 'a').toLowerCase().includes('gesprochen')
+  )
+  if (spoken) return BookFormat.Audiobook
+
+  const carriers = fields(record, '338').map((field) => subfield(field, 'b'))
+  if (carriers.some((code) => code.startsWith('s'))) return BookFormat.Audiobook
+  if (carriers.includes('cr')) return BookFormat.Ebook
+
+  const stated = [
+    ...fields(record, '653')
+      .map((field) => subfield(field, 'a'))
+      .filter((value) => value.startsWith(PRODUCT_FORM))
+      .map((value) => value.slice(PRODUCT_FORM.length)),
+    ...fields(record, '020').map((field) => subfield(field, 'c')),
+  ].map((value) => value.toLowerCase())
+
+  for (const value of stated) {
+    const match = BINDING_WORDS.find(([word]) => value.includes(word))
+    if (match) return match[1]
+  }
+  return null
 }
 
 function isAdditionalAuthor(field: Element) {
@@ -281,6 +330,7 @@ function parseDnbRecord(record: Element): Candidate | null {
     page_count: pages,
     publisher,
     language: language ?? null,
+    format: formatFromRecord(record),
     cover_url: coverForIsbn(isbn),
     source: 'DNB',
   }
@@ -319,7 +369,7 @@ async function searchOpenLibraryIsbn(isbn: string): Promise<Candidate[]> {
     format: 'json',
     jscmd: 'data',
   })
-  const response = await fetchCatalogue(`${OPENLIBRARY_ISBN}?${parameters}`)
+  const response = await fetchCatalogue(`${OPENLIBRARY_ISBN}?${parameters}`, OPENLIBRARY_TIMEOUT)
   const record = (await response.json())[`ISBN:${isbn}`]
   if (!record?.title) return []
 
@@ -335,6 +385,7 @@ async function searchOpenLibraryIsbn(isbn: string): Promise<Candidate[]> {
       page_count: record.number_of_pages ?? null,
       publisher: record.publishers?.[0]?.name ?? null,
       language: null,
+      format: null,
       cover_url: coverForIsbn(isbn),
       source: 'OpenLibrary',
     },
@@ -349,7 +400,7 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
       'cover_i,language',
     limit: String(limit),
   })
-  const response = await fetchCatalogue(`${OPENLIBRARY_SEARCH}?${parameters}`)
+  const response = await fetchCatalogue(`${OPENLIBRARY_SEARCH}?${parameters}`, LATE_ANSWER_TIMEOUT)
   const documents: Record<string, unknown>[] = (await response.json()).docs ?? []
   return documents
     .map((document) => {
@@ -371,6 +422,7 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
         page_count: (document.number_of_pages_median as number) ?? null,
         publisher: ((document.publisher as string[]) ?? [])[0] ?? null,
         language,
+        format: null,
         cover_url: coverForIsbn(isbn, coverId),
         source: 'OpenLibrary' as const,
       }
@@ -381,6 +433,7 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
 
 function normalizeText(text: string) {
   return text
+    .normalize('NFC')
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim()
@@ -392,6 +445,7 @@ const TITLE_WORDS = 30
 const AUTHOR_MATCH = 50
 const HAS_EXTENT = 6
 const HAS_ISBN = 4
+const HAS_FORMAT = 3
 
 function scoreCandidate(candidate: Candidate, query: string, words: string[]) {
   const title = normalizeText(candidate.title)
@@ -408,6 +462,7 @@ function scoreCandidate(candidate: Candidate, query: string, words: string[]) {
 
   if (candidate.page_count) points += HAS_EXTENT
   if (candidate.isbn) points += HAS_ISBN
+  if (candidate.format) points += HAS_FORMAT
 
   return points
 }
@@ -437,20 +492,49 @@ function dnbQueries(input: string) {
 
 function dedupe(candidates: Candidate[]) {
   const seen = new Set<string>()
+  const named = new Set<string>()
   return candidates.filter((candidate) => {
-    const key = [
-      candidate.title.toLowerCase(),
-      candidate.authors.join(',').toLowerCase(),
+    const book = [
+      normalizeText(candidate.title),
+      normalizeText(candidate.authors.join(' ')),
       candidate.published_year ?? '',
     ].join('|')
+    if (!candidate.format && named.has(book)) return false
+
+    const key = `${book}|${candidate.format ?? ''}`
     if (seen.has(key)) return false
     seen.add(key)
+    named.add(book)
     return true
   })
 }
 
-export async function lookupBooks(input: string) {
+export interface Lookup {
+  query: 'isbn' | 'text'
+  results: Candidate[]
+  silent: number
+  moreAvailable: boolean
+}
+
+const CACHE_LIMIT = 30
+const answered = new Map<string, Lookup>()
+
+function remember(key: string, lookup: Lookup) {
+  if (lookup.results.length === 0 || lookup.silent > 0) return lookup
+  answered.set(key, lookup)
+  const oldest = answered.keys().next()
+  if (answered.size > CACHE_LIMIT && !oldest.done) answered.delete(oldest.value)
+  return lookup
+}
+
+export async function lookupBooks(
+  input: string,
+  onFirstAnswer?: (lookup: Lookup) => void
+): Promise<Lookup> {
   const trimmed = input.trim()
+  const key = trimmed.toLowerCase()
+  const known = answered.get(key)
+  if (known) return known
 
   if (looksLikeIsbn(trimmed)) {
     const isbn = trimmed.replace(/[^0-9Xx]/g, '')
@@ -464,33 +548,44 @@ export async function lookupBooks(input: string) {
         const found = await search()
         if (found.length > 0) {
           const results = found.map((candidate) => ({ ...candidate, isbn }))
-          return { query: 'isbn' as const, results, silent, moreAvailable: false }
+          return remember(key, { query: 'isbn', results, silent, moreAvailable: false })
         }
       } catch {
         silent += 1
       }
     }
-    return { query: 'isbn' as const, results: [], silent, moreAvailable: false }
+    return { query: 'isbn', results: [], silent, moreAvailable: false }
   }
 
   const { exact, broad } = dnbQueries(trimmed)
   const empty = { candidates: [], total: 0 }
-  const outcomes = await Promise.allSettled([
-    searchDnb(exact, FETCH_LIMIT),
+  const slowly = searchOpenLibraryText(trimmed, FETCH_LIMIT).catch(() => null)
+  const promptly = await Promise.allSettled([
+    searchDnb(exact, EXACT_LIMIT),
     searchDnb(broad, FETCH_LIMIT),
-    searchOpenLibraryText(trimmed, FETCH_LIMIT),
   ])
-  const byTitle = outcomes[0].status === 'fulfilled' ? outcomes[0].value : empty
-  const byWords = outcomes[1].status === 'fulfilled' ? outcomes[1].value : empty
-  const openLibrary = outcomes[2].status === 'fulfilled' ? outcomes[2].value : []
 
-  const found = [...byTitle.candidates, ...byWords.candidates, ...openLibrary]
-  const fetched = byTitle.candidates.length + byWords.candidates.length
+  const byTitle = promptly[0].status === 'fulfilled' ? promptly[0].value : empty
+  const byWords = promptly[1].status === 'fulfilled' ? promptly[1].value : empty
+  const fromDnb = [...byTitle.candidates, ...byWords.candidates]
+  const moreAvailable = byTitle.total + byWords.total > fromDnb.length
+  const silent = promptly.filter((outcome) => outcome.status === 'rejected').length
 
-  return {
-    query: 'text' as const,
-    results: dedupe(rankCandidates(found, trimmed)),
-    silent: outcomes.filter((outcome) => outcome.status === 'rejected').length,
-    moreAvailable: byTitle.total + byWords.total > fetched,
+  if (onFirstAnswer && fromDnb.length > 0) {
+    onFirstAnswer({
+      query: 'text',
+      results: dedupe(rankCandidates(fromDnb, trimmed)),
+      silent,
+      moreAvailable,
+    })
   }
+
+  const fromOpenLibrary = await slowly
+
+  return remember(key, {
+    query: 'text',
+    results: dedupe(rankCandidates([...fromDnb, ...(fromOpenLibrary ?? [])], trimmed)),
+    silent: silent + (fromOpenLibrary === null ? 1 : 0),
+    moreAvailable,
+  })
 }

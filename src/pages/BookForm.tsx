@@ -124,6 +124,7 @@ export function BookForm() {
       published_year: prefill.published_year,
       page_count: prefill.page_count,
       language: prefill.language,
+      format: prefill.format,
       source_meta: { lookup: prefill.source, publisher: prefill.publisher },
     }
   })

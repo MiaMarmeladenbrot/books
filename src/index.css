@@ -125,10 +125,30 @@
   animation: loader-appear 0.25s ease both;
 }
 
+@keyframes catalogue-sweep {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(310%);
+  }
+}
+
+.catalogue-sweep {
+  will-change: transform;
+  animation: catalogue-sweep 1.15s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .falling-book {
     opacity: 1;
     transform: translateY(calc(var(--step) * var(--i))) rotate(var(--tilt));
+    animation: none;
+  }
+
+  .catalogue-sweep {
+    width: 100%;
+    opacity: 0.45;
     animation: none;
   }
 }

@@ -1,9 +1,10 @@
-import { lazy, Suspense, useState, type SyntheticEvent } from 'react'
+import { lazy, Suspense, useRef, useState, type SyntheticEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ScanBarcode, Search, X } from 'lucide-react'
 import { Cover } from '../components/Cover'
-import { lookupBooks, looksLikeIsbn, type Candidate } from '../lib/lookup'
+import { lookupBooks, type Candidate } from '../lib/lookup'
 import { formatNumber } from '../utils/format'
+import { FORMAT_LABEL } from '../types'
 
 const BarcodeScanner = lazy(() =>
   import('../components/BarcodeScanner').then((module) => ({ default: module.BarcodeScanner }))
@@ -15,6 +16,7 @@ const PAGE_SIZE = 8
 
 function describe(candidate: Candidate) {
   return [
+    candidate.format ? FORMAT_LABEL[candidate.format] : null,
     candidate.publisher,
     candidate.published_year,
     candidate.page_count ? `${formatNumber(candidate.page_count)} Seiten` : null,
@@ -31,7 +33,9 @@ export function BookSearch() {
   const [results, setResults] = useState<Candidate[]>([])
   const [visible, setVisible] = useState(PAGE_SIZE)
   const [moreAvailable, setMoreAvailable] = useState(false)
+  const [waitingOnMore, setWaitingOnMore] = useState(false)
   const [error, setError] = useState('')
+  const attempt = useRef(0)
   const [scanning, setScanning] = useState(
     Boolean((location.state as { scan?: boolean } | null)?.scan)
   )
@@ -44,11 +48,28 @@ export function BookSearch() {
     const trimmed = value.trim()
     if (trimmed.length < 3) return
 
+    const run = attempt.current + 1
+    attempt.current = run
+    let shown = false
+
     setError('')
     setPhase('searching')
     setVisible(PAGE_SIZE)
     try {
-      const { results: found, silent, moreAvailable: more } = await lookupBooks(trimmed)
+      const {
+        results: found,
+        silent,
+        moreAvailable: more,
+      } = await lookupBooks(trimmed, (first) => {
+        if (run !== attempt.current || first.results.length === 0) return
+        shown = true
+        setResults(first.results)
+        setMoreAvailable(first.moreAvailable)
+        setPhase('results')
+        setWaitingOnMore(true)
+      })
+      if (run !== attempt.current) return
+      setWaitingOnMore(false)
       setMoreAvailable(more)
       if (found.length === 0) {
         if (silent > 0) {
@@ -59,13 +80,15 @@ export function BookSearch() {
         setPhase('empty')
         return
       }
-      if (found.length === 1) {
+      if (found.length === 1 && !shown) {
         openForm(found[0], undefined, trimmed)
         return
       }
       setResults(found)
       setPhase('results')
     } catch (caught) {
+      if (run !== attempt.current) return
+      setWaitingOnMore(false)
       setError(caught instanceof Error ? caught.message : 'Suche fehlgeschlagen.')
       setPhase('idle')
     }
@@ -77,9 +100,11 @@ export function BookSearch() {
   }
 
   const clearTerm = () => {
+    attempt.current += 1
     setTerm('')
     setResults([])
     setMoreAvailable(false)
+    setWaitingOnMore(false)
     setError('')
     setPhase('idle')
   }
@@ -98,6 +123,8 @@ export function BookSearch() {
     )
   }
 
+  const asking = phase === 'searching' || waitingOnMore
+
   return (
     <div className="pb-16">
       <header className="border-line sticky top-0 z-10 flex items-center gap-3 border-b bg-paper/95 px-4 py-3 backdrop-blur">
@@ -105,6 +132,14 @@ export function BookSearch() {
           <X size={22} className="text-ink-3" />
         </button>
         <h1 className="font-serif text-xl font-semibold tracking-tight">Buch hinzufügen</h1>
+        {asking && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 -bottom-px h-0.5 overflow-hidden"
+          >
+            <span className="catalogue-sweep bg-accent absolute inset-y-0 w-1/3 rounded-full" />
+          </span>
+        )}
       </header>
 
       <main className="mx-auto max-w-xl px-4 pt-5">
@@ -138,11 +173,6 @@ export function BookSearch() {
               <ScanBarcode size={20} />
             </button>
           </div>
-          <p className="text-ink-3 mt-2 text-xs leading-relaxed">
-            {looksLikeIsbn(term)
-              ? 'Wird als ISBN exakt gesucht.'
-              : 'Ziffern werden als ISBN gesucht, alles andere als Titel.'}
-          </p>
           <button
             type="submit"
             disabled={term.trim().length < 3 || phase === 'searching'}
@@ -220,7 +250,7 @@ export function BookSearch() {
           </button>
         )}
 
-        {phase === 'results' && visible >= results.length && moreAvailable && (
+        {phase === 'results' && !waitingOnMore && visible >= results.length && moreAvailable && (
           <p className="text-ink-3 mt-5 text-center text-xs leading-relaxed">
             Der Katalog hat noch mehr Ausgaben. Suche verfeinern, etwa mit dem Autorennamen.
           </p>
