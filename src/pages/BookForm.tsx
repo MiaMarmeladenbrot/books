@@ -95,9 +95,10 @@ export function BookForm() {
   const isEdit = Boolean(id)
   const location = useLocation()
   const cameFromDetail = location.key !== 'default'
-  const { prefill, fallbackTitle } = (location.state ?? {}) as {
+  const { prefill, fallbackTitle, term } = (location.state ?? {}) as {
     prefill?: Candidate
     fallbackTitle?: string
+    term?: string
   }
 
   const [draft, setDraft] = useState<BookDraft>(() => {
@@ -179,6 +180,11 @@ export function BookForm() {
 
   const patch = (changes: Partial<BookDraft>) => setDraft((current) => ({ ...current, ...changes }))
 
+  const close = () => {
+    if (existing) navigate(-1)
+    else navigate('/buch/suchen', { replace: true, state: { term } })
+  }
+
   const pickStatus = (status: BookStatus) => {
     if (!DATES_FOR_STATUS[status].finished) setFinishedPicked(false)
     setDraft((current) => draftForStatus(current, status, todayIso()))
@@ -257,7 +263,7 @@ export function BookForm() {
   return (
     <form onSubmit={handleSubmit} className="pb-16">
       <header className="border-line sticky top-0 z-10 flex items-center gap-3 border-b bg-paper/95 px-4 py-3 backdrop-blur">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Abbrechen">
+        <button type="button" onClick={close} aria-label="Abbrechen">
           <X size={22} className="text-ink-3" />
         </button>
         <h1 className="font-serif text-xl font-semibold tracking-tight">

@@ -26,7 +26,7 @@ function describe(candidate: Candidate) {
 export function BookSearch() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [term, setTerm] = useState('')
+  const [term, setTerm] = useState((location.state as { term?: string } | null)?.term ?? '')
   const [phase, setPhase] = useState<Phase>('idle')
   const [results, setResults] = useState<Candidate[]>([])
   const [visible, setVisible] = useState(PAGE_SIZE)
@@ -36,8 +36,8 @@ export function BookSearch() {
     Boolean((location.state as { scan?: boolean } | null)?.scan)
   )
 
-  const openForm = (prefill?: Candidate, fallbackTitle?: string) => {
-    navigate('/buch/neu', { state: { prefill, fallbackTitle }, replace: true })
+  const openForm = (prefill?: Candidate, fallbackTitle?: string, searched = term.trim()) => {
+    navigate('/buch/neu', { state: { prefill, fallbackTitle, term: searched }, replace: true })
   }
 
   const search = async (value: string) => {
@@ -60,7 +60,7 @@ export function BookSearch() {
         return
       }
       if (found.length === 1) {
-        openForm(found[0])
+        openForm(found[0], undefined, trimmed)
         return
       }
       setResults(found)
