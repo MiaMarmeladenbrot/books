@@ -70,38 +70,29 @@ function TabLayout() {
 }
 
 function Shell() {
-  const { loading } = useBooks()
-
   return (
-    <SplashGate pending={loading}>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<TabLayout />}>
-            <Route index element={<Shelf />} />
-            <Route path="statistik" element={<Stats />} />
-          </Route>
-          <Route path="buch/suchen" element={<BookSearch />} />
-          <Route path="buch/neu" element={<BookForm />} />
-          <Route path="buch/:id" element={<BookDetail />} />
-          <Route path="buch/:id/bearbeiten" element={<BookForm />} />
-        </Routes>
-      </BrowserRouter>
-    </SplashGate>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<TabLayout />}>
+          <Route index element={<Shelf />} />
+          <Route path="statistik" element={<Stats />} />
+        </Route>
+        <Route path="buch/suchen" element={<BookSearch />} />
+        <Route path="buch/neu" element={<BookForm />} />
+        <Route path="buch/:id" element={<BookDetail />} />
+        <Route path="buch/:id/bearbeiten" element={<BookForm />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
 function AppRoutes() {
-  const { user, loading } = useAuth()
+  const { user, loading: signingIn } = useAuth()
+  const { loading: fetchingBooks } = useBooks()
 
   return (
-    <SplashGate pending={loading}>
-      {user ? (
-        <BooksProvider>
-          <Shell />
-        </BooksProvider>
-      ) : (
-        <Login />
-      )}
+    <SplashGate pending={signingIn || (Boolean(user) && fetchingBooks)}>
+      {user ? <Shell /> : <Login />}
     </SplashGate>
   )
 }
@@ -109,7 +100,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <BooksProvider>
+        <AppRoutes />
+      </BooksProvider>
     </AuthProvider>
   )
 }

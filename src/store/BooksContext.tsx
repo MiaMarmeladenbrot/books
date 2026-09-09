@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { releaseCover, supabase } from '../lib/supabase'
 import type { Book, BookDraft } from '../types'
 import { BooksContext } from './booksContextValue'
+import { useAuth } from './useAuth'
 
 const COLUMNS = '*'
 
@@ -20,6 +21,7 @@ export function BooksProvider({ children }: { children: ReactNode }) {
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const userId = useAuth().user?.id ?? null
 
   const reload = useCallback(async () => {
     const { data, error: queryError } = await supabase.from('books').select(COLUMNS)
@@ -32,9 +34,11 @@ export function BooksProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    // eslint-disable-next-line react/set-state-in-effect -- reload only sets state after awaiting
+    if (!userId) return
+    // eslint-disable-next-line react/set-state-in-effect -- a fresh account waits behind the splash instead of showing the last one's books
+    setLoading(true)
     void reload()
-  }, [reload])
+  }, [reload, userId])
 
   const addBook = useCallback(async (draft: BookDraft) => {
     const { data, error: insertError } = await supabase
