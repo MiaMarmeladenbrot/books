@@ -2,6 +2,7 @@ export const config = { runtime: 'edge' }
 
 const MVB_COVER = 'https://portal.dnb.de/opac/mvb/cover'
 const OPENLIBRARY_COVER = 'https://covers.openlibrary.org/b/isbn'
+const OPENLIBRARY_WORK_COVER = 'https://covers.openlibrary.org/b/id'
 const USER_AGENT = 'lesestapel/1.0 (private library app)'
 
 const MIN_BYTES = 5000
@@ -60,14 +61,17 @@ async function tryFetch(url: string) {
 }
 
 export default async function handler(request: Request) {
-  const isbn = (new URL(request.url).searchParams.get('isbn') ?? '').replace(/[^0-9Xx]/g, '')
+  const parameters = new URL(request.url).searchParams
+  const isbn = (parameters.get('isbn') ?? '').replace(/[^0-9Xx]/g, '')
   if (isbn.length !== 10 && isbn.length !== 13) {
     return new Response('isbn fehlt oder ist ungültig', { status: 400 })
   }
+  const cover = (parameters.get('cover') ?? '').replace(/\D/g, '')
 
   const bytes =
     (await tryFetch(`${MVB_COVER}?isbn=${isbn}`)) ??
-    (await tryFetch(`${OPENLIBRARY_COVER}/${isbn}-L.jpg?default=false`))
+    (await tryFetch(`${OPENLIBRARY_COVER}/${isbn}-L.jpg?default=false`)) ??
+    (cover ? await tryFetch(`${OPENLIBRARY_WORK_COVER}/${cover}-L.jpg`) : null)
 
   if (!bytes) return new Response('kein Cover gefunden', { status: 404 })
 

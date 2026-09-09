@@ -175,8 +175,24 @@ function firstNumber(value: string, pattern: RegExp) {
   return match ? Number(match[1]) : null
 }
 
-function coverForIsbn(isbn: string | null) {
-  return isbn ? `/api/cover?isbn=${isbn}` : null
+function coverForIsbn(isbn: string | null, fallback: number | null = null) {
+  if (!isbn) return fallback ? `${OPENLIBRARY_COVER}/id/${fallback}-L.jpg` : null
+  return fallback ? `/api/cover?isbn=${isbn}&cover=${fallback}` : `/api/cover?isbn=${isbn}`
+}
+
+const ISBN_GROUPS: Record<string, string[]> = {
+  de: ['9783'],
+  en: ['9780', '9781'],
+}
+
+export function pickIsbn(candidates: string[], language: string | null) {
+  const thirteen = candidates.filter((value) => value.length === 13)
+  const groups = language ? ISBN_GROUPS[language] : undefined
+  const preferred = groups?.find((group) => thirteen.some((value) => value.startsWith(group)))
+  const wanted = preferred
+    ? thirteen.find((value) => value.startsWith(preferred))
+    : thirteen.find(Boolean)
+  return wanted ?? null
 }
 
 function fields(record: Element, tag: string) {
@@ -338,22 +354,24 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
   return documents
     .map((document) => {
       const isbnList = (document.isbn as string[]) ?? []
-      const coverId = document.cover_i as number | undefined
+      const coverId = (document.cover_i as number | undefined) ?? null
+      const language =
+        ((document.language as string[]) ?? [])
+          .map(languageFromMarc)
+          .find((code) => code !== null) ?? null
+      const isbn = pickIsbn(isbnList, language)
       return {
         title: String(document.title ?? '').trim(),
         subtitle: document.subtitle ? String(document.subtitle).trim() : null,
         authors: ((document.author_name as string[]) ?? []).slice(0, 3),
         series: null,
         series_volume: null,
-        isbn: isbnList.find((value) => value.length === 13) ?? null,
+        isbn,
         published_year: (document.first_publish_year as number) ?? null,
         page_count: (document.number_of_pages_median as number) ?? null,
         publisher: ((document.publisher as string[]) ?? [])[0] ?? null,
-        language:
-          ((document.language as string[]) ?? [])
-            .map(languageFromMarc)
-            .find((code) => code !== null) ?? null,
-        cover_url: coverId ? `${OPENLIBRARY_COVER}/id/${coverId}-L.jpg` : null,
+        language,
+        cover_url: coverForIsbn(isbn, coverId),
         source: 'OpenLibrary' as const,
       }
     })
@@ -361,19 +379,70 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
     .filter((candidate) => !looksLikeStudyGuide(candidate.title))
 }
 
-function interleave(first: Candidate[], second: Candidate[]) {
-  const mixed: Candidate[] = []
-  for (let index = 0; index < Math.max(first.length, second.length); index += 1) {
-    if (first[index]) mixed.push(first[index])
-    if (second[index]) mixed.push(second[index])
+function normalizeText(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+}
+
+const TITLE_EXACT = 100
+const TITLE_EDGE = 60
+const TITLE_WORDS = 30
+const AUTHOR_MATCH = 50
+const HAS_EXTENT = 6
+const HAS_ISBN = 4
+
+function scoreCandidate(candidate: Candidate, query: string, words: string[]) {
+  const title = normalizeText(candidate.title)
+  let points = 0
+
+  if (title === query) points += TITLE_EXACT
+  else if (title.startsWith(query) || query.startsWith(title)) points += TITLE_EDGE
+  else if (words.every((word) => title.includes(word))) points += TITLE_WORDS
+
+  const authors = normalizeText(candidate.authors.join(' '))
+  if (authors && words.some((word) => word.length > 2 && authors.includes(word))) {
+    points += AUTHOR_MATCH
   }
-  return mixed
+
+  if (candidate.page_count) points += HAS_EXTENT
+  if (candidate.isbn) points += HAS_ISBN
+
+  return points
+}
+
+export function rankCandidates(candidates: Candidate[], input: string) {
+  const query = normalizeText(input)
+  const words = query.split(' ').filter(Boolean)
+  return candidates
+    .map((candidate) => ({ candidate, points: scoreCandidate(candidate, query, words) }))
+    .sort((left, right) => right.points - left.points)
+    .map((entry) => entry.candidate)
+}
+
+const WORDS_SUGGEST_A_NAME = 3
+
+function dnbQueries(input: string) {
+  const phrase = input.replace(/"/g, '').trim()
+  const words = normalizeText(input)
+    .split(' ')
+    .filter((word) => word.length > 1)
+  const broad =
+    words.length >= WORDS_SUGGEST_A_NAME
+      ? words.map((word) => `WOE=${word}`).join(' and ')
+      : `tit="${phrase}"`
+  return { exact: `tst="${phrase}"`, broad }
 }
 
 function dedupe(candidates: Candidate[]) {
   const seen = new Set<string>()
   return candidates.filter((candidate) => {
-    const key = `${candidate.title.toLowerCase()}|${candidate.published_year ?? ''}`
+    const key = [
+      candidate.title.toLowerCase(),
+      candidate.authors.join(',').toLowerCase(),
+      candidate.published_year ?? '',
+    ].join('|')
     if (seen.has(key)) return false
     seen.add(key)
     return true
@@ -404,17 +473,24 @@ export async function lookupBooks(input: string) {
     return { query: 'isbn' as const, results: [], silent, moreAvailable: false }
   }
 
+  const { exact, broad } = dnbQueries(trimmed)
+  const empty = { candidates: [], total: 0 }
   const outcomes = await Promise.allSettled([
-    searchDnb(`tit="${trimmed.replace(/"/g, '')}"`, FETCH_LIMIT),
+    searchDnb(exact, FETCH_LIMIT),
+    searchDnb(broad, FETCH_LIMIT),
     searchOpenLibraryText(trimmed, FETCH_LIMIT),
   ])
-  const dnb = outcomes[0].status === 'fulfilled' ? outcomes[0].value : { candidates: [], total: 0 }
-  const openLibrary = outcomes[1].status === 'fulfilled' ? outcomes[1].value : []
+  const byTitle = outcomes[0].status === 'fulfilled' ? outcomes[0].value : empty
+  const byWords = outcomes[1].status === 'fulfilled' ? outcomes[1].value : empty
+  const openLibrary = outcomes[2].status === 'fulfilled' ? outcomes[2].value : []
+
+  const found = [...byTitle.candidates, ...byWords.candidates, ...openLibrary]
+  const fetched = byTitle.candidates.length + byWords.candidates.length
 
   return {
     query: 'text' as const,
-    results: dedupe(interleave(dnb.candidates, openLibrary)),
+    results: dedupe(rankCandidates(found, trimmed)),
     silent: outcomes.filter((outcome) => outcome.status === 'rejected').length,
-    moreAvailable: dnb.total > dnb.candidates.length,
+    moreAvailable: byTitle.total + byWords.total > fetched,
   }
 }
