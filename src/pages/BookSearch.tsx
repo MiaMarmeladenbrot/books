@@ -36,9 +36,7 @@ export function BookSearch() {
   const [waitingOnMore, setWaitingOnMore] = useState(false)
   const [error, setError] = useState('')
   const attempt = useRef(0)
-  const [scanning, setScanning] = useState(
-    Boolean((location.state as { scan?: boolean } | null)?.scan)
-  )
+  const [scanning, setScanning] = useState(false)
 
   const openForm = (prefill?: Candidate, fallbackTitle?: string, searched = term.trim()) => {
     navigate('/buch/neu', { state: { prefill, fallbackTitle, term: searched }, replace: true })
