@@ -138,13 +138,14 @@ export function Shelf() {
       const choice = dimension.choices.find((entry) => entry.value === params.get(dimension.param))
       return choice ? [choice] : []
     })
-    const needle = query.trim().toLowerCase()
+    const needle = query.trim().normalize('NFC').toLowerCase()
     return books.filter((book) => {
       if (!chosen.every((choice) => choice.matches(book))) return false
       if (!needle) return true
       const haystack = [book.title, book.subtitle, book.series, ...book.authors]
         .filter(Boolean)
         .join(' ')
+        .normalize('NFC')
         .toLowerCase()
       return haystack.includes(needle)
     })
