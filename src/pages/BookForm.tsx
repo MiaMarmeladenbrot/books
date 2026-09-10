@@ -94,11 +94,10 @@ export function BookForm() {
   const existing = useMemo(() => books.find((book) => book.id === id), [books, id])
   const isEdit = Boolean(id)
   const location = useLocation()
-  const cameFromDetail = location.key !== 'default'
-  const { prefill, fallbackTitle, term } = (location.state ?? {}) as {
+  const cameFromApp = location.key !== 'default'
+  const { prefill, fallbackTitle } = (location.state ?? {}) as {
     prefill?: Candidate
     fallbackTitle?: string
-    term?: string
   }
 
   const [draft, setDraft] = useState<BookDraft>(() => {
@@ -182,8 +181,8 @@ export function BookForm() {
   const patch = (changes: Partial<BookDraft>) => setDraft((current) => ({ ...current, ...changes }))
 
   const close = () => {
-    if (existing) navigate(-1)
-    else navigate('/buch/suchen', { replace: true, state: { term } })
+    if (cameFromApp) navigate(-1)
+    else navigate(existing ? `/buch/${existing.id}` : '/buch/suchen', { replace: true })
   }
 
   const pickStatus = (status: BookStatus) => {
@@ -253,7 +252,7 @@ export function BookForm() {
         await releaseCover(previousCover)
       }
 
-      if (existing && cameFromDetail) navigate(-1)
+      if (existing && cameFromApp) navigate(-1)
       else navigate(`/buch/${saved.id}`, { replace: true })
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Speichern fehlgeschlagen.')

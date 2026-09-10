@@ -1,5 +1,5 @@
 import { lazy, Suspense, useRef, useState, type SyntheticEvent } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ScanBarcode, Search, X } from 'lucide-react'
 import { Cover } from '../components/Cover'
 import { lookupBooks, type Candidate } from '../lib/lookup'
@@ -13,6 +13,8 @@ const BarcodeScanner = lazy(() =>
 type Phase = 'idle' | 'searching' | 'results' | 'empty'
 
 const PAGE_SIZE = 8
+
+let answered: { term: string; results: Candidate[]; moreAvailable: boolean } | null = null
 
 function describe(candidate: Candidate) {
   return [
@@ -28,18 +30,21 @@ function describe(candidate: Candidate) {
 export function BookSearch() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [term, setTerm] = useState((location.state as { term?: string } | null)?.term ?? '')
-  const [phase, setPhase] = useState<Phase>('idle')
-  const [results, setResults] = useState<Candidate[]>([])
+  const [params, setParams] = useSearchParams()
+  const asked = params.get('q') ?? ''
+  const remembered = answered?.term === asked ? answered : null
+  const [term, setTerm] = useState(asked)
+  const [phase, setPhase] = useState<Phase>(remembered ? 'results' : 'idle')
+  const [results, setResults] = useState<Candidate[]>(remembered?.results ?? [])
   const [visible, setVisible] = useState(PAGE_SIZE)
-  const [moreAvailable, setMoreAvailable] = useState(false)
+  const [moreAvailable, setMoreAvailable] = useState(remembered?.moreAvailable ?? false)
   const [waitingOnMore, setWaitingOnMore] = useState(false)
   const [error, setError] = useState('')
   const attempt = useRef(0)
   const [scanning, setScanning] = useState(false)
 
-  const openForm = (prefill?: Candidate, fallbackTitle?: string, searched = term.trim()) => {
-    navigate('/buch/neu', { state: { prefill, fallbackTitle, term: searched }, replace: true })
+  const openForm = (prefill?: Candidate, fallbackTitle?: string) => {
+    navigate('/buch/neu', { state: { prefill, fallbackTitle } })
   }
 
   const search = async (value: string) => {
@@ -50,6 +55,7 @@ export function BookSearch() {
     attempt.current = run
     let shown = false
 
+    setParams({ q: trimmed }, { replace: true })
     setError('')
     setPhase('searching')
     setVisible(PAGE_SIZE)
@@ -78,8 +84,9 @@ export function BookSearch() {
         setPhase('empty')
         return
       }
+      answered = { term: trimmed, results: found, moreAvailable: more }
       if (found.length === 1 && !shown) {
-        openForm(found[0], undefined, trimmed)
+        openForm(found[0])
         return
       }
       setResults(found)
@@ -99,18 +106,25 @@ export function BookSearch() {
 
   const clearTerm = () => {
     attempt.current += 1
+    answered = null
     setTerm('')
     setResults([])
     setMoreAvailable(false)
     setWaitingOnMore(false)
     setError('')
     setPhase('idle')
+    setParams({}, { replace: true })
   }
 
   const acceptScan = (isbn: string) => {
     setScanning(false)
     setTerm(isbn)
     void search(isbn)
+  }
+
+  const leave = () => {
+    if (location.key === 'default') navigate('/', { replace: true })
+    else navigate(-1)
   }
 
   if (scanning) {
@@ -126,7 +140,7 @@ export function BookSearch() {
   return (
     <div className="pb-16">
       <header className="border-line sticky top-0 z-10 flex items-center gap-3 border-b bg-paper/95 px-4 py-3 backdrop-blur">
-        <button type="button" onClick={() => navigate('/')} aria-label="Abbrechen">
+        <button type="button" onClick={leave} aria-label="Abbrechen">
           <X size={22} className="text-ink-3" />
         </button>
         <h1 className="font-serif text-xl font-semibold tracking-tight">Buch hinzufügen</h1>
