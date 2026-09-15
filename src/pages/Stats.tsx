@@ -68,6 +68,64 @@ type Slice = { label: string; value: number; color: (typeof SLICE_COLORS)[number
 
 const REST_COLOR = SLICE_COLORS[SLICE_COLORS.length - 1]
 
+function PerMonth({ books }: { books: FinishedBook[] }) {
+  const [metric, setMetric] = useState<Metric>(Metric.Books)
+
+  const counts = useMemo(() => {
+    const months = Array.from({ length: 12 }, () => ({ books: 0, pages: 0 }))
+    for (const book of books) {
+      const index = Number(book.finished_on.slice(5, 7)) - 1
+      months[index].books += 1
+      months[index].pages += book.page_count ?? 0
+    }
+    return months
+  }, [books])
+
+  const tallest = Math.max(...counts.map((entry) => entry[metric]), 1)
+  const peak = counts.reduce(
+    (best, entry, index) => (entry.books > counts[best].books ? index : best),
+    0,
+  )
+
+  return (
+    <Panel
+      title="Pro Monat"
+      extra={
+        <span className="bg-shade flex gap-0.5 rounded-full p-0.5">
+          {[Metric.Books, Metric.Pages].map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={metric === value}
+              onClick={() => setMetric(value)}
+              className={`rounded-full px-3 py-1 text-xs font-semibold tracking-normal normal-case ${
+                metric === value ? 'bg-ink text-paper' : 'text-ink-2'
+              }`}
+            >
+              {METRIC_LABEL[value]}
+            </button>
+          ))}
+        </span>
+      }
+    >
+      <div className="flex h-28 items-end gap-1.5">
+        {counts.map((entry, index) => (
+          <div key={index} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
+            <span className="text-ink-2 text-2xs font-bold">
+              {entry[metric] ? formatCompact(entry[metric]) : ''}
+            </span>
+            <span
+              className={`w-full rounded-t-xs ${index === peak ? 'bg-leaf' : 'bg-accent'}`}
+              style={{ height: `${Math.max((entry[metric] / tallest) * 100, 2)}%` }}
+            />
+            <span className="text-ink-3 text-2xs font-medium">{monthNarrow(index)}</span>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  )
+}
+
 function countLanguages(books: Book[]) {
   const counts = new Map<string, number>()
   for (const book of books)
@@ -160,7 +218,6 @@ function Pie({ rows }: { rows: Slice[] }) {
 export function Stats() {
   const { books } = useBooks()
   const [year, setYear] = useState<string>('')
-  const [metric, setMetric] = useState<Metric>(Metric.Books)
 
   const finished = useMemo(() => books.filter(isFinished), [books])
 
@@ -197,22 +254,6 @@ export function Stats() {
   const longest = scope.reduce<FinishedBook | null>(
     (best, book) => ((book.page_count ?? 0) > (best?.page_count ?? 0) ? book : best),
     null,
-  )
-
-  const perMonth = useMemo(() => {
-    const counts = Array.from({ length: 12 }, () => ({ books: 0, pages: 0 }))
-    for (const book of scope) {
-      const index = Number(book.finished_on.slice(5, 7)) - 1
-      counts[index].books += 1
-      counts[index].pages += book.page_count ?? 0
-    }
-    return counts
-  }, [scope])
-
-  const monthMax = Math.max(...perMonth.map((entry) => entry[metric]), 1)
-  const peakMonth = perMonth.reduce(
-    (best, entry, index) => (entry.books > perMonth[best].books ? index : best),
-    0,
   )
 
   const colorOfLanguage = useMemo(() => languageColors(finished), [finished])
@@ -280,48 +321,7 @@ export function Stats() {
           </div>
         </div>
 
-        {year !== ALL_YEARS && (
-          <Panel
-            title="Pro Monat"
-            extra={
-              <span className="bg-shade flex gap-0.5 rounded-full p-0.5">
-                {[Metric.Books, Metric.Pages].map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={metric === value}
-                    onClick={() => setMetric(value)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold tracking-normal normal-case ${
-                      metric === value ? 'bg-ink text-paper' : 'text-ink-2'
-                    }`}
-                  >
-                    {METRIC_LABEL[value]}
-                  </button>
-                ))}
-              </span>
-            }
-          >
-            <div className="flex h-28 items-end gap-1.5">
-              {perMonth.map((entry, index) => (
-                <div
-                  key={index}
-                  className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
-                >
-                  <span className="text-ink-2 text-2xs font-bold">
-                    {entry[metric] ? formatCompact(entry[metric]) : ''}
-                  </span>
-                  <span
-                    className={`w-full rounded-t-xs ${
-                      index === peakMonth ? 'bg-leaf' : 'bg-accent'
-                    }`}
-                    style={{ height: `${Math.max((entry[metric] / monthMax) * 100, 2)}%` }}
-                  />
-                  <span className="text-ink-3 text-2xs font-medium">{monthNarrow(index)}</span>
-                </div>
-              ))}
-            </div>
-          </Panel>
-        )}
+        {year !== ALL_YEARS && <PerMonth books={scope} />}
 
         <div className="grid gap-x-3.5 md:grid-cols-2">
           <Panel title="Auf einen Blick">
