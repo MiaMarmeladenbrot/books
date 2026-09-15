@@ -2,7 +2,7 @@ import { lazy, Suspense, useRef, useState, type SyntheticEvent } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ScanBarcode, Search, X } from 'lucide-react'
 import { Cover } from '../components/Cover'
-import { looksLikeIsbn, lookupBooks, type Candidate } from '../lib/lookup'
+import { looksLikeIsbn, lookupBooks, rememberedLookup, type Candidate } from '../lib/lookup'
 import { formatNumber } from '../utils/format'
 import { FORMAT_LABEL } from '../types'
 
@@ -10,11 +10,17 @@ const BarcodeScanner = lazy(() =>
   import('../components/BarcodeScanner').then((module) => ({ default: module.BarcodeScanner }))
 )
 
-type Phase = 'idle' | 'searching' | 'results' | 'empty'
+type Outcome =
+  | { kind: 'idle' }
+  | { kind: 'searching' }
+  | { kind: 'partial'; results: Candidate[]; moreAvailable: boolean }
+  | { kind: 'results'; results: Candidate[]; moreAvailable: boolean }
+  | { kind: 'empty'; oneSourceQuiet: boolean }
+  | { kind: 'failed'; message: string }
 
 const PAGE_SIZE = 8
 
-let answered: { term: string; results: Candidate[]; moreAvailable: boolean } | null = null
+const MANUAL_ENTRY = 'Von Hand eintragen'
 
 function describe(candidate: Candidate) {
   return [
@@ -32,15 +38,14 @@ export function BookSearch() {
   const location = useLocation()
   const [params, setParams] = useSearchParams()
   const asked = params.get('q') ?? ''
-  const remembered = answered?.term === asked ? answered : null
   const [term, setTerm] = useState(asked)
-  const [phase, setPhase] = useState<Phase>(remembered ? 'results' : 'idle')
-  const [results, setResults] = useState<Candidate[]>(remembered?.results ?? [])
+  const [outcome, setOutcome] = useState<Outcome>(() => {
+    const known = asked ? rememberedLookup(asked) : null
+    return known
+      ? { kind: 'results', results: known.results, moreAvailable: known.moreAvailable }
+      : { kind: 'idle' }
+  })
   const [visible, setVisible] = useState(PAGE_SIZE)
-  const [moreAvailable, setMoreAvailable] = useState(remembered?.moreAvailable ?? false)
-  const [waitingOnMore, setWaitingOnMore] = useState(false)
-  const [oneSourceQuiet, setOneSourceQuiet] = useState(false)
-  const [error, setError] = useState('')
   const attempt = useRef(0)
   const [scanning, setScanning] = useState(false)
 
@@ -61,49 +66,46 @@ export function BookSearch() {
     let shown = false
 
     setParams({ q: trimmed }, { replace: true })
-    setError('')
-    setOneSourceQuiet(false)
-    setPhase('searching')
     setVisible(PAGE_SIZE)
+    setOutcome({ kind: 'searching' })
+
     try {
-      const {
-        results: found,
-        asked,
-        silent,
-        moreAvailable: more,
-      } = await lookupBooks(trimmed, (first) => {
-        if (run !== attempt.current || first.results.length === 0) return
-        shown = true
-        setResults(first.results)
-        setMoreAvailable(first.moreAvailable)
-        setPhase('results')
-        setWaitingOnMore(true)
-      })
-      if (run !== attempt.current) return
-      setWaitingOnMore(false)
-      setMoreAvailable(more)
-      if (found.length === 0) {
-        if (silent === asked) {
-          setError('Der Katalog antwortet nicht. Nochmal versuchen oder von Hand eintragen.')
-          setPhase('idle')
-          return
+      const { results, asked: tried, silent, moreAvailable } = await lookupBooks(
+        trimmed,
+        (first) => {
+          if (run !== attempt.current || first.results.length === 0) return
+          shown = true
+          setOutcome({
+            kind: 'partial',
+            results: first.results,
+            moreAvailable: first.moreAvailable,
+          })
         }
-        setOneSourceQuiet(silent > 0)
-        setPhase('empty')
+      )
+      if (run !== attempt.current) return
+
+      if (results.length === 0) {
+        setOutcome(
+          silent === tried
+            ? {
+                kind: 'failed',
+                message: 'Der Katalog antwortet nicht. Nochmal versuchen oder von Hand eintragen.',
+              }
+            : { kind: 'empty', oneSourceQuiet: silent > 0 }
+        )
         return
       }
-      answered = { term: trimmed, results: found, moreAvailable: more }
-      if (found.length === 1 && !shown) {
-        openForm(found[0])
+      if (results.length === 1 && !shown) {
+        openForm(results[0])
         return
       }
-      setResults(found)
-      setPhase('results')
+      setOutcome({ kind: 'results', results, moreAvailable })
     } catch (caught) {
       if (run !== attempt.current) return
-      setWaitingOnMore(false)
-      setError(caught instanceof Error ? caught.message : 'Suche fehlgeschlagen.')
-      setPhase('idle')
+      setOutcome({
+        kind: 'failed',
+        message: caught instanceof Error ? caught.message : 'Suche fehlgeschlagen.',
+      })
     }
   }
 
@@ -114,14 +116,9 @@ export function BookSearch() {
 
   const clearTerm = () => {
     attempt.current += 1
-    answered = null
     setTerm('')
-    setResults([])
-    setMoreAvailable(false)
-    setWaitingOnMore(false)
-    setOneSourceQuiet(false)
-    setError('')
-    setPhase('idle')
+    setVisible(PAGE_SIZE)
+    setOutcome({ kind: 'idle' })
     setParams({}, { replace: true })
   }
 
@@ -144,7 +141,9 @@ export function BookSearch() {
     )
   }
 
-  const asking = phase === 'searching' || waitingOnMore
+  const asking = outcome.kind === 'searching' || outcome.kind === 'partial'
+  const listed = outcome.kind === 'partial' || outcome.kind === 'results' ? outcome : null
+  const offersManualEntry = outcome.kind === 'idle' || outcome.kind === 'failed'
 
   return (
     <div className="pb-16">
@@ -171,6 +170,7 @@ export function BookSearch() {
               value={term}
               onChange={(event) => setTerm(event.target.value)}
               placeholder="ISBN oder Titel"
+              aria-label="Katalog nach ISBN oder Titel durchsuchen"
               autoFocus
               inputMode="search"
               className="placeholder:text-ink-3 w-full bg-transparent text-base outline-none"
@@ -196,25 +196,23 @@ export function BookSearch() {
           </div>
           <button
             type="submit"
-            disabled={term.trim().length < 3 || phase === 'searching'}
+            disabled={term.trim().length < 3 || outcome.kind === 'searching'}
             className="bg-accent mt-3 w-full rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-40"
           >
-            {phase === 'searching' ? 'Sucht…' : 'Suchen'}
+            {outcome.kind === 'searching' ? 'Sucht…' : 'Suchen'}
           </button>
         </form>
 
-        {error && <p className="text-danger mt-4 text-sm">{error}</p>}
+        {outcome.kind === 'failed' && <p className="text-danger mt-4 text-sm">{outcome.message}</p>}
 
-        {phase === 'empty' && (
+        {outcome.kind === 'empty' && (
           <div className="mt-8 text-center">
-            <p className="font-serif mb-1.5 text-base font-semibold">
-              Dazu weiß der Katalog nichts
-            </p>
+            <p className="font-serif mb-1.5 text-base font-semibold">Dazu weiß der Katalog nichts</p>
             <p className="text-ink-2 mx-auto mb-5 max-w-[34ch] text-sm leading-relaxed">
               Neuerscheinungen und englische Ausgaben fehlen oft. Deine Angaben sind dann die
               besseren.
             </p>
-            {oneSourceQuiet && (
+            {outcome.oneSourceQuiet && (
               <p className="text-ink-3 mx-auto mb-5 max-w-[34ch] text-xs leading-relaxed">
                 Ein Katalog war dabei still. Nochmal suchen kann also mehr ergeben.
               </p>
@@ -224,78 +222,78 @@ export function BookSearch() {
               onClick={() => openForm(undefined, term)}
               className="bg-accent w-full rounded-xl py-3.5 text-sm font-bold text-white"
             >
-              Von Hand eintragen
+              {MANUAL_ENTRY}
             </button>
           </div>
         )}
 
-        {phase === 'results' && (
-          <ul className="mt-6">
-            {results.slice(0, visible).map((candidate, index) => (
-              <li
-                key={`${candidate.title}-${index}`}
-                className="border-line border-b last:border-b-0"
-              >
-                <button
-                  type="button"
-                  onClick={() => openForm(candidate)}
-                  className="flex w-full gap-3.5 py-3.5 text-left"
+        {listed && (
+          <>
+            <ul className="mt-6">
+              {listed.results.slice(0, visible).map((candidate, index) => (
+                <li
+                  key={`${candidate.title}-${index}`}
+                  className="border-line border-b last:border-b-0"
                 >
-                  <span className="w-12 shrink-0">
-                    <Cover
-                      title={candidate.title}
-                      authors={candidate.authors}
-                      src={candidate.cover_url}
-                      showText={false}
-                    />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm leading-snug font-semibold">
-                      {candidate.title}
+                  <button
+                    type="button"
+                    onClick={() => openForm(candidate)}
+                    className="flex w-full gap-3.5 py-3.5 text-left"
+                  >
+                    <span className="w-12 shrink-0">
+                      <Cover
+                        title={candidate.title}
+                        authors={candidate.authors}
+                        src={candidate.cover_url}
+                        showText={false}
+                      />
                     </span>
-                    {candidate.authors.length > 0 && (
-                      <span className="text-ink-2 block truncate text-sm">
-                        {candidate.authors.join(', ')}
+                    <span className="min-w-0">
+                      <span className="block text-sm leading-snug font-semibold">
+                        {candidate.title}
                       </span>
-                    )}
-                    <span className="text-ink-3 mt-0.5 block text-xs">{describe(candidate)}</span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+                      {candidate.authors.length > 0 && (
+                        <span className="text-ink-2 block truncate text-sm">
+                          {candidate.authors.join(', ')}
+                        </span>
+                      )}
+                      <span className="text-ink-3 mt-0.5 block text-xs">{describe(candidate)}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {visible < listed.results.length && (
+              <button
+                type="button"
+                onClick={() => setVisible((current) => current + PAGE_SIZE)}
+                className="border-line text-ink-2 mt-5 w-full rounded-xl border py-3 text-sm font-semibold"
+              >
+                Mehr laden ({listed.results.length - visible} weitere)
+              </button>
+            )}
+
+            {outcome.kind === 'results' && visible >= listed.results.length && listed.moreAvailable && (
+              <p className="text-ink-3 mt-5 text-center text-xs leading-relaxed">
+                Der Katalog hat noch mehr Ausgaben. Suche verfeinern, etwa mit dem Autorennamen.
+              </p>
+            )}
+
+            <div className="border-line mt-6 border-t pt-5 text-center">
+              <p className="text-ink-2 mb-3 text-sm">Nichts davon passt?</p>
+              <button
+                type="button"
+                onClick={() => openForm(undefined, term)}
+                className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-sm font-semibold"
+              >
+                {MANUAL_ENTRY}
+              </button>
+            </div>
+          </>
         )}
 
-        {phase === 'results' && visible < results.length && (
-          <button
-            type="button"
-            onClick={() => setVisible((current) => current + PAGE_SIZE)}
-            className="border-line text-ink-2 mt-5 w-full rounded-xl border py-3 text-sm font-semibold"
-          >
-            Mehr laden ({results.length - visible} weitere)
-          </button>
-        )}
-
-        {phase === 'results' && !waitingOnMore && visible >= results.length && moreAvailable && (
-          <p className="text-ink-3 mt-5 text-center text-xs leading-relaxed">
-            Der Katalog hat noch mehr Ausgaben. Suche verfeinern, etwa mit dem Autorennamen.
-          </p>
-        )}
-
-        {phase === 'results' && (
-          <div className="border-line mt-6 border-t pt-5 text-center">
-            <p className="text-ink-2 mb-3 text-sm">Nichts davon passt?</p>
-            <button
-              type="button"
-              onClick={() => openForm(undefined, term)}
-              className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-sm font-semibold"
-            >
-              Von Hand eintragen
-            </button>
-          </div>
-        )}
-
-        {phase === 'idle' && (
+        {offersManualEntry && (
           <>
             <div className="text-ink-3 my-7 flex items-center gap-3 text-xs">
               <span className="bg-line h-px flex-1" />
@@ -307,7 +305,7 @@ export function BookSearch() {
               onClick={() => openForm(undefined, term)}
               className="border-line text-ink-2 w-full rounded-xl border py-3.5 text-sm font-semibold"
             >
-              Manuell eintragen
+              {MANUAL_ENTRY}
             </button>
           </>
         )}

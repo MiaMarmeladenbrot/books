@@ -521,6 +521,14 @@ export interface Lookup {
 const CACHE_LIMIT = 30
 const answered = new Map<string, Lookup>()
 
+function cacheKey(input: string) {
+  return input.trim().toLowerCase()
+}
+
+export function rememberedLookup(input: string) {
+  return answered.get(cacheKey(input)) ?? null
+}
+
 function remember(key: string, lookup: Lookup) {
   if (lookup.results.length === 0 || lookup.silent > 0) return lookup
   answered.set(key, lookup)
@@ -534,7 +542,7 @@ export async function lookupBooks(
   onFirstAnswer?: (lookup: Lookup) => void
 ): Promise<Lookup> {
   const trimmed = input.trim()
-  const key = trimmed.toLowerCase()
+  const key = cacheKey(input)
   const known = answered.get(key)
   if (known) return known
 
