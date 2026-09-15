@@ -44,7 +44,8 @@ Three things are prepared in Supabase itself:
 2. Create each account by hand under Authentication. The app has no sign-up on
    purpose, so a new reader is one row in `auth.users` and nothing else.
 3. Create a public storage bucket named `cover` and grant the accounts access to
-   it, see `supabase/storage.sql`.
+   it, see `supabase/storage.sql`. It has to run after step 1, because one of
+   its policies calls `cover_is_orphaned`.
 
 ## Scripts
 
@@ -82,6 +83,30 @@ replacing its picture therefore gives up the pointer first and asks
 across all accounts, whether anything still points at the file; only then is it
 removed. When that call fails nothing is deleted, because an orphaned file costs
 a few kilobytes and a wrongly deleted one costs somebody their cover.
+
+The bucket asks the same question a second time. The policies in
+`supabase/storage.sql` grant a delete only where the file was uploaded by the
+account asking and nothing points at it any more, so a client that forgets to
+ask `cover_is_orphaned` cannot delete anything either. Politeness is a poor
+place to keep a rule that matters.
+
+There is no select policy at all. The bucket is public, `getPublicUrl` builds an
+address in the browser without making a request, and a policy that allowed
+reading would also allow listing — which would hand any signed-in reader every
+file name in the bucket, and the file names are ISBNs.
+
+Policies are the one part of this repository that a dashboard can change without
+leaving a diff, and this file had drifted away from what was in force before
+anybody thought to look. What is actually in force is one query away, and
+comparing it to the file above is the only thing that keeps the file worth
+reading:
+
+```sql
+select policyname, cmd, qual, with_check
+from pg_policies
+where schemaname = 'storage' and tablename = 'objects'
+order by cmd, policyname;
+```
 
 Tiles are 5:8 rather than the obvious 2:3. Measured over the first 412 covers, a
 2:3 box cropped 87 percent of them at top and bottom, which is where the title
