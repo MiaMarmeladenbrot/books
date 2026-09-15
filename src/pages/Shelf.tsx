@@ -153,15 +153,6 @@ export function Shelf() {
 
   const groups = useMemo(() => groupByMonth(visible), [visible])
 
-  const narrowed =
-    query.trim() !== '' || dimensions.some((dimension) => params.get(dimension.param))
-
-  const showEverything = () =>
-    updateParams({
-      q: '',
-      ...Object.fromEntries(dimensions.map((dimension) => [dimension.param, ''])),
-    })
-
   return (
     <div className="pb-28">
       <header className="border-line sticky top-0 z-10 border-b bg-paper/95 px-4 pt-3 pb-3 backdrop-blur">
@@ -174,15 +165,6 @@ export function Shelf() {
                 ? `${formatNumber(books.length)} Bücher`
                 : `${formatNumber(visible.length)} von ${formatNumber(books.length)}`}
           </span>
-          {narrowed && (
-            <button
-              type="button"
-              onClick={showEverything}
-              className="text-ink-2 decoration-line shrink-0 text-xs font-medium underline underline-offset-3"
-            >
-              Alles zeigen
-            </button>
-          )}
         </div>
 
         <div className="mx-auto mt-2.5 max-w-5xl">
@@ -192,7 +174,8 @@ export function Shelf() {
               value={query}
               onChange={(event) => updateParams({ q: event.target.value })}
               placeholder="Titel oder Autorin suchen…"
-              className="placeholder:text-ink-3 w-full bg-transparent text-sm outline-none"
+              aria-label="Regal nach Titel oder Autorin durchsuchen"
+              className="placeholder:text-ink-2 w-full bg-transparent text-sm outline-none"
             />
             {query && (
               <button
@@ -209,6 +192,7 @@ export function Shelf() {
           <div className="no-scrollbar -mx-4 mt-2.5 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
             {dimensions.map((dimension) => {
               const value = params.get(dimension.param) ?? ''
+              const active = dimension.choices.find((choice) => choice.value === value)
               return (
                 <Select
                   key={dimension.param}
@@ -217,6 +201,8 @@ export function Shelf() {
                   aria-label={dimension.all}
                   wrapper="shrink-0"
                   chevron={value ? 'text-paper' : 'text-ink-3'}
+                  onClear={active ? () => updateParams({ [dimension.param]: '' }) : undefined}
+                  clearLabel={active ? `${active.label} entfernen` : undefined}
                   className={`rounded-full border py-1.5 pr-8 pl-3.5 text-sm font-medium ${
                     value ? 'border-ink bg-ink text-paper' : 'border-line bg-card text-ink-2'
                   }`}
