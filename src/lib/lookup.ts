@@ -512,6 +512,7 @@ function dedupe(candidates: Candidate[]) {
 export interface Lookup {
   query: 'isbn' | 'text'
   results: Candidate[]
+  asked: number
   silent: number
   moreAvailable: boolean
 }
@@ -538,23 +539,25 @@ export async function lookupBooks(
 
   if (looksLikeIsbn(trimmed)) {
     const isbn = trimmed.replace(/[^0-9Xx]/g, '')
+    let asked = 0
     let silent = 0
     const sources = [
       async () => (await searchDnb(`num=${isbn}`, 1)).candidates,
       () => searchOpenLibraryIsbn(isbn),
     ]
     for (const search of sources) {
+      asked += 1
       try {
         const found = await search()
         if (found.length > 0) {
           const results = found.map((candidate) => ({ ...candidate, isbn }))
-          return remember(key, { query: 'isbn', results, silent, moreAvailable: false })
+          return remember(key, { query: 'isbn', results, asked, silent, moreAvailable: false })
         }
       } catch {
         silent += 1
       }
     }
-    return { query: 'isbn', results: [], silent, moreAvailable: false }
+    return { query: 'isbn', results: [], asked, silent, moreAvailable: false }
   }
 
   const { exact, broad } = dnbQueries(trimmed)
@@ -571,10 +574,13 @@ export async function lookupBooks(
   const moreAvailable = byTitle.total + byWords.total > fromDnb.length
   const silent = promptly.filter((outcome) => outcome.status === 'rejected').length
 
+  const asked = promptly.length + 1
+
   if (onFirstAnswer && fromDnb.length > 0) {
     onFirstAnswer({
       query: 'text',
       results: dedupe(rankCandidates(fromDnb, trimmed)),
+      asked,
       silent,
       moreAvailable,
     })
@@ -585,6 +591,7 @@ export async function lookupBooks(
   return remember(key, {
     query: 'text',
     results: dedupe(rankCandidates([...fromDnb, ...(fromOpenLibrary ?? [])], trimmed)),
+    asked,
     silent: silent + (fromOpenLibrary === null ? 1 : 0),
     moreAvailable,
   })

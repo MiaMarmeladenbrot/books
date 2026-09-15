@@ -95,9 +95,10 @@ export function BookForm() {
   const isEdit = Boolean(id)
   const location = useLocation()
   const cameFromApp = location.key !== 'default'
-  const { prefill, fallbackTitle } = (location.state ?? {}) as {
+  const { prefill, fallbackTitle, fallbackIsbn } = (location.state ?? {}) as {
     prefill?: Candidate
     fallbackTitle?: string
+    fallbackIsbn?: string
   }
 
   const [draft, setDraft] = useState<BookDraft>(() => {
@@ -111,7 +112,7 @@ export function BookForm() {
       } = existing
       return rest
     }
-    if (!prefill) return { ...EMPTY, title: fallbackTitle ?? '' }
+    if (!prefill) return { ...EMPTY, title: fallbackTitle ?? '', isbn: fallbackIsbn ?? null }
     return {
       ...EMPTY,
       title: prefill.title,

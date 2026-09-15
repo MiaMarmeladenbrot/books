@@ -2,7 +2,7 @@ import { lazy, Suspense, useRef, useState, type SyntheticEvent } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ScanBarcode, Search, X } from 'lucide-react'
 import { Cover } from '../components/Cover'
-import { lookupBooks, type Candidate } from '../lib/lookup'
+import { looksLikeIsbn, lookupBooks, type Candidate } from '../lib/lookup'
 import { formatNumber } from '../utils/format'
 import { FORMAT_LABEL } from '../types'
 
@@ -39,12 +39,17 @@ export function BookSearch() {
   const [visible, setVisible] = useState(PAGE_SIZE)
   const [moreAvailable, setMoreAvailable] = useState(remembered?.moreAvailable ?? false)
   const [waitingOnMore, setWaitingOnMore] = useState(false)
+  const [oneSourceQuiet, setOneSourceQuiet] = useState(false)
   const [error, setError] = useState('')
   const attempt = useRef(0)
   const [scanning, setScanning] = useState(false)
 
-  const openForm = (prefill?: Candidate, fallbackTitle?: string) => {
-    navigate('/buch/neu', { state: { prefill, fallbackTitle } })
+  const openForm = (prefill?: Candidate, typed?: string) => {
+    const kept = (typed ?? '').trim()
+    const fallback = looksLikeIsbn(kept)
+      ? { fallbackIsbn: kept.replace(/[^0-9Xx]/g, '') }
+      : { fallbackTitle: kept }
+    navigate('/buch/neu', { state: { prefill, ...fallback } })
   }
 
   const search = async (value: string) => {
@@ -57,11 +62,13 @@ export function BookSearch() {
 
     setParams({ q: trimmed }, { replace: true })
     setError('')
+    setOneSourceQuiet(false)
     setPhase('searching')
     setVisible(PAGE_SIZE)
     try {
       const {
         results: found,
+        asked,
         silent,
         moreAvailable: more,
       } = await lookupBooks(trimmed, (first) => {
@@ -76,11 +83,12 @@ export function BookSearch() {
       setWaitingOnMore(false)
       setMoreAvailable(more)
       if (found.length === 0) {
-        if (silent > 0) {
+        if (silent === asked) {
           setError('Der Katalog antwortet nicht. Nochmal versuchen oder von Hand eintragen.')
           setPhase('idle')
           return
         }
+        setOneSourceQuiet(silent > 0)
         setPhase('empty')
         return
       }
@@ -111,6 +119,7 @@ export function BookSearch() {
     setResults([])
     setMoreAvailable(false)
     setWaitingOnMore(false)
+    setOneSourceQuiet(false)
     setError('')
     setPhase('idle')
     setParams({}, { replace: true })
@@ -205,9 +214,14 @@ export function BookSearch() {
               Neuerscheinungen und englische Ausgaben fehlen oft. Deine Angaben sind dann die
               besseren.
             </p>
+            {oneSourceQuiet && (
+              <p className="text-ink-3 mx-auto mb-5 max-w-[34ch] text-xs leading-relaxed">
+                Ein Katalog war dabei still. Nochmal suchen kann also mehr ergeben.
+              </p>
+            )}
             <button
               type="button"
-              onClick={() => openForm(undefined, term.trim())}
+              onClick={() => openForm(undefined, term)}
               className="bg-accent w-full rounded-xl py-3.5 text-sm font-bold text-white"
             >
               Von Hand eintragen
@@ -273,7 +287,7 @@ export function BookSearch() {
             <p className="text-ink-2 mb-3 text-sm">Nichts davon passt?</p>
             <button
               type="button"
-              onClick={() => openForm(undefined, term.trim())}
+              onClick={() => openForm(undefined, term)}
               className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-sm font-semibold"
             >
               Von Hand eintragen
@@ -281,7 +295,7 @@ export function BookSearch() {
           </div>
         )}
 
-        {phase === 'idle' && !error && (
+        {phase === 'idle' && (
           <>
             <div className="text-ink-3 my-7 flex items-center gap-3 text-xs">
               <span className="bg-line h-px flex-1" />
@@ -290,7 +304,7 @@ export function BookSearch() {
             </div>
             <button
               type="button"
-              onClick={() => openForm()}
+              onClick={() => openForm(undefined, term)}
               className="border-line text-ink-2 w-full rounded-xl border py-3.5 text-sm font-semibold"
             >
               Manuell eintragen
