@@ -42,11 +42,16 @@ export function booksToJson(books: Book[]) {
   return JSON.stringify({ exportedAt: new Date().toISOString(), books }, null, 2)
 }
 
+const KEEP_BLOB_ALIVE = 10_000
+
 export function download(filename: string, mimeType: string, content: string) {
   const url = URL.createObjectURL(new Blob([content], { type: `${mimeType};charset=utf-8` }))
   const link = document.createElement('a')
   link.href = url
   link.download = filename
+  link.hidden = true
+  document.body.append(link)
   link.click()
-  URL.revokeObjectURL(url)
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), KEEP_BLOB_ALIVE)
 }
