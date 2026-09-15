@@ -89,7 +89,7 @@ const labelClass = 'text-ink-2 mb-1.5 block text-xs font-semibold'
 export function BookForm() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { books, addBook, updateBook, loading } = useBooks()
+  const { books, addBook, updateBook } = useBooks()
 
   const existing = useMemo(() => books.find((book) => book.id === id), [books, id])
   const isEdit = Boolean(id)
@@ -173,11 +173,7 @@ export function BookForm() {
   }
 
   if (isEdit && !existing) {
-    return (
-      <p className="text-ink-2 px-4 py-20 text-center text-sm">
-        {loading ? 'Lädt…' : 'Buch nicht gefunden.'}
-      </p>
-    )
+    return <p className="text-ink-2 px-4 py-20 text-center text-sm">Buch nicht gefunden.</p>
   }
 
   const patch = (changes: Partial<BookDraft>) => setDraft((current) => ({ ...current, ...changes }))

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './store/AuthContext'
 import { BooksProvider } from './store/BooksContext'
@@ -8,10 +8,15 @@ import { TabBar } from './components/TabBar'
 import { StackLoader } from './components/StackLoader'
 import { Login } from './pages/Login'
 import { Shelf } from './pages/Shelf'
-import { Stats } from './pages/Stats'
 import { BookDetail } from './pages/BookDetail'
-import { BookForm } from './pages/BookForm'
-import { BookSearch } from './pages/BookSearch'
+
+const Stats = lazy(() => import('./pages/Stats').then((module) => ({ default: module.Stats })))
+const BookForm = lazy(() =>
+  import('./pages/BookForm').then((module) => ({ default: module.BookForm })),
+)
+const BookSearch = lazy(() =>
+  import('./pages/BookSearch').then((module) => ({ default: module.BookSearch })),
+)
 
 const SPLASH_MINIMUM = 900
 
@@ -48,19 +53,25 @@ function TabLayout() {
   )
 }
 
+function Turning() {
+  return <p className="text-ink-3 px-4 py-20 text-center text-sm">Lädt…</p>
+}
+
 function Shell() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<TabLayout />}>
-          <Route index element={<Shelf />} />
-          <Route path="statistik" element={<Stats />} />
-        </Route>
-        <Route path="buch/suchen" element={<BookSearch />} />
-        <Route path="buch/neu" element={<BookForm />} />
-        <Route path="buch/:id" element={<BookDetail />} />
-        <Route path="buch/:id/bearbeiten" element={<BookForm />} />
-      </Routes>
+      <Suspense fallback={<Turning />}>
+        <Routes>
+          <Route element={<TabLayout />}>
+            <Route index element={<Shelf />} />
+            <Route path="statistik" element={<Stats />} />
+          </Route>
+          <Route path="buch/suchen" element={<BookSearch />} />
+          <Route path="buch/neu" element={<BookForm />} />
+          <Route path="buch/:id" element={<BookDetail />} />
+          <Route path="buch/:id/bearbeiten" element={<BookForm />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

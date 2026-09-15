@@ -21,17 +21,13 @@ function Row({ label, value }: { label: string; value: string | null }) {
 export function BookDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { books, loading, removeBook } = useBooks()
+  const { books, removeBook } = useBooks()
   const [confirming, setConfirming] = useState(false)
 
   const book = books.find((entry) => entry.id === id)
 
   if (!book) {
-    return (
-      <p className="text-ink-2 px-4 py-20 text-center text-sm">
-        {loading ? 'Lädt…' : 'Buch nicht gefunden.'}
-      </p>
-    )
+    return <p className="text-ink-2 px-4 py-20 text-center text-sm">Buch nicht gefunden.</p>
   }
 
   const days = readingDays(book.started_on, book.finished_on)
