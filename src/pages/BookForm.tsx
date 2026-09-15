@@ -137,6 +137,7 @@ export function BookForm() {
   const [finishedPicked, setFinishedPicked] = useState(() => Boolean(existing?.finished_on))
   const [candidateCover, setCandidateCover] = useState<string | null>(prefill?.cover_url ?? null)
   const [error, setError] = useState('')
+  const [savedId, setSavedId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [coverImage, setCoverImage] = useState<Blob | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
@@ -234,17 +235,27 @@ export function BookForm() {
         series_volume: volumeOrNull(volumeText),
         notes: textOrNull(draft.notes ?? ''),
       }
-      const saved = existing ? await updateBook(existing.id, payload) : await addBook(payload)
+      const known = existing?.id ?? savedId
+      const saved = known ? await updateBook(known, payload) : await addBook(payload)
       const previousCover = existing?.cover_path ?? null
 
       if (coverImage) {
-        const path = await uploadCover(payload.isbn ?? saved.id, coverImage)
-        await updateBook(saved.id, { cover_path: path })
-        if (previousCover) await releaseCover(previousCover)
+        try {
+          const path = await uploadCover(payload.isbn ?? saved.id, coverImage)
+          await updateBook(saved.id, { cover_path: path })
+          if (previousCover) await releaseCover(previousCover)
+        } catch {
+          setSavedId(saved.id)
+          setError('Das Buch ist gespeichert. Nur das Bild nicht — nochmal versuchen?')
+          setBusy(false)
+          return
+        }
       } else if (candidateCover) {
         const image = await fetchCoverJpeg(candidateCover)
-        if (image) {
-          const path = await uploadCover(payload.isbn ?? saved.id, image)
+        const path = image
+          ? await uploadCover(payload.isbn ?? saved.id, image).catch(() => null)
+          : null
+        if (path) {
           await updateBook(saved.id, { cover_path: path })
           if (previousCover) await releaseCover(previousCover)
         }
