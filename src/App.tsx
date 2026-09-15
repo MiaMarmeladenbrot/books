@@ -6,6 +6,7 @@ import { useAuth } from './store/useAuth'
 import { useBooks } from './store/useBooks'
 import { TabBar } from './components/TabBar'
 import { StackLoader } from './components/StackLoader'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { Login } from './pages/Login'
 import { Shelf } from './pages/Shelf'
 import { BookDetail } from './pages/BookDetail'
@@ -89,10 +90,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BooksProvider>
-        <AppRoutes />
-      </BooksProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BooksProvider>
+          <AppRoutes />
+        </BooksProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
