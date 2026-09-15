@@ -247,7 +247,7 @@ export function Stats() {
     : 0
   const spans = scope
     .map((book) => readingDays(book.started_on, book.finished_on))
-    .filter((days): days is number => days !== null && days >= 0 && days < 200)
+    .filter((days): days is number => days !== null)
   const averageDays = spans.length
     ? (spans.reduce((sum, days) => sum + days, 0) / spans.length).toFixed(1).replace('.', ',')
     : '—'
