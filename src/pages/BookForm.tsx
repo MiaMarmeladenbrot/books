@@ -6,7 +6,7 @@ import { CoverPicker } from '../components/CoverPicker'
 import { Select } from '../components/Select'
 import { releaseCover, uploadCover } from '../lib/supabase'
 import type { Candidate } from '../lib/lookup'
-import { MAX_UPLOAD_BYTES, fetchCoverJpeg, toCoverJpeg } from '../utils/image'
+import { MAX_UPLOAD_BYTES, fetchGatedCoverJpeg, toCoverJpeg } from '../utils/image'
 import { todayIso } from '../utils/format'
 import {
   BookStatus,
@@ -247,7 +247,7 @@ export function BookForm() {
           return
         }
       } else if (candidateCover) {
-        const image = await fetchCoverJpeg(candidateCover)
+        const image = await fetchGatedCoverJpeg(candidateCover)
         const path = image
           ? await uploadCover(payload.isbn ?? saved.id, image).catch(() => null)
           : null

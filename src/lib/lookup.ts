@@ -3,7 +3,6 @@ import { BookFormat } from '../types'
 const DNB_ENDPOINT = 'https://services.dnb.de/sru/dnb'
 const OPENLIBRARY_ISBN = 'https://openlibrary.org/api/books'
 const OPENLIBRARY_SEARCH = 'https://openlibrary.org/search.json'
-const OPENLIBRARY_COVER = 'https://covers.openlibrary.org/b'
 const MARC_NAMESPACE = 'http://www.loc.gov/MARC21/slim'
 
 const FETCH_LIMIT = 20
@@ -182,8 +181,10 @@ function firstNumber(value: string, pattern: RegExp) {
 }
 
 function coverForIsbn(isbn: string | null, fallback: number | null = null) {
-  if (!isbn) return fallback ? `${OPENLIBRARY_COVER}/id/${fallback}-L.jpg` : null
-  return fallback ? `/api/cover?isbn=${isbn}&cover=${fallback}` : `/api/cover?isbn=${isbn}`
+  const asked = new URLSearchParams()
+  if (isbn) asked.set('isbn', isbn)
+  if (fallback) asked.set('cover', String(fallback))
+  return asked.size > 0 ? `/api/cover?${asked}` : null
 }
 
 const ISBN_GROUPS: Record<string, string[]> = {

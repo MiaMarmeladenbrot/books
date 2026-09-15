@@ -62,15 +62,16 @@ async function tryFetch(url: string) {
 
 export default async function handler(request: Request) {
   const parameters = new URL(request.url).searchParams
-  const isbn = (parameters.get('isbn') ?? '').replace(/[^0-9Xx]/g, '')
-  if (isbn.length !== 10 && isbn.length !== 13) {
-    return new Response('isbn fehlt oder ist ungültig', { status: 400 })
-  }
+  const raw = (parameters.get('isbn') ?? '').replace(/[^0-9Xx]/g, '')
+  const isbn = raw.length === 10 || raw.length === 13 ? raw : null
   const cover = (parameters.get('cover') ?? '').replace(/\D/g, '')
+  if (!isbn && !cover) {
+    return new Response('isbn oder cover fehlt', { status: 400 })
+  }
 
   const bytes =
-    (await tryFetch(`${MVB_COVER}?isbn=${isbn}`)) ??
-    (await tryFetch(`${OPENLIBRARY_COVER}/${isbn}-L.jpg?default=false`)) ??
+    (isbn ? await tryFetch(`${MVB_COVER}?isbn=${isbn}`) : null) ??
+    (isbn ? await tryFetch(`${OPENLIBRARY_COVER}/${isbn}-L.jpg?default=false`) : null) ??
     (cover ? await tryFetch(`${OPENLIBRARY_WORK_COVER}/${cover}-L.jpg`) : null)
 
   if (!bytes) return new Response('kein Cover gefunden', { status: 404 })
