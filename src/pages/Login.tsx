@@ -1,6 +1,6 @@
 import { useState, type SyntheticEvent } from 'react'
 import { useAuth } from '../store/useAuth'
-import { hueFromTitle } from '../utils/format'
+import { hueFromTitle, spineGradient } from '../utils/spine'
 
 const SPINE_SEEDS = [
   'Die Wut, die bleibt',
@@ -53,10 +53,7 @@ export function Login() {
               <span
                 key={seed}
                 className="flex-1 rounded-t-xs"
-                style={{
-                  height: `${55 + (hue % 45)}%`,
-                  background: `linear-gradient(150deg, hsl(${hue} 34% 40%), hsl(${(hue + 28) % 360} 30% 26%))`,
-                }}
+                style={{ height: `${55 + (hue % 45)}%`, background: spineGradient(hue) }}
               />
             )
           })}

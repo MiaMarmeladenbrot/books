@@ -56,9 +56,3 @@ export function monthNarrow(monthIndex: number) {
 export function todayIso() {
   return new Date().toLocaleDateString('sv-SE')
 }
-
-export function hueFromTitle(title: string) {
-  let hue = 0
-  for (const character of title) hue = (hue * 31 + character.charCodeAt(0)) % 360
-  return hue
-}

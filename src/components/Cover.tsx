@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { hueFromTitle } from '../utils/format'
+import { hueFromTitle, spineGradient } from '../utils/spine'
 
-export const COVER_SHAPE =
+const COVER_SHAPE =
   'relative aspect-[5/8] overflow-hidden rounded-sm shadow-[0_1px_2px_rgb(30_26_21/0.18),0_10px_20px_-10px_rgb(30_26_21/0.45)]'
 
 interface CoverProps {
@@ -28,8 +28,7 @@ export function Cover({ title, authors, src, showText = true, className = '' }: 
     )
   }
 
-  const hue = hueFromTitle(title)
-  const background = `linear-gradient(150deg, hsl(${hue} 34% 40%), hsl(${(hue + 28) % 360} 30% 26%))`
+  const background = spineGradient(hueFromTitle(title))
 
   return (
     <div
