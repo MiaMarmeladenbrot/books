@@ -1,7 +1,7 @@
 # Lesestapel
 
 A small web app for recording books read and seeing the reading statistics that
-follow from them. It replaces bookstats.de, is mobile first, and serves two
+follow from them. It replaces bookstats.de, is mobile first, and serves ten
 accounts which, thanks to row level security, never see each other's shelves.
 The interface is German; everything else in this repository is English.
 
@@ -14,6 +14,19 @@ The interface is German; everything else in this repository is English.
 Loading every book at startup costs about 500 KB and makes search, filtering and
 all statistics instant without a single further request. Covers deliberately stay
 out of that payload; they are files in a bucket, so the browser can cache them.
+
+Supabase is asked for in parts — `auth-js`, `postgrest-js` and `storage-js`
+rather than `supabase-js`, which builds a realtime client in its constructor that
+this app never subscribes to. The parts do not wire themselves together, so
+`src/lib/supabase.ts` does it: every request reads the access token out of the
+current session, and the key that session is stored under is derived exactly the
+way `supabase-js` derives it, `sb-<ref>-auth-token`. That string is worth copying
+rather than inventing, because getting it wrong signs everybody out at once.
+
+The shelf is the only page in the first chunk. The statistics page, the book form
+and the catalogue search are fetched when they are opened, as the scanner already
+was. The two typefaces are served from `public/fonts` instead of Google's CDN,
+which keeps a render-blocking request to a third-party host off the start.
 
 ## Setup
 
@@ -56,9 +69,9 @@ served with `Cache-Control: immutable` for a year: a changed picture therefore
 has to mean a changed URL. Replacing a cover through the app deletes the previous
 file, and so does deleting a book.
 
-The bucket is shared by both accounts, so naming a file after its ISBN means one
-file for an edition both of them own — which is the point, but it also means an
-import cannot assume it may write. Supabase answers such an upload with HTTP 400
+The bucket is shared by every account, so naming a file after its ISBN means one
+file for an edition several readers own — which is the point, but it also means
+an import cannot assume it may write. Supabase answers such an upload with HTTP 400
 and a 409 body, `KeyAlreadyExists`, and the honest reaction is to leave the file
 alone and point the new row at it.
 
@@ -66,7 +79,7 @@ Sharing files makes deleting one a question about other people's rows, which is
 exactly what row level security stops a browser from asking. Deleting a book or
 replacing its picture therefore gives up the pointer first and asks
 `public.cover_is_orphaned`, a `security definer` function that counts references
-across both accounts, whether anything still points at the file; only then is it
+across all accounts, whether anything still points at the file; only then is it
 removed. When that call fails nothing is deleted, because an orphaned file costs
 a few kilobytes and a wrongly deleted one costs somebody their cover.
 
@@ -146,9 +159,9 @@ book carrying no finish date stays out of every yearly figure until it gets one
 — which is the honest state for a book whose date nobody has said yet.
 
 Both catalogues are queried straight from the browser — the DNB and Open Library
-each send permissive CORS headers, so no server sits in between and nothing has
-to be deployed alongside the app. The DNB is asked first because it carries the
-German editions; Open Library answers for most of the rest, and adds the covers.
+each send permissive CORS headers, so no server sits between the app and a
+record. The DNB is asked first because it carries the German editions; Open
+Library answers for most of the rest.
 
 Three filters come from reconciling the imported library against these same
 catalogues. Field 700 of a MARC record holds translators and name-title entries
@@ -157,10 +170,19 @@ are dropped. Series names are checked against publisher imprints, or books end
 up in a series called `KiWi` or `Goldmann`. And study guides and audio editions
 are filtered out of title matches.
 
-Covers can only be taken from Open Library, whose images are readable across
-origins; the better scans behind the DNB portal are not, which is why a German
-new arrival sometimes has no proposed cover. Uploading one by hand covers that
-case.
+Covers are the exception, and the reason `api/cover.ts` exists — the one thing
+that is deployed alongside the app. Open Library lets its images be read across
+origins; the better scans behind the DNB portal do not, so a browser left to
+itself could only ever keep the weaker source. The endpoint sits on the app's own
+origin, takes an ISBN or an Open Library cover id or both, tries the MVB service
+first and Open Library after, and applies the size and proportion gate before
+handing anything over. The browser therefore sees only a picture worth keeping,
+and can downscale and upload it like a manual one. Where both services come up
+empty a photo by hand still covers the case.
+
+Because the endpoint answers for every candidate, the gate is written once. An
+earlier version checked the same four numbers again in the browser, which only
+repeated a verdict that had already been reached.
 
 ## Scanning the barcode
 
@@ -221,3 +243,22 @@ preview rather than a LAN address.
 ## Planned
 
 - A web app manifest, so the app sits on the home screen without browser chrome.
+- Ratings. The column is already there and already decided: `smallint` between 1
+  and 5, so half stars would be a migration rather than a design choice.
+- A price, and who recommended a book. A column each, a field each.
+- A progress indicator for books being read, which needs somewhere to keep the
+  page somebody is on.
+- A panel of its own for audiobooks: hours rather than pages, time listened, the
+  longest one. Audiobooks currently carry no length at all — `page_count` counts
+  pages, and the import deliberately refused a figure that counted CDs or minutes.
+- A calendar of when each book was started and finished.
+- A feed of recommendations, shareable lists, shareable statistics, and a profile
+  page with a switch for what is shared at all.
+
+The sharing ideas are the only ones that are not a column and a field. Every
+policy on `books` says `auth.uid() = user_id`, and the whole app is written on
+the assumption that a browser can see nothing but its own rows — the shared cover
+bucket is already the exception, and it needed a `security definer` function to
+work around that assumption rather than break it. Anything shared needs a second
+way in that grants a reader something without handing over the shelf, which is a
+change to the security model before it is a screen.
