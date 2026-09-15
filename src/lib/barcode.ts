@@ -47,7 +47,14 @@ async function createWasm(): Promise<Reader> {
 let reader: Promise<Reader> | null = null
 
 export function loadDecoder() {
-  reader = reader ?? createNative().then((native) => native ?? createWasm())
+  reader =
+    reader ??
+    createNative()
+      .then((native) => native ?? createWasm())
+      .catch((caught) => {
+        reader = null
+        throw caught
+      })
   return reader
 }
 

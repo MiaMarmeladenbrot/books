@@ -11,8 +11,25 @@ const CONFIRMATIONS = 2
 const SIGHTED_FOR = 1200
 const STALLED_AFTER = 6000
 
-type Phase = 'starting' | 'scanning' | 'denied' | 'unavailable'
+type Running = 'starting' | 'scanning'
+type Trouble = 'denied' | 'unavailable' | 'unreadable'
+type Phase = Running | Trouble
 type Hint = 'aiming' | 'sighted' | 'stalled'
+
+const TROUBLE: Record<Trouble, { title: string; body: string }> = {
+  denied: {
+    title: 'Kein Zugriff auf die Kamera',
+    body: 'Die Kamera ist für diese Seite gesperrt. In den Browser-Einstellungen freigeben — oder die ISBN eintippen.',
+  },
+  unavailable: {
+    title: 'Scannen geht hier nicht',
+    body: 'Dieser Browser gibt keine Kamera her. Die ISBN steht als Zahl unter dem Barcode.',
+  },
+  unreadable: {
+    title: 'Der Barcode-Leser fehlt',
+    body: 'Die Kamera läuft, aber das Lesemodul lädt gerade nicht. Die ISBN steht als Zahl unter dem Barcode.',
+  },
+}
 
 const HINTS: Record<Hint, string> = {
   aiming: 'Barcode auf der Rückseite in den Rahmen halten',
@@ -94,7 +111,7 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
         try {
           result = await scanFrame(context.getImageData(0, 0, canvas.width, canvas.height))
         } catch {
-          if (!stopped) setPhase('unavailable')
+          if (!stopped) setPhase('unreadable')
           return
         }
         if (stopped) return
@@ -134,7 +151,7 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
         return
       }
 
-      void loadDecoder()
+      void loadDecoder().catch(() => null)
 
       const upright = window.innerHeight >= window.innerWidth
       const shape = upright
@@ -186,17 +203,13 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
     }
   }, [])
 
-  if (phase === 'denied' || phase === 'unavailable') {
+  const trouble = phase === 'starting' || phase === 'scanning' ? null : TROUBLE[phase]
+
+  if (trouble) {
     return (
       <div className="bg-paper fixed inset-0 z-50 flex flex-col items-center justify-center px-8 text-center">
-        <p className="font-serif mb-2 text-base font-semibold">
-          {phase === 'denied' ? 'Kein Zugriff auf die Kamera' : 'Scannen geht hier nicht'}
-        </p>
-        <p className="text-ink-2 mb-6 max-w-[34ch] text-sm leading-relaxed">
-          {phase === 'denied'
-            ? 'Die Kamera ist für diese Seite gesperrt. In den Browser-Einstellungen freigeben — oder die ISBN eintippen.'
-            : 'Dieser Browser gibt keine Kamera her. Die ISBN steht als Zahl unter dem Barcode.'}
-        </p>
+        <p className="font-serif mb-2 text-base font-semibold">{trouble.title}</p>
+        <p className="text-ink-2 mb-6 max-w-[34ch] text-sm leading-relaxed">{trouble.body}</p>
         <button
           type="button"
           onClick={onClose}
