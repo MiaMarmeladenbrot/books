@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { releaseCover, supabase } from '../lib/supabase'
+import { db, releaseCover } from '../lib/supabase'
 import type { Book, BookDraft } from '../types'
 import { BooksContext } from './booksContextValue'
 import { useAuth } from './useAuth'
-
-const COLUMNS = '*'
 
 function byRecency(a: Book, b: Book) {
   const left = a.finished_on ?? a.started_on
@@ -24,7 +22,7 @@ export function BooksProvider({ children }: { children: ReactNode }) {
   const userId = useAuth().user?.id ?? null
 
   const reload = useCallback(async () => {
-    const { data, error: queryError } = await supabase.from('books').select(COLUMNS)
+    const { data, error: queryError } = await db.from('books').select('*')
     if (queryError) setError(queryError.message)
     else {
       setError(null)
@@ -41,10 +39,10 @@ export function BooksProvider({ children }: { children: ReactNode }) {
   }, [reload, userId])
 
   const addBook = useCallback(async (draft: BookDraft) => {
-    const { data, error: insertError } = await supabase
+    const { data, error: insertError } = await db
       .from('books')
       .insert(draft)
-      .select(COLUMNS)
+      .select('*')
       .single()
     if (insertError) throw new Error(insertError.message)
     const created = data as Book
@@ -53,11 +51,11 @@ export function BooksProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const updateBook = useCallback(async (id: string, patch: Partial<BookDraft>) => {
-    const { data, error: updateError } = await supabase
+    const { data, error: updateError } = await db
       .from('books')
       .update(patch)
       .eq('id', id)
-      .select(COLUMNS)
+      .select('*')
       .single()
     if (updateError) throw new Error(updateError.message)
     const saved = data as Book
@@ -66,7 +64,7 @@ export function BooksProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const removeBook = useCallback(async (id: string) => {
-    const { data, error: deleteError } = await supabase
+    const { data, error: deleteError } = await db
       .from('books')
       .delete()
       .eq('id', id)

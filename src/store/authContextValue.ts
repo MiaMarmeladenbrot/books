@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { User } from '@supabase/supabase-js'
+import type { User } from '@supabase/auth-js'
 
 interface AuthValue {
   user: User | null
