@@ -1,9 +1,27 @@
 import { defineConfig } from 'vitest/config'
 
+const FLOW = 'src/lib/lookup.flow.test.ts'
+
 export default defineConfig({
   test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts'],
-    env: { TZ: 'Europe/Berlin' },
+    projects: [
+      {
+        test: {
+          name: 'pure',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+          exclude: [FLOW],
+          env: { TZ: 'Europe/Berlin' },
+        },
+      },
+      {
+        test: {
+          name: 'flow',
+          environment: 'jsdom',
+          include: [FLOW],
+          env: { TZ: 'Europe/Berlin' },
+        },
+      },
+    ],
   },
 })

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><version>1.1</version><numberOfRecords>90</numberOfRecords><records><record><recordSchema>MARC21-xml</recordSchema><recordPacking>xml</recordPacking><recordData><record xmlns="http://www.loc.gov/MARC21/slim" type="Bibliographic">
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">9783733509200</subfield>
+      <subfield code="c">Broschur : EUR 12.00 (DE), EUR 12.40 (AT)</subfield>
+      <subfield code="9">978-3-7335-0920-0</subfield>
+    </datafield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">373350920X</subfield>
+      <subfield code="9">3-7335-0920-X</subfield>
+    </datafield>
+    <datafield tag="041" ind1=" " ind2=" ">
+      <subfield code="a">ger</subfield>
+    </datafield>
+    <datafield tag="100" ind1="1" ind2=" ">
+      <subfield code="8">1\p</subfield>
+      <subfield code="0">(DE-588)124287646</subfield>
+      <subfield code="0">https://d-nb.info/gnd/124287646</subfield>
+      <subfield code="0">(DE-101)124287646</subfield>
+      <subfield code="a">Herrndorf, Wolfgang</subfield>
+      <subfield code="d">1965-2013</subfield>
+      <subfield code="e">Verfasser</subfield>
+      <subfield code="4">aut</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="245" ind1="1" ind2="0">
+      <subfield code="a">Tschick</subfield>
+      <subfield code="b">Roman</subfield>
+      <subfield code="c">Wolfgang Herrndorf</subfield>
+    </datafield>
+    <datafield tag="264" ind1=" " ind2="1">
+      <subfield code="a">Frankfurt am Main</subfield>
+      <subfield code="b">Rotfuchs</subfield>
+      <subfield code="c">2024</subfield>
+    </datafield>
+    <datafield tag="300" ind1=" " ind2=" ">
+      <subfield code="a">253 Seiten</subfield>
+      <subfield code="c">19 cm, 228 g</subfield>
+    </datafield>
+    <datafield tag="336" ind1=" " ind2=" ">
+      <subfield code="a">Text</subfield>
+      <subfield code="b">txt</subfield>
+      <subfield code="2">rdacontent</subfield>
+    </datafield>
+    <datafield tag="338" ind1=" " ind2=" ">
+      <subfield code="a">Band</subfield>
+      <subfield code="b">nc</subfield>
+      <subfield code="2">rdacarrier</subfield>
+    </datafield>
+    <datafield tag="653" ind1=" " ind2=" ">
+      <subfield code="a">(Produktform)Paperback / softback</subfield>
+    </datafield>
+    </record></recordData></record><record><recordSchema>MARC21-xml</recordSchema><recordPacking>xml</recordPacking><recordData><record xmlns="http://www.loc.gov/MARC21/slim" type="Bibliographic">
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">9783126741330</subfield>
+      <subfield code="c">Broschur : EUR 11.00 (DE), EUR 11.40 (AT), CHF 14.90 (freier Preis)</subfield>
+      <subfield code="9">978-3-12-674133-0</subfield>
+    </datafield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">3126741339</subfield>
+      <subfield code="9">3-12-674133-9</subfield>
+    </datafield>
+    <datafield tag="041" ind1=" " ind2=" ">
+      <subfield code="a">ger</subfield>
+    </datafield>
+    <datafield tag="100" ind1="1" ind2=" ">
+      <subfield code="8">1\p</subfield>
+      <subfield code="0">(DE-588)124287646</subfield>
+      <subfield code="0">https://d-nb.info/gnd/124287646</subfield>
+      <subfield code="0">(DE-101)124287646</subfield>
+      <subfield code="a">Herrndorf, Wolfgang</subfield>
+      <subfield code="d">1965-2013</subfield>
+      <subfield code="e">Verfasser</subfield>
+      <subfield code="4">aut</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="245" ind1="1" ind2="0">
+      <subfield code="a">Tschick</subfield>
+      <subfield code="c">Wolfgang Herrndorf ; bearbeitet von: Angelika Lundquist-Mog</subfield>
+    </datafield>
+    <datafield tag="264" ind1=" " ind2="1">
+      <subfield code="a">Stuttgart</subfield>
+      <subfield code="b">Ernst Klett Sprachen</subfield>
+      <subfield code="c">[2025]</subfield>
+    </datafield>
+    <datafield tag="300" ind1=" " ind2=" ">
+      <subfield code="a">127 Seiten</subfield>
+      <subfield code="c">20 cm, 182 g</subfield>
+    </datafield>
+    <datafield tag="336" ind1=" " ind2=" ">
+      <subfield code="a">Text</subfield>
+      <subfield code="b">txt</subfield>
+      <subfield code="2">rdacontent</subfield>
+    </datafield>
+    <datafield tag="338" ind1=" " ind2=" ">
+      <subfield code="a">Band</subfield>
+      <subfield code="b">nc</subfield>
+      <subfield code="2">rdacarrier</subfield>
+    </datafield>
+    <datafield tag="490" ind1="0" ind2=" ">
+      <subfield code="a">Deutsch - leichter lesen</subfield>
+    </datafield>
+    <datafield tag="653" ind1=" " ind2=" ">
+      <subfield code="a">(Produktform)Paperback / softback</subfield>
+    </datafield>
+    <datafield tag="700" ind1="1" ind2=" ">
+      <subfield code="8">2\p</subfield>
+      <subfield code="0">(DE-588)1052806988</subfield>
+      <subfield code="0">https://d-nb.info/gnd/1052806988</subfield>
+      <subfield code="0">(DE-101)1052806988</subfield>
+      <subfield code="a">Lundquist-Mog, Angelika</subfield>
+      <subfield code="e">Mitwirkender</subfield>
+      <subfield code="4">ctb</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    </record></recordData></record><record><recordSchema>MARC21-xml</recordSchema><recordPacking>xml</recordPacking><recordData><record xmlns="http://www.loc.gov/MARC21/slim" type="Bibliographic">
+    <datafield tag="041" ind1=" " ind2=" ">
+      <subfield code="8">1\p</subfield>
+      <subfield code="a">ger</subfield>
+    </datafield>
+    <datafield tag="245" ind1="0" ind2="0">
+      <subfield code="a">Tschick</subfield>
+      <subfield code="c">Bergsteiger [und weitere] ; Bergsteiger, Heinrich Himalaya, Da Playaz</subfield>
+    </datafield>
+    <datafield tag="264" ind1=" " ind2="4">
+      <subfield code="c">2025</subfield>
+    </datafield>
+    <datafield tag="264" ind1=" " ind2="1">
+      <subfield code="a">München</subfield>
+      <subfield code="b">Sony Music/Honigdachs</subfield>
+      <subfield code="c">2025-11-28</subfield>
+    </datafield>
+    <datafield tag="300" ind1=" " ind2=" ">
+      <subfield code="a">Online-Ressource</subfield>
+    </datafield>
+    <datafield tag="336" ind1=" " ind2=" ">
+      <subfield code="a">aufgeführte Musik</subfield>
+      <subfield code="b">prm</subfield>
+      <subfield code="2">rdacontent</subfield>
+    </datafield>
+    <datafield tag="338" ind1=" " ind2=" ">
+      <subfield code="a">Online-Ressource</subfield>
+      <subfield code="b">cr</subfield>
+      <subfield code="2">rdacarrier</subfield>
+    </datafield>
+    </record></recordData></record></records></searchRetrieveResponse>

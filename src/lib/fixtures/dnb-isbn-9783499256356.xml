@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<searchRetrieveResponse xmlns="http://www.loc.gov/zing/srw/"><version>1.1</version><numberOfRecords>1</numberOfRecords><records><record><recordSchema>MARC21-xml</recordSchema><recordPacking>xml</recordPacking><recordData><record xmlns="http://www.loc.gov/MARC21/slim" type="Bibliographic">
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">9783499256356</subfield>
+      <subfield code="c">kart. : EUR 8.99 (DE), EUR 9.30 (AT), sfr 14.50 (freier Pr.)</subfield>
+      <subfield code="9">978-3-499-25635-6</subfield>
+    </datafield>
+    <datafield tag="020" ind1=" " ind2=" ">
+      <subfield code="a">3499256355</subfield>
+      <subfield code="9">3-499-25635-5</subfield>
+    </datafield>
+    <datafield tag="041" ind1=" " ind2=" ">
+      <subfield code="a">ger</subfield>
+    </datafield>
+    <datafield tag="100" ind1="1" ind2=" ">
+      <subfield code="0">(DE-588)124287646</subfield>
+      <subfield code="0">https://d-nb.info/gnd/124287646</subfield>
+      <subfield code="0">(DE-101)124287646</subfield>
+      <subfield code="a">Herrndorf, Wolfgang</subfield>
+      <subfield code="d">1965-2013</subfield>
+      <subfield code="e">Verfasser</subfield>
+      <subfield code="4">aut</subfield>
+      <subfield code="2">gnd</subfield>
+    </datafield>
+    <datafield tag="245" ind1="1" ind2="0">
+      <subfield code="a">Tschick</subfield>
+      <subfield code="b">Roman</subfield>
+      <subfield code="c">Wolfgang Herrndorf</subfield>
+    </datafield>
+    <datafield tag="264" ind1=" " ind2="1">
+      <subfield code="a">Reinbek bei Hamburg</subfield>
+      <subfield code="b">Rowohlt-Taschenbuch-Verl.</subfield>
+      <subfield code="c">2012</subfield>
+    </datafield>
+    <datafield tag="300" ind1=" " ind2=" ">
+      <subfield code="a">253 S.</subfield>
+      <subfield code="c">19 cm</subfield>
+    </datafield>
+    <datafield tag="336" ind1=" " ind2=" ">
+      <subfield code="a">Text</subfield>
+      <subfield code="b">txt</subfield>
+      <subfield code="2">rdacontent</subfield>
+    </datafield>
+    <datafield tag="338" ind1=" " ind2=" ">
+      <subfield code="a">Band</subfield>
+      <subfield code="b">nc</subfield>
+      <subfield code="2">rdacarrier</subfield>
+    </datafield>
+    <datafield tag="490" ind1="1" ind2=" ">
+      <subfield code="a">Rororo</subfield>
+      <subfield code="v">25635</subfield>
+    </datafield>
+    <datafield tag="653" ind1=" " ind2=" ">
+      <subfield code="a">(Produktform)Paperback / softback</subfield>
+    </datafield>
+    <datafield tag="830" ind1=" " ind2="0">
+      <subfield code="a">Rororo</subfield>
+      <subfield code="v">25635</subfield>
+      <subfield code="w">(DE-101)010429638</subfield>
+      <subfield code="w">(DE-600)48948-7</subfield>
+      <subfield code="9">525635</subfield>
+      <subfield code="7">as</subfield>
+    </datafield>
+    </record></recordData></record></records></searchRetrieveResponse>

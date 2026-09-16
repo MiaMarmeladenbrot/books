@@ -1,0 +1,116 @@
+{
+  "numFound": 14,
+  "docs": [
+    {
+      "author_name": [
+        "Wolfgang Herrndorf"
+      ],
+      "cover_i": 8418261,
+      "first_publish_year": 2010,
+      "isbn": [
+        "9789059363304",
+        "1783440317",
+        "1448187338",
+        "837747946X",
+        "2364740371",
+        "9783871347108",
+        "3499259915",
+        "9780545586368",
+        "0545481813",
+        "3499256355",
+        "8490325383",
+        "3499216515",
+        "9781925113129",
+        "9780545481816",
+        "9788490325384",
+        "9788377479469",
+        "9782364740372",
+        "9781783440313",
+        "9783839891261",
+        "0545586364",
+        "0545481805",
+        "3871347108",
+        "9780545481809",
+        "9781448187331",
+        "9059363302",
+        "9783499216510",
+        "1925113124",
+        "9783499259913",
+        "3839891264",
+        "9783499256356"
+      ],
+      "language": [
+        "fre",
+        "eng",
+        "pol",
+        "ger",
+        "dut",
+        "spa"
+      ],
+      "number_of_pages_median": 248,
+      "publisher": [
+        "DEBOLSILLO",
+        "Andersen Press",
+        "Scribe Publications",
+        "Rowohlt",
+        "Scholastic, Incorporated",
+        "EUROPEAN SCHOOLBOOKS LTD",
+        "Rowohlt Taschenbuch Verlag GmbH",
+        "Foksal",
+        "T. Magnier",
+        "Rowohlt Verlag",
+        "Cossee",
+        "Debolsillo",
+        "Arthur A. Levine Books/Scholastic"
+      ],
+      "title": "Tschick"
+    },
+    {
+      "author_name": [
+        "Eva-Maria Scholz"
+      ],
+      "cover_i": 10874693,
+      "first_publish_year": 2018,
+      "isbn": [
+        "9783150154786",
+        "3150154782"
+      ],
+      "publisher": [
+        "Philipp Reclam jun. Verlag GmbH"
+      ],
+      "title": "Tschick von Wolfgang Herrndorf"
+    },
+    {
+      "author_name": [
+        "Wolfgang Pütz"
+      ],
+      "cover_i": 8884503,
+      "first_publish_year": 2016,
+      "isbn": [
+        "3129231021",
+        "9783129231029"
+      ],
+      "publisher": [
+        "Klett Lerntraining"
+      ],
+      "title": "Lektürehilfen Wolfgang Herrndorf \"Tschick\""
+    },
+    {
+      "author_name": [
+        "Thomas Möbius"
+      ],
+      "cover_i": 13572697,
+      "first_publish_year": 2014,
+      "isbn": [
+        "9783804420083",
+        "3804420087"
+      ],
+      "number_of_pages_median": 130,
+      "publisher": [
+        "Bange C. GmbH",
+        "C. Bange GmbH & Co KG"
+      ],
+      "title": "Tschick"
+    }
+  ]
+}
