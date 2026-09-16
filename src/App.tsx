@@ -5,6 +5,7 @@ import { BooksProvider } from './store/BooksContext'
 import { useAuth } from './store/useAuth'
 import { useBooks } from './store/useBooks'
 import { TabBar } from './components/TabBar'
+import { InstallHint } from './components/InstallHint'
 import { StackLoader } from './components/StackLoader'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Login } from './pages/Login'
@@ -48,6 +49,7 @@ function SplashGate({ pending, children }: { pending: boolean; children: ReactNo
 function TabLayout() {
   return (
     <>
+      <InstallHint />
       <Outlet />
       <TabBar />
     </>
