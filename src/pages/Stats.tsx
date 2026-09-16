@@ -83,7 +83,7 @@ function PerMonth({ books }: { books: FinishedBook[] }) {
 
   const tallest = Math.max(...counts.map((entry) => entry[metric]), 1)
   const peak = counts.reduce(
-    (best, entry, index) => (entry.books > counts[best].books ? index : best),
+    (best, entry, index) => (entry[metric] > counts[best][metric] ? index : best),
     0,
   )
 
@@ -110,14 +110,17 @@ function PerMonth({ books }: { books: FinishedBook[] }) {
     >
       <div className="flex h-28 items-end gap-1.5">
         {counts.map((entry, index) => (
-          <div key={index} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
-            <span className="text-ink-2 text-2xs font-bold">
-              {entry[metric] ? formatCompact(entry[metric]) : ''}
+          <div key={index} className="flex h-full flex-1 flex-col items-center gap-1.5">
+            <span className="flex min-h-0 w-full flex-1 items-end pt-4.5">
+              <span
+                className={`relative w-full rounded-t-xs ${index === peak ? 'bg-leaf' : 'bg-accent'}`}
+                style={{ height: `${Math.max((entry[metric] / tallest) * 100, 2)}%` }}
+              >
+                <span className="text-ink-2 text-2xs absolute inset-x-0 bottom-full pb-1 text-center font-bold">
+                  {entry[metric] ? formatCompact(entry[metric]) : ''}
+                </span>
+              </span>
             </span>
-            <span
-              className={`w-full rounded-t-xs ${index === peak ? 'bg-leaf' : 'bg-accent'}`}
-              style={{ height: `${Math.max((entry[metric] / tallest) * 100, 2)}%` }}
-            />
             <span className="text-ink-3 text-2xs font-medium">{monthNarrow(index)}</span>
           </div>
         ))}
