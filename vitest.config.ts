@@ -18,7 +18,8 @@ export default defineConfig({
         test: {
           name: 'flow',
           environment: 'jsdom',
-          include: [FLOW],
+          include: [FLOW, 'src/**/*.test.tsx'],
+          setupFiles: ['./src/test-setup.ts'],
           env: { TZ: 'Europe/Berlin' },
         },
       },
