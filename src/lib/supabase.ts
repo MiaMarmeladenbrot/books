@@ -41,25 +41,54 @@ export const db = new PostgrestClient(new URL('rest/v1', project).href, {
 const storage = new StorageClient(new URL('storage/v1', project).href, {}, asCurrentUser)
 
 const COVER_BUCKET = 'cover'
+const SHARED_FOLDER = 'isbn'
+const ALREADY_THERE = '409'
+
+const COVER_UPLOAD = { contentType: 'image/jpeg', cacheControl: '31536000' }
 
 export function coverUrl(path: string | null) {
   if (!path) return null
   return storage.from(COVER_BUCKET).getPublicUrl(path).data.publicUrl
 }
 
-export async function uploadCover(stem: string, image: Blob) {
+export function sharedCoverPath(isbn: string) {
+  const compact = isbn.replace(/[^0-9Xx]/g, '').toUpperCase()
+  if (!/^(\d{9}[\dX]|\d{13})$/.test(compact)) return null
+  return `${SHARED_FOLDER}/${compact}.jpg`
+}
+
+export function ownCoverPath(userId: string, stem: string, stamp = Date.now()) {
   const safeStem = stem.replace(/[^A-Za-z0-9-]/g, '') || 'cover'
-  const path = `${safeStem}-${Date.now()}.jpg`
-  const { error } = await storage.from(COVER_BUCKET).upload(path, image, {
-    contentType: 'image/jpeg',
-    cacheControl: '31536000',
-  })
+  return `${userId}/${safeStem}-${stamp}.jpg`
+}
+
+export function isSharedCover(path: string) {
+  return path.startsWith(`${SHARED_FOLDER}/`)
+}
+
+async function currentUserId() {
+  const { data } = await auth.getSession()
+  const id = data.session?.user.id
+  if (!id) throw new Error('Kein angemeldetes Konto')
+  return id
+}
+
+export async function uploadOwnCover(stem: string, image: Blob) {
+  const path = ownCoverPath(await currentUserId(), stem)
+  const { error } = await storage.from(COVER_BUCKET).upload(path, image, COVER_UPLOAD)
   if (error) throw new Error(error.message)
   return path
 }
 
+export async function uploadSharedCover(path: string, image: Blob) {
+  const { error } = await storage.from(COVER_BUCKET).upload(path, image, COVER_UPLOAD)
+  if (error && error.statusCode !== ALREADY_THERE) throw new Error(error.message)
+  return path
+}
+
 export async function releaseCover(path: string) {
-  const { data, error } = await db.rpc('cover_is_orphaned', { wanted: path })
-  if (error || data !== true) return
-  await storage.from(COVER_BUCKET).remove([path])
+  if (isSharedCover(path)) return
+  const { data, error } = await storage.from(COVER_BUCKET).remove([path])
+  if (error) console.warn(`Cover ${path} nicht gelöscht: ${error.message}`)
+  else if (data?.length === 0) console.warn(`Cover ${path} nicht gelöscht: abgelehnt`)
 }

@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { CoverPicker } from '../components/CoverPicker'
 import { Select } from '../components/Select'
-import { releaseCover, uploadCover } from '../lib/supabase'
+import { releaseCover, sharedCoverPath, uploadOwnCover, uploadSharedCover } from '../lib/supabase'
 import type { Candidate } from '../lib/lookup'
 import { MAX_UPLOAD_BYTES, fetchGatedCoverJpeg, toCoverJpeg } from '../utils/image'
 import { todayIso } from '../utils/format'
@@ -79,6 +79,12 @@ function draftForStatus(draft: BookDraft, status: BookStatus, today: string): Bo
     started_on: dates.started ? (draft.started_on ?? today) : null,
     finished_on: dates.finished ? (draft.finished_on ?? today) : null,
   }
+}
+
+function storeCatalogueCover(isbn: string | null, bookId: string, image: Blob) {
+  const shared = isbn ? sharedCoverPath(isbn) : null
+  const upload = shared ? uploadSharedCover(shared, image) : uploadOwnCover(bookId, image)
+  return upload.catch(() => null)
 }
 
 const fieldClass =
@@ -237,7 +243,7 @@ export function BookForm() {
 
       if (coverImage) {
         try {
-          const path = await uploadCover(payload.isbn ?? saved.id, coverImage)
+          const path = await uploadOwnCover(payload.isbn ?? saved.id, coverImage)
           await updateBook(saved.id, { cover_path: path })
           if (previousCover) await releaseCover(previousCover)
         } catch {
@@ -248,9 +254,7 @@ export function BookForm() {
         }
       } else if (candidateCover) {
         const image = await fetchGatedCoverJpeg(candidateCover)
-        const path = image
-          ? await uploadCover(payload.isbn ?? saved.id, image).catch(() => null)
-          : null
+        const path = image ? await storeCatalogueCover(payload.isbn, saved.id, image) : null
         if (path) {
           await updateBook(saved.id, { cover_path: path })
           if (previousCover) await releaseCover(previousCover)
