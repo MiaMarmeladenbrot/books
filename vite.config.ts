@@ -24,5 +24,6 @@ function serveApiRoutesInDevelopment() {
 }
 
 export default defineConfig({
+  server: { port: 5180, strictPort: true },
   plugins: [react(), tailwindcss(), serveApiRoutesInDevelopment()],
 })
