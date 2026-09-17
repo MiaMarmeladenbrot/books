@@ -1,9 +1,12 @@
-import { useState, type ReactNode, type SyntheticEvent } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 import { Pencil } from 'lucide-react'
 import { useAuth } from '../store/useAuth'
+import { useBooks } from '../store/useBooks'
 import { useProfile } from '../store/useProfile'
 import { Avatar, DEFAULT_AVATAR } from '../components/Avatar'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ExportPanel } from '../components/ExportPanel'
+import { Panel } from '../components/Panel'
 import { auth } from '../lib/supabase'
 import { AVATAR_LABEL, AVATAR_ORDER } from '../types'
 import type { AvatarName } from '../types'
@@ -18,17 +21,9 @@ const quietButtonClass =
 const strongButtonClass =
   'bg-accent flex-1 rounded-xl py-3 text-sm font-bold text-white disabled:opacity-60'
 
-function Panel({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="border-line bg-card mb-3.5 rounded-2xl border px-4 py-4">
-      <h2 className="text-ink-3 mb-3.5 text-xs font-bold tracking-widest uppercase">{title}</h2>
-      {children}
-    </section>
-  )
-}
-
 export function Profile() {
   const { user, signOut } = useAuth()
+  const { books } = useBooks()
   const { profile, saveProfile } = useProfile()
 
   const [editing, setEditing] = useState(false)
@@ -234,6 +229,8 @@ export function Profile() {
 
           {passwordDone && <p className="text-leaf mt-3 text-sm">Das Passwort ist geändert.</p>}
         </Panel>
+
+        <ExportPanel books={books} />
 
         <button
           type="button"

@@ -1,4 +1,5 @@
 import { Download } from 'lucide-react'
+import { Panel } from './Panel'
 import { booksToCsv, booksToJson, download } from '../utils/export'
 import { formatNumber, todayIso } from '../utils/format'
 import type { Book } from '../types'
@@ -10,8 +11,7 @@ export function ExportPanel({ books }: { books: Book[] }) {
   const stamp = todayIso()
 
   return (
-    <section className="border-line bg-card mb-3.5 rounded-2xl border px-4 py-4">
-      <h2 className="text-ink-3 mb-1.5 text-xs font-bold tracking-widest uppercase">Sicherung</h2>
+    <Panel title="Sicherung">
       <p className="text-ink-2 mb-3.5 text-sm leading-relaxed">
         {formatNumber(books.length)} Bücher herunterladen. Die JSON-Datei ist die vollständige
         Sicherung, die CSV-Datei zum Anschauen in Numbers oder Excel.
@@ -36,6 +36,6 @@ export function ExportPanel({ books }: { books: Book[] }) {
           CSV
         </button>
       </div>
-    </section>
+    </Panel>
   )
 }

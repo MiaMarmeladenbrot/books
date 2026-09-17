@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useBooks } from '../store/useBooks'
-import { ExportPanel } from '../components/ExportPanel'
+import { Panel } from '../components/Panel'
 import { formatCompact, formatNumber, monthNarrow, readingDays } from '../utils/format'
 import {
   BookStatus,
@@ -30,26 +30,6 @@ type FinishedBook = Book & { finished_on: string }
 
 function isFinished(book: Book): book is FinishedBook {
   return book.status === BookStatus.Read && book.finished_on !== null
-}
-
-function Panel({
-  title,
-  extra,
-  children,
-}: {
-  title: string
-  extra?: React.ReactNode
-  children: React.ReactNode
-}) {
-  return (
-    <section className="border-line bg-card mb-3.5 rounded-2xl border px-4 py-4">
-      <h2 className="text-ink-3 mb-3.5 flex items-baseline text-xs font-bold tracking-widest uppercase">
-        {title}
-        {extra ? <span className="ml-auto">{extra}</span> : null}
-      </h2>
-      {children}
-    </section>
-  )
 }
 
 const SLICE_COLORS = [
@@ -395,8 +375,6 @@ export function Stats() {
             <Pie rows={languages} />
           </Panel>
         )}
-
-        {year === ALL_YEARS && <ExportPanel books={books} />}
       </main>
     </div>
   )

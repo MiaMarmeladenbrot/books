@@ -20,7 +20,7 @@ function statistics(books: Book[]) {
   render(
     <BooksContext.Provider value={value}>
       <Stats />
-    </BooksContext.Provider>
+    </BooksContext.Provider>,
   )
 }
 
@@ -214,11 +214,10 @@ describe('the statistics page', () => {
     expect(months.getByRole('button', { name: 'Seiten' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('offers the download only when no year is narrowing the shelf', () => {
+  it('leaves the download to the profile', () => {
     statistics(SHELF)
-    expect(screen.queryByText('Sicherung')).not.toBeInTheDocument()
 
     fireEvent.click(chip('Alle'))
-    expect(screen.getByText('Sicherung')).toBeInTheDocument()
+    expect(screen.queryByText('Sicherung')).not.toBeInTheDocument()
   })
 })

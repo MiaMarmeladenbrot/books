@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react'
 import type { User } from '@supabase/auth-js'
 import { Profile } from './Profile'
 import { AuthContext } from '../store/authContextValue'
+import { BooksContext } from '../store/booksContextValue'
 import { ProfileContext } from '../store/profileContextValue'
 import { auth } from '../lib/supabase'
 import { AvatarName } from '../types'
@@ -38,12 +39,23 @@ function open(profile: Reader | null = aProfile()) {
   const signOut = vi.fn().mockResolvedValue(undefined)
   const saveProfile = vi.fn().mockImplementation(async (patch) => aProfile(patch))
   const account = { user: READER, signOut } as unknown as AuthValue
+  const shelf = {
+    books: [],
+    loading: false,
+    error: null,
+    addBook: vi.fn(),
+    updateBook: vi.fn(),
+    removeBook: vi.fn(),
+    reload: vi.fn().mockResolvedValue(undefined),
+  }
 
   render(
     <AuthContext.Provider value={account}>
-      <ProfileContext.Provider value={{ profile, loading: false, error: null, saveProfile }}>
-        <Profile />
-      </ProfileContext.Provider>
+      <BooksContext.Provider value={shelf}>
+        <ProfileContext.Provider value={{ profile, loading: false, error: null, saveProfile }}>
+          <Profile />
+        </ProfileContext.Provider>
+      </BooksContext.Provider>
     </AuthContext.Provider>,
   )
 
@@ -79,6 +91,13 @@ describe('the profile as it is read', () => {
     expect(screen.queryByLabelText('Anzeigename')).not.toBeInTheDocument()
     edit()
     expect(nameField()).toHaveValue('Ann-Marie')
+  })
+
+  it('carries the backup, which used to sit under the statistics', () => {
+    open()
+
+    expect(screen.getByText('Sicherung')).toBeInTheDocument()
+    expect(page().getByRole('button', { name: 'JSON' })).toBeInTheDocument()
   })
 })
 
