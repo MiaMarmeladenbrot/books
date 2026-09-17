@@ -27,12 +27,18 @@ const SPINE_SEEDS = [
   '25 letzte Sommer',
 ]
 
+const fieldClass =
+  'border-line bg-card focus:border-accent w-full rounded-xl border px-3.5 py-3 text-base outline-none'
+const labelClass = 'text-ink-2 mb-1.5 block text-xs font-semibold'
+
 export function Login() {
-  const { signIn } = useAuth()
+  const { signIn, requestReset } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [asking, setAsking] = useState(false)
+  const [sent, setSent] = useState(false)
 
   const handleSubmit = async (event: SyntheticEvent) => {
     event.preventDefault()
@@ -41,6 +47,28 @@ export function Login() {
     const { error: signInError } = await signIn(email.trim(), password)
     if (signInError) setError('E-Mail oder Passwort falsch')
     setBusy(false)
+  }
+
+  const handleReset = async (event: SyntheticEvent) => {
+    event.preventDefault()
+    setError('')
+    setBusy(true)
+    const { error: refused } = await requestReset(email.trim())
+    if (refused) setError('Das hat gerade nicht geklappt. Versuch es in ein paar Minuten nochmal.')
+    else setSent(true)
+    setBusy(false)
+  }
+
+  const ask = () => {
+    setError('')
+    setPassword('')
+    setAsking(true)
+  }
+
+  const back = () => {
+    setError('')
+    setSent(false)
+    setAsking(false)
   }
 
   return (
@@ -60,42 +88,67 @@ export function Login() {
         </div>
 
         <h1 className="font-serif mb-1 text-3xl font-semibold tracking-tight">Lesestapel</h1>
-        <p className="text-ink-2 mb-7 text-sm">Deine Bücher, an einem Ort.</p>
+        <p className="text-ink-2 mb-7 text-sm">
+          {asking ? 'Wir schicken dir einen Link zum Zurücksetzen.' : 'Deine Bücher, an einem Ort.'}
+        </p>
 
-        <form onSubmit={handleSubmit}>
-          <label className="mb-4 block">
-            <span className="text-ink-2 mb-1.5 block text-xs font-semibold">E-Mail</span>
-            <input
-              type="email"
-              autoComplete="username"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              className="border-line bg-card focus:border-accent w-full rounded-xl border px-3.5 py-3 text-base outline-none"
-            />
-          </label>
-          <label className="mb-4 block">
-            <span className="text-ink-2 mb-1.5 block text-xs font-semibold">Passwort</span>
-            <input
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              className="border-line bg-card focus:border-accent w-full rounded-xl border px-3.5 py-3 text-base outline-none"
-            />
-          </label>
+        {sent ? (
+          <>
+            <p className="text-ink-2 text-sm leading-relaxed">
+              Wenn es ein Konto zu <b className="text-ink font-semibold">{email.trim()}</b> gibt,
+              liegt gleich eine Mail mit einem Link darin. Der Link gilt eine Stunde.
+            </p>
+            <button type="button" onClick={back} className="text-accent mt-6 text-sm font-semibold">
+              Zurück zur Anmeldung
+            </button>
+          </>
+        ) : (
+          <form onSubmit={asking ? handleReset : handleSubmit}>
+            <label className="mb-4 block">
+              <span className={labelClass}>E-Mail</span>
+              <input
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+                className={fieldClass}
+              />
+            </label>
 
-          {error && <p className="text-danger mb-3 text-sm">{error}</p>}
+            {!asking && (
+              <label className="mb-4 block">
+                <span className={labelClass}>Passwort</span>
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  className={fieldClass}
+                />
+              </label>
+            )}
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="bg-accent mt-2 w-full rounded-xl py-4 text-base font-bold text-white disabled:opacity-60"
-          >
-            {busy ? 'Moment…' : 'Anmelden'}
-          </button>
-        </form>
+            {error && <p className="text-danger mb-3 text-sm">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={busy}
+              className="bg-accent mt-2 w-full rounded-xl py-4 text-base font-bold text-white disabled:opacity-60"
+            >
+              {busy ? 'Moment…' : asking ? 'Link schicken' : 'Anmelden'}
+            </button>
+
+            <button
+              type="button"
+              onClick={asking ? back : ask}
+              className="text-ink-3 mt-5 w-full text-center text-sm font-semibold"
+            >
+              {asking ? 'Zurück zur Anmeldung' : 'Passwort vergessen?'}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )

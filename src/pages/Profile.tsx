@@ -7,11 +7,11 @@ import { Avatar, DEFAULT_AVATAR } from '../components/Avatar'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ExportPanel } from '../components/ExportPanel'
 import { Panel } from '../components/Panel'
+import { PasswordField } from '../components/PasswordField'
 import { auth } from '../lib/supabase'
+import { refusalText, tooShort } from '../lib/password'
 import { AVATAR_LABEL, AVATAR_ORDER } from '../types'
 import type { AvatarName } from '../types'
-
-const PASSWORD_MINIMUM = 8
 
 const fieldClass =
   'border-line bg-card focus:border-accent w-full rounded-xl border px-3.5 py-3 text-base outline-none'
@@ -67,8 +67,9 @@ export function Profile() {
   const handlePassword = async (event: SyntheticEvent) => {
     event.preventDefault()
     setPasswordError('')
-    if (nextPassword.length < PASSWORD_MINIMUM) {
-      setPasswordError(`Mindestens ${PASSWORD_MINIMUM} Zeichen.`)
+    const short = tooShort(nextPassword)
+    if (short) {
+      setPasswordError(short)
       return
     }
     setPasswordBusy(true)
@@ -82,7 +83,7 @@ export function Profile() {
       return
     }
     const { error: refused } = await auth.updateUser({ password: nextPassword })
-    if (refused) setPasswordError('Das neue Passwort wurde abgelehnt.')
+    if (refused) setPasswordError(refusalText(refused))
     else {
       setPasswordDone(true)
       setChanging(false)
@@ -187,17 +188,11 @@ export function Profile() {
                   className={fieldClass}
                 />
               </label>
-              <label className="block">
-                <span className={labelClass}>Neues Passwort</span>
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  value={nextPassword}
-                  onChange={(event) => setNextPassword(event.target.value)}
-                  required
-                  className={fieldClass}
-                />
-              </label>
+              <PasswordField
+                label="Neues Passwort"
+                value={nextPassword}
+                onChange={setNextPassword}
+              />
 
               {passwordError && <p className="text-danger mt-3 text-sm">{passwordError}</p>}
 

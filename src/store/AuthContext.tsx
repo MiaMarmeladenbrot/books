@@ -6,6 +6,7 @@ import { AuthContext } from './authContextValue'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recovering, setRecovering] = useState(false)
 
   useEffect(() => {
     auth.getSession().then(({ data }) => {
@@ -15,8 +16,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = auth.onAuthStateChange((_event, session) => {
+    } = auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
+      if (event === 'PASSWORD_RECOVERY') setRecovering(true)
     })
 
     return () => subscription.unsubscribe()
@@ -28,11 +30,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    setRecovering(false)
     await auth.signOut()
   }
 
+  const requestReset = async (email: string) => {
+    const { error } = await auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/`,
+    })
+    return { error: error as Error | null }
+  }
+
+  const endRecovery = () => setRecovering(false)
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{ user, loading, recovering, signIn, signOut, requestReset, endRecovery }}
+    >
       {children}
     </AuthContext.Provider>
   )

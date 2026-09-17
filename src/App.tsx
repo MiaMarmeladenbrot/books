@@ -24,6 +24,9 @@ const BookSearch = lazy(() =>
 const Profile = lazy(() =>
   import('./pages/Profile').then((module) => ({ default: module.Profile })),
 )
+const NewPassword = lazy(() =>
+  import('./pages/NewPassword').then((module) => ({ default: module.NewPassword })),
+)
 
 const SPLASH_MINIMUM = 900
 
@@ -85,14 +88,25 @@ function Shell() {
   )
 }
 
+function Screen() {
+  const { user, recovering } = useAuth()
+
+  if (!user) return <Login />
+  if (recovering) return <NewPassword />
+  return <Shell />
+}
+
 function AppRoutes() {
-  const { user, loading: signingIn } = useAuth()
+  const { user, loading: signingIn, recovering } = useAuth()
   const { loading: fetchingBooks } = useBooks()
   const { loading: fetchingProfile } = useProfile()
+  const waiting = Boolean(user) && !recovering && (fetchingBooks || fetchingProfile)
 
   return (
-    <SplashGate pending={signingIn || (Boolean(user) && (fetchingBooks || fetchingProfile))}>
-      {user ? <Shell /> : <Login />}
+    <SplashGate pending={signingIn || waiting}>
+      <Suspense fallback={<Turning />}>
+        <Screen />
+      </Suspense>
     </SplashGate>
   )
 }
