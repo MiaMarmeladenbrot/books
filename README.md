@@ -39,13 +39,11 @@ npm run dev
 Three things are prepared in Supabase itself:
 
 1. Run `supabase/schema.sql` once in the SQL editor. It creates the enums, the
-   `books` table, its indexes, four RLS policies, the `updated_at` trigger and
-   `cover_is_orphaned`, the one function a browser cannot answer for itself.
+   `books` table, its indexes, four RLS policies and the `updated_at` trigger.
 2. Create each account by hand under Authentication. The app has no sign-up on
    purpose, so a new reader is one row in `auth.users` and nothing else.
 3. Create a public storage bucket named `cover` and grant the accounts access to
-   it, see `supabase/storage.sql`. It has to run after step 1, because one of
-   its policies calls `cover_is_orphaned`.
+   it, see `supabase/storage.sql`.
 
 ## Scripts
 
@@ -58,100 +56,37 @@ Three things are prepared in Supabase itself:
 
 ## Covers
 
-A cover lives in the `cover` bucket and the book row points at it through
-`cover_path`; the file name is never derived from the book. Books without a cover
-fall back to a pattern generated from the title, which also catches an image that
-fails to load.
+The book row points at a file through `cover_path`; books without one fall back
+to a pattern generated from the title, which also catches an image that fails to
+load. Tiles are 5:8, not the obvious 2:3 — over the first 412 covers a 2:3 box
+cropped 87 percent of them top and bottom, where the title and the author sit.
 
-The covers of both imported libraries were fetched once from the MVB service
-behind the DNB portal and from Open Library, and are named after their ISBN.
-Uploads from the app add a timestamp, `<isbn>-<epoch>.jpg`, because covers are
-served with `Cache-Control: immutable` for a year: a changed picture therefore
-has to mean a changed URL. Replacing a cover through the app deletes the previous
-file, and so does deleting a book.
+| Path                           | Belongs to              | Deleted       |
+| ------------------------------ | ----------------------- | ------------- |
+| `isbn/<isbn>.jpg`              | the edition             | never         |
+| `<user_id>/<stem>-<epoch>.jpg` | the reader who chose it | with its book |
 
-The bucket is shared by every account, so naming a file after its ISBN means one
-file for an edition several readers own — which is the point, but it also means
-an import cannot assume it may write. Supabase answers such an upload with HTTP 400
-and a 409 body, `KeyAlreadyExists`, and the honest reaction is to leave the file
-alone and point the new row at it.
+Deleting a shared file would be a question about other people's rows, which is
+what row level security stops a browser from asking — a file that is never
+deleted never raises it. The first upload for an edition is the one everybody
+gets; whoever wants another chooses their own, which lands in their folder and
+wins for their book.
 
-Sharing files makes deleting one a question about other people's rows, which is
-exactly what row level security stops a browser from asking. Deleting a book or
-replacing its picture therefore gives up the pointer first and asks
-`public.cover_is_orphaned`, a `security definer` function that counts references
-across all accounts, whether anything still points at the file; only then is it
-removed. When that call fails nothing is deleted, because an orphaned file costs
-a few kilobytes and a wrongly deleted one costs somebody their cover.
+The rule is the path, not a hidden `owner_id`: an account writes into its own
+folder or into `isbn/` and deletes only inside its own. A name under `isbn/` has
+to look like an ISBN, checked in the client and again in the policy, because the
+form's ISBN field is free text and `unbekannt` strips down to nothing. Uploading
+onto a shared name that exists answers 409 and is the normal case, not an error.
+There is no select policy: the bucket is public and `getPublicUrl` needs no
+request, while allowing reads would allow listing — and the file names are ISBNs.
 
-The bucket asks the same question a second time. The policies in
-`supabase/storage.sql` grant a delete only where the file was uploaded by the
-account asking and nothing points at it any more, so a client that forgets to
-ask `cover_is_orphaned` cannot delete anything either. Politeness is a poor
-place to keep a rule that matters.
-
-There is no select policy at all. The bucket is public, `getPublicUrl` builds an
-address in the browser without making a request, and a policy that allowed
-reading would also allow listing — which would hand any signed-in reader every
-file name in the bucket, and the file names are ISBNs.
-
-Policies are the one part of this repository that a dashboard can change without
-leaving a diff, and this file had drifted away from what was in force before
-anybody thought to look. What is actually in force is one query away, and
-comparing it to the file above is the only thing that keeps the file worth
-reading:
+A dashboard changes policies without leaving a diff, so the file is worth nothing
+unchecked:
 
 ```sql
-select policyname, cmd, qual, with_check
-from pg_policies
-where schemaname = 'storage' and tablename = 'objects'
-order by cmd, policyname;
+select policyname, cmd, qual, with_check from pg_policies
+where schemaname = 'storage' and tablename = 'objects' order by cmd, policyname;
 ```
-
-Tiles are 5:8 rather than the obvious 2:3. Measured over the first 412 covers, a
-2:3 box cropped 87 percent of them at top and bottom, which is where the title
-and the author sit; 5:8 lies just below the 25th percentile of the real ratios,
-so what little cropping remains happens at the sides.
-
-## Where the data came from
-
-The 501 books of the old library came out of an Excel export from bookstats.de on
-23 August 2026 and were cleaned up and imported once by script. Titles, authors,
-format and provenance were normalised on the way in, and the original value of
-each is still kept in the `source_meta` column. The script and its intermediate
-files were removed after the import.
-
-Checking those values against the Deutsche Nationalbibliothek and Open Library
-afterwards turned up no wrong ISBN and no wrong page count. Where a catalogue
-disagrees it is usually a different edition, so the imported numbers were kept.
-
-The second account was filled the same way on 24 August 2026, from a spreadsheet
-of 239 books kept as two lists side by side: read on the left with a reading
-year, wanted on the right, author and title and nothing else. Two entries on the
-right carried a page number instead, which is what being read looks like in a
-spreadsheet. One book stood on both lists and was imported once, the two already
-entered by hand were left alone, and so 236 rows were written. Because the sheet
-knows only years, a read book carries 31 December of its year as `finished_on`,
-and the 23 that predate the list carry no date at all, which is what keeps them
-out of every yearly figure. The spreadsheet's own wording stays in
-`source_meta.import`, the record that matched it in `source_meta.catalogue`.
-
-ISBN, page count, publication year and cover were looked up per title against the
-same two catalogues. Both were asked for every book and the better record won,
-because asking the DNB first and Open Library only on failure hands a novel to
-the 128-page school reader of it. Matching was on title and family name, which
-resolved the typos of a spreadsheet — `Sarte`, `Cornrad`, `Möchet` — while
-keeping `Tagebuch` by Anne Frank away from `Die Tagebücher` by Frank Wedekind.
-Foreign-language editions, school readers and audiobooks lose the ranking, and a
-page count is believed only where the catalogue counts pages rather than CDs or
-minutes.
-
-Four books ended up without a page count and two of those without an ISBN,
-`Harry Potter 1-7` among them: seven volumes in one row have no single edition,
-and a 28-page booklet is a worse answer than none. Another 32 have no cover. A
-script is not bound by CORS the way the app is, so it could take the better MVB
-scans for almost all of the rest; what is missing is missing from both services,
-or too small and too oddly proportioned to pass the checks in `api/cover.ts`.
 
 ## Data model
 
@@ -174,100 +109,82 @@ fetched again from their ISBN.
 ## Adding a book
 
 Adding starts with a search rather than an empty form. One field takes both an
-ISBN and a title: ten or thirteen digits are looked up exactly, anything else is
-searched as a title and offers the matches. The book form then opens prefilled,
-with the status set to read.
+ISBN and a title, and what happens behind it differs:
 
-The dates stay empty. Guessing today is right often enough to be tempting, but
-entering a date costs less than noticing a wrong one and clearing it, and a read
-book carrying no finish date stays out of every yearly figure until it gets one
-— which is the honest state for a book whose date nobody has said yet.
+```mermaid
+flowchart TD
+  IN["one field"] --> Q{"ten or thirteen digits?"}
 
-Both catalogues are queried straight from the browser — the DNB and Open Library
-each send permissive CORS headers, so no server sits between the app and a
-record. The DNB is asked first because it carries the German editions; Open
-Library answers for most of the rest.
+  Q -->|yes| D1["DNB, by number"]
+  D1 -->|"a record"| ONE["the book"]
+  D1 -->|"nothing"| O1["Open Library, by ISBN"]
+  O1 --> ONE
+
+  Q -->|no| PAR["three searches at once"]
+  PAR --> DT["DNB, exact title"]
+  PAR --> DW["DNB, single words"]
+  PAR --> OT["Open Library, text"]
+  DT --> SHOW["what the DNB has,<br/>on screen at once"]
+  DW --> SHOW
+  SHOW --> LIST["ranked and deduplicated"]
+  OT --> LIST
+```
+
+Both catalogues answer the browser directly, with no server in between. By number
+the DNB goes first because it carries the German editions, and Open Library is
+asked only if that comes back empty. By title all three run together and the
+DNB's answers go on screen the moment they arrive, rather than making somebody
+wait for the slower search to finish.
+
+The form then opens prefilled, with the status set to read and the dates empty —
+entering a date costs less than noticing a wrong one, and a read book without a
+finish date stays out of every yearly figure until somebody says it.
 
 Three filters come from reconciling the imported library against these same
-catalogues. Field 700 of a MARC record holds translators and name-title entries
-as often as further authors, so entries carrying a `$t` or a non-`aut` relator
-are dropped. Series names are checked against publisher imprints, or books end
-up in a series called `KiWi` or `Goldmann`. And study guides and audio editions
-are filtered out of title matches.
+catalogues: MARC field 700 holds translators as often as further authors, so
+entries with a `$t` or a non-`aut` relator are dropped; series names are checked
+against publisher imprints, or books land in a series called `Goldmann`; study
+guides and audio editions lose title matches.
 
-Covers are the exception, and the reason `api/cover.ts` exists — the one thing
-that is deployed alongside the app. Open Library lets its images be read across
-origins; the better scans behind the DNB portal do not, so a browser left to
-itself could only ever keep the weaker source. The endpoint sits on the app's own
-origin, takes an ISBN or an Open Library cover id or both, tries the MVB service
-first and Open Library after, and applies the size and proportion gate before
-handing anything over. The browser therefore sees only a picture worth keeping,
-and can downscale and upload it like a manual one. Where both services come up
-empty a photo by hand still covers the case.
-
-Because the endpoint answers for every candidate, the gate is written once. An
-earlier version checked the same four numbers again in the browser, which only
-repeated a verdict that had already been reached.
+Covers are the one exception to answering the browser directly, and the reason
+`api/cover.ts` is deployed alongside the app: Open Library allows its images to
+be read across origins, the better scans behind the DNB portal do not, so a
+browser left to itself could only ever keep the weaker source. The size and
+proportion gate sits there too, written once, so the browser only ever sees a
+picture worth keeping.
 
 ## Scanning the barcode
 
-The same field also takes a scan. Every barcode on a book is a Bookland EAN-13,
-which is the ISBN-13 itself, so a read feeds the exact lookup a typed number
-does and nothing behind the field had to change.
+The same field takes a scan. Every barcode on a book is a Bookland EAN-13, which
+is the ISBN-13 itself, so nothing behind the field had to change.
 
-Decoding asks the browser first. Chromium has `BarcodeDetector`, which on Android
-is the system's own barcode reader, and it costs nothing to download. Where it is
-missing — Safari, and therefore every browser on iOS — zbar compiled to
-WebAssembly stands in, loaded on the first scan and not before, 175 KB as its own
-chunks. On a phone that never happens, because the native reader answers first.
+```mermaid
+flowchart TD
+  CAM["camera frame"] --> CROP["cropped to the guide<br/>coverCrop in src/lib/frame.ts"]
+  CROP --> DEC{"BarcodeDetector?"}
+  DEC -->|"Chromium, so Android"| NAT["the system's own reader"]
+  DEC -->|"Safari, so all of iOS"| ZBAR["zbar, WebAssembly, 175 KB"]
+  NAT --> CHK{"EAN-13, starts 978 or 979,<br/>check digit holds?"}
+  ZBAR --> CHK
+  CHK -->|no| CAM
+  CHK -->|"yes, a new number"| KEEP["kept in mind"]
+  KEEP --> CAM
+  CHK -->|"yes, the one kept"| OUT["ISBN into the field"]
+```
 
-This is the reverse of how it started. zbar was chosen alone on the reasoning
-that a second decoder only ever exercised on someone else's device is a path that
-rots untested. That was maintenance logic applied to what turned out to be a
-capability question: the device where scanning kept failing was the one where the
-native reader exists, and a WebAssembly build of a decoder from 2009 is not the
-equal of what the platform ships. Both paths carry real traffic now, so neither
-is the untested one.
+Each gate answers something. Books carry a second, smaller barcode for the price,
+so without the 978-or-979 rule and the check digit a scan succeeds cheerfully
+with `52799`. A number has to arrive twice, though not in consecutive frames — a
+frame that decodes nothing changes nothing, while a different number starts the
+count over — because a single misread that satisfies the check digit is rare but
+possible, and one wrong book quietly prefilled is worse than a second of waiting.
 
-Which leaves iOS on the weaker decoder, and that is a known limitation rather
-than a solved problem: zbar wants a sharper frame than a hand-held phone usually
-gives. If scanning there turns out to be as poor as it was on Android, the answer
-is a better WebAssembly decoder, not more pixels.
-
-Only EAN-13 is enabled, and a decoded number counts as a book when it begins
-with 978 or 979 and its check digit holds. Books carry a second, smaller barcode
-for the price, and without that rule a scan succeeds cheerfully with `52799`.
-
-Only the area under the framing guide is read, mapped from screen coordinates
-back into camera pixels by `coverCrop` in `src/lib/frame.ts`, which keeps the
-guide honest about what is decoded and keeps the decoder off the rest of the
-frame. The stream is requested in the orientation of the window so `object-cover`
-has little to crop, though a phone is free to hand over whatever it likes and
-often does.
-
-A number is accepted only once it arrives twice, which need not be twice in a
-row. A single misread that satisfies the check digit is rare but possible, and
-one wrong book quietly prefilled is worse than a second of waiting. While it
-looks, the overlay separates nothing in view from a code it has seen but cannot
-confirm yet, because silence is indistinguishable from a broken feature.
-
-The reason to prefer the platform reader is worth writing down, because the
-arithmetic misleads. A barcode needs about two pixels per module to decode, and
-that number is easy to compute and easy to chase: measured on an Android phone
-the guide offered nine pixels per module, four times the floor, over a stream
-whose full width was visible. On those same frames the native reader recognised
-85 percent and zbar none at all. Resolution had been sufficient for a long time
-while a decoder that could not read a phone's slightly soft frames was being
-handed better and better pictures. Geometry is cheap to measure, which is exactly
-why it kept looking like the answer.
-
-A camera needs a secure context. `npm run dev` on localhost qualifies, so
-scanning can be developed locally, but trying it from a phone means a deployed
-preview rather than a LAN address.
+zbar is loaded on the first scan and not before, so on a phone that carries a
+system reader it is never fetched at all. A camera needs a secure context, so
+trying a scan from a phone means a deployed preview rather than a LAN address.
 
 ## Planned
 
-- A web app manifest, so the app sits on the home screen without browser chrome.
 - Ratings. The column is already there and already decided: `smallint` between 1
   and 5, so half stars would be a migration rather than a design choice.
 - A price, and who recommended a book. A column each, a field each.
@@ -282,8 +199,9 @@ preview rather than a LAN address.
 
 The sharing ideas are the only ones that are not a column and a field. Every
 policy on `books` says `auth.uid() = user_id`, and the whole app is written on
-the assumption that a browser can see nothing but its own rows — the shared cover
-bucket is already the exception, and it needed a `security definer` function to
-work around that assumption rather than break it. Anything shared needs a second
-way in that grants a reader something without handing over the shelf, which is a
-change to the security model before it is a screen.
+the assumption that a browser can see nothing but its own rows. The shared covers
+are the one thing several accounts already hold in common, and they get away with
+it by holding nothing private: a picture of an edition says only that the edition
+exists. Anything shared beyond that needs a second way in that grants a reader
+something without handing over the shelf, which is a change to the security model
+before it is a screen.
