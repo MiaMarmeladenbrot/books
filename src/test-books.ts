@@ -1,5 +1,5 @@
-import { BookFormat, BookProvenance, BookStatus } from './types'
-import type { Book } from './types'
+import { AvatarName, BookFormat, BookProvenance, BookStatus } from './types'
+import type { Book, FeedEntry, Recommendation } from './types'
 
 let made = 0
 
@@ -30,5 +30,31 @@ export function aBook(changes: Partial<Book> = {}): Book {
     created_at: '2026-08-20T10:00:00Z',
     updated_at: '2026-09-13T20:00:00Z',
     ...changes,
+  }
+}
+
+export function aRecommendation(changes: Partial<Recommendation> = {}): Recommendation {
+  made += 1
+  return {
+    id: `r${made}`,
+    user_id: 'u1',
+    book_id: `b${made}`,
+    title: `Buch ${made}`,
+    authors: ['Beth Revis'],
+    isbn: null,
+    note: null,
+    created_at: '2026-09-17T09:00:00Z',
+    ...changes,
+  }
+}
+
+export function aFeedEntry(changes: Partial<FeedEntry> = {}): FeedEntry {
+  const { profiles, ...rest } = changes
+  return {
+    ...aRecommendation(rest),
+    profiles:
+      'profiles' in changes
+        ? (profiles ?? null)
+        : { display_name: 'Sinja', avatar: AvatarName.Owl },
   }
 }
