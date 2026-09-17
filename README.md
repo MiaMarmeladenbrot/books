@@ -166,6 +166,11 @@ their own rows. It keeps the someday pile and the abandoned ones out. And a null
 `book_id` fails it, which is the rule that recommending starts at a book. There
 is no update policy on purpose — a recommendation is taken back, not rewritten.
 
+The sentence is not optional, in the dialog and in the column. A title with a
+name under it is what a shelf already shows; what makes it a recommendation is
+somebody saying why, however short. The check keeps that honest — `btrim` means
+a line of spaces is not a sentence.
+
 The cards show covers without storing a path to one. They derive
 `isbn/<isbn>.jpg`, the shared address from the Covers section: public, never
 deleted, and written by whoever first added that edition. A recommendation can
