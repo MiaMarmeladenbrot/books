@@ -10,6 +10,7 @@ import { MAX_UPLOAD_BYTES, fetchGatedCoverJpeg, toCoverJpeg } from '../utils/ima
 import { todayIso } from '../utils/format'
 import {
   BookStatus,
+  EMPTY_DRAFT,
   FORMAT_LABEL,
   FORMAT_ORDER,
   LANGUAGE_LABEL,
@@ -21,28 +22,6 @@ import {
   languageLabel,
 } from '../types'
 import type { BookDraft, BookFormat, BookProvenance } from '../types'
-
-const EMPTY: BookDraft = {
-  title: '',
-  subtitle: null,
-  authors: [],
-  series: null,
-  series_volume: null,
-  isbn: null,
-  published_year: null,
-  page_count: null,
-  format: null,
-  provenance: null,
-  language: null,
-  status: BookStatus.WantToRead,
-  started_on: null,
-  finished_on: null,
-  acquired_on: null,
-  rating: null,
-  notes: null,
-  cover_path: null,
-  source_meta: {},
-}
 
 function textOrNull(value: string) {
   const trimmed = value.trim()
@@ -118,9 +97,9 @@ export function BookForm() {
       } = existing
       return rest
     }
-    if (!prefill) return { ...EMPTY, title: fallbackTitle ?? '', isbn: fallbackIsbn ?? null }
+    if (!prefill) return { ...EMPTY_DRAFT, title: fallbackTitle ?? '', isbn: fallbackIsbn ?? null }
     return {
-      ...EMPTY,
+      ...EMPTY_DRAFT,
       title: prefill.title,
       subtitle: prefill.subtitle,
       authors: prefill.authors,

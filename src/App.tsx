@@ -3,6 +3,7 @@ import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './store/AuthContext'
 import { BooksProvider } from './store/BooksContext'
 import { ProfileProvider } from './store/ProfileContext'
+import { RecommendationsProvider } from './store/RecommendationsContext'
 import { useAuth } from './store/useAuth'
 import { useBooks } from './store/useBooks'
 import { useProfile } from './store/useProfile'
@@ -15,6 +16,7 @@ import { Shelf } from './pages/Shelf'
 import { BookDetail } from './pages/BookDetail'
 
 const Stats = lazy(() => import('./pages/Stats').then((module) => ({ default: module.Stats })))
+const Feed = lazy(() => import('./pages/Feed').then((module) => ({ default: module.Feed })))
 const BookForm = lazy(() =>
   import('./pages/BookForm').then((module) => ({ default: module.BookForm })),
 )
@@ -75,6 +77,7 @@ function Shell() {
         <Routes>
           <Route element={<TabLayout />}>
             <Route index element={<Shelf />} />
+            <Route path="empfehlungen" element={<Feed />} />
             <Route path="statistik" element={<Stats />} />
             <Route path="profil" element={<Profile />} />
           </Route>
@@ -117,7 +120,9 @@ export default function App() {
       <AuthProvider>
         <BooksProvider>
           <ProfileProvider>
-            <AppRoutes />
+            <RecommendationsProvider>
+              <AppRoutes />
+            </RecommendationsProvider>
           </ProfileProvider>
         </BooksProvider>
       </AuthProvider>

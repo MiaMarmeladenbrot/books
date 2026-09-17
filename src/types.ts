@@ -124,6 +124,28 @@ export type BookDraft = Omit<
   'id' | 'user_id' | 'created_at' | 'updated_at' | 'cover_path'
 > & { cover_path?: string | null }
 
+export const EMPTY_DRAFT: BookDraft = {
+  title: '',
+  subtitle: null,
+  authors: [],
+  series: null,
+  series_volume: null,
+  isbn: null,
+  published_year: null,
+  page_count: null,
+  format: null,
+  provenance: null,
+  language: null,
+  status: BookStatus.WantToRead,
+  started_on: null,
+  finished_on: null,
+  acquired_on: null,
+  rating: null,
+  notes: null,
+  cover_path: null,
+  source_meta: {},
+}
+
 export interface Profile {
   user_id: string
   display_name: string | null
@@ -133,3 +155,20 @@ export interface Profile {
 }
 
 export type ProfileDraft = Pick<Profile, 'display_name' | 'avatar'>
+
+export interface Recommendation {
+  id: string
+  user_id: string
+  book_id: string | null
+  title: string
+  authors: string[]
+  isbn: string | null
+  note: string | null
+  created_at: string
+}
+
+export const NOTE_LIMIT = 280
+
+export interface FeedEntry extends Recommendation {
+  profiles: Pick<Profile, 'display_name' | 'avatar'> | null
+}

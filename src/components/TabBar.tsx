@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Library, BarChart3 } from 'lucide-react'
+import { Library, Gem, BarChart3 } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { useProfile } from '../store/useProfile'
 
@@ -14,6 +14,7 @@ export function TabBar() {
 
   const tabs = [
     { to: '/', label: 'Regal', icon: () => <Library size={21} strokeWidth={1.8} /> },
+    { to: '/empfehlungen', label: 'Empfehlungen', icon: () => <Gem size={21} strokeWidth={1.8} /> },
     { to: '/statistik', label: 'Statistik', icon: () => <BarChart3 size={21} strokeWidth={1.8} /> },
     {
       to: '/profil',
@@ -29,7 +30,7 @@ export function TabBar() {
   ]
 
   return (
-    <nav className="border-line fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t bg-paper/95 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur">
+    <nav className="border-line fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t bg-paper/95 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur">
       {tabs.map(({ to, label, icon }) => (
         <NavLink
           key={to}

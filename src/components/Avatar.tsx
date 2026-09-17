@@ -2,7 +2,7 @@ import type { ReactElement } from 'react'
 import { AVATAR_LABEL, AvatarName } from '../types'
 
 const CREAM = '#fffefb'
-const GOLD = '#d8a743'
+const GOLD = 'var(--color-gold)'
 
 const DISC: Record<AvatarName, string> = {
   [AvatarName.Cat]: '#b4552f',
