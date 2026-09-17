@@ -248,7 +248,7 @@ export function BookForm() {
           if (previousCover) await releaseCover(previousCover)
         } catch {
           setSavedId(saved.id)
-          setError('Das Buch ist gespeichert. Nur das Bild nicht — nochmal versuchen?')
+          setError('Das Buch ist gespeichert, nur das Bild nicht. Nochmal versuchen?')
           setBusy(false)
           return
         }

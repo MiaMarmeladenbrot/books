@@ -19,7 +19,7 @@ type Hint = 'aiming' | 'sighted' | 'stalled'
 const TROUBLE: Record<Trouble, { title: string; body: string }> = {
   denied: {
     title: 'Kein Zugriff auf die Kamera',
-    body: 'Die Kamera ist für diese Seite gesperrt. In den Browser-Einstellungen freigeben — oder die ISBN eintippen.',
+    body: 'Die Kamera ist für diese Seite gesperrt. In den Browser-Einstellungen freigeben oder die ISBN eintippen.',
   },
   unavailable: {
     title: 'Scannen geht hier nicht',
@@ -104,7 +104,7 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
           0,
           0,
           canvas.width,
-          canvas.height
+          canvas.height,
         )
 
         let result
@@ -223,16 +223,13 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black">
-      <video
-        ref={video}
-        playsInline
-        autoPlay
-        muted
-        className="h-full w-full object-cover"
-      />
+      <video ref={video} playsInline autoPlay muted className="h-full w-full object-cover" />
 
       <div className="absolute inset-0 flex flex-col">
-        <div className="flex justify-end p-4" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+        <div
+          className="flex justify-end p-4"
+          style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+        >
           <button
             type="button"
             onClick={onClose}
@@ -246,7 +243,7 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
         <div className="flex flex-1 flex-col items-center justify-center">
           <div
             ref={box}
-            className={`aspect-[3/2] w-[80%] max-w-[40rem] rounded-lg ring-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
+            className={`aspect-3/2 w-[80%] max-w-160 rounded-lg ring-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-colors ${
               phase === 'scanning' && hint === 'sighted' ? 'ring-leaf' : 'ring-white/80'
             }`}
           />
