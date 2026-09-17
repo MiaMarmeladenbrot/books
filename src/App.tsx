@@ -2,8 +2,10 @@ import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './store/AuthContext'
 import { BooksProvider } from './store/BooksContext'
+import { ProfileProvider } from './store/ProfileContext'
 import { useAuth } from './store/useAuth'
 import { useBooks } from './store/useBooks'
+import { useProfile } from './store/useProfile'
 import { TabBar } from './components/TabBar'
 import { InstallHint } from './components/InstallHint'
 import { StackLoader } from './components/StackLoader'
@@ -18,6 +20,9 @@ const BookForm = lazy(() =>
 )
 const BookSearch = lazy(() =>
   import('./pages/BookSearch').then((module) => ({ default: module.BookSearch })),
+)
+const Profile = lazy(() =>
+  import('./pages/Profile').then((module) => ({ default: module.Profile })),
 )
 
 const SPLASH_MINIMUM = 900
@@ -68,6 +73,7 @@ function Shell() {
           <Route element={<TabLayout />}>
             <Route index element={<Shelf />} />
             <Route path="statistik" element={<Stats />} />
+            <Route path="profil" element={<Profile />} />
           </Route>
           <Route path="buch/suchen" element={<BookSearch />} />
           <Route path="buch/neu" element={<BookForm />} />
@@ -82,9 +88,10 @@ function Shell() {
 function AppRoutes() {
   const { user, loading: signingIn } = useAuth()
   const { loading: fetchingBooks } = useBooks()
+  const { loading: fetchingProfile } = useProfile()
 
   return (
-    <SplashGate pending={signingIn || (Boolean(user) && fetchingBooks)}>
+    <SplashGate pending={signingIn || (Boolean(user) && (fetchingBooks || fetchingProfile))}>
       {user ? <Shell /> : <Login />}
     </SplashGate>
   )
@@ -95,7 +102,9 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <BooksProvider>
-          <AppRoutes />
+          <ProfileProvider>
+            <AppRoutes />
+          </ProfileProvider>
         </BooksProvider>
       </AuthProvider>
     </ErrorBoundary>

@@ -1,10 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { Library, BarChart3 } from 'lucide-react'
-
-const TABS = [
-  { to: '/', label: 'Regal', Icon: Library },
-  { to: '/statistik', label: 'Statistik', Icon: BarChart3 },
-]
+import { Avatar } from './Avatar'
+import { useProfile } from '../store/useProfile'
 
 function scrollToTop() {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -13,10 +10,27 @@ function scrollToTop() {
 
 export function TabBar() {
   const { pathname, search } = useLocation()
+  const { profile } = useProfile()
+
+  const tabs = [
+    { to: '/', label: 'Regal', icon: () => <Library size={21} strokeWidth={1.8} /> },
+    { to: '/statistik', label: 'Statistik', icon: () => <BarChart3 size={21} strokeWidth={1.8} /> },
+    {
+      to: '/profil',
+      label: 'Profil',
+      icon: (active: boolean) => (
+        <Avatar
+          name={profile?.avatar ?? null}
+          size={22}
+          className={active ? '' : 'opacity-55 grayscale-[0.35]'}
+        />
+      ),
+    },
+  ]
 
   return (
-    <nav className="border-line fixed inset-x-0 bottom-0 z-20 grid grid-cols-2 border-t bg-paper/95 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur">
-      {TABS.map(({ to, label, Icon }) => (
+    <nav className="border-line fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t bg-paper/95 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur">
+      {tabs.map(({ to, label, icon }) => (
         <NavLink
           key={to}
           to={to}
@@ -32,8 +46,12 @@ export function TabBar() {
             }`
           }
         >
-          <Icon size={21} strokeWidth={1.8} />
-          {label}
+          {({ isActive }) => (
+            <>
+              {icon(isActive)}
+              {label}
+            </>
+          )}
         </NavLink>
       ))}
     </nav>

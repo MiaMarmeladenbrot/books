@@ -19,13 +19,33 @@ export const BookProvenance = {
   Borrowed: 'borrowed',
 } as const
 
+export const AvatarName = {
+  Cat: 'cat',
+  Mug: 'mug',
+  Owl: 'owl',
+  Glasses: 'glasses',
+  Hedgehog: 'hedgehog',
+  Moon: 'moon',
+} as const
+
 export type BookStatus = (typeof BookStatus)[keyof typeof BookStatus]
 export type BookFormat = (typeof BookFormat)[keyof typeof BookFormat]
 export type BookProvenance = (typeof BookProvenance)[keyof typeof BookProvenance]
+export type AvatarName = (typeof AvatarName)[keyof typeof AvatarName]
 
 export const STATUS_ORDER = Object.values(BookStatus)
 export const FORMAT_ORDER = Object.values(BookFormat)
 export const PROVENANCE_ORDER = Object.values(BookProvenance)
+export const AVATAR_ORDER = Object.values(AvatarName)
+
+export const AVATAR_LABEL: Record<AvatarName, string> = {
+  [AvatarName.Cat]: 'Katze',
+  [AvatarName.Mug]: 'Becher',
+  [AvatarName.Owl]: 'Eule',
+  [AvatarName.Glasses]: 'Lesebrille',
+  [AvatarName.Hedgehog]: 'Igel',
+  [AvatarName.Moon]: 'Mondlicht',
+}
 
 export const STATUS_LABEL: Record<BookStatus, string> = {
   [BookStatus.WantToRead]: 'Irgendwann',
@@ -103,3 +123,13 @@ export type BookDraft = Omit<
   Book,
   'id' | 'user_id' | 'created_at' | 'updated_at' | 'cover_path'
 > & { cover_path?: string | null }
+
+export interface Profile {
+  user_id: string
+  display_name: string | null
+  avatar: AvatarName | null
+  created_at: string
+  updated_at: string
+}
+
+export type ProfileDraft = Pick<Profile, 'display_name' | 'avatar'>
