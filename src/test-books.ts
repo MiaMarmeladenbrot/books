@@ -42,7 +42,7 @@ export function aRecommendation(changes: Partial<Recommendation> = {}): Recommen
     title: `Buch ${made}`,
     authors: ['Beth Revis'],
     isbn: null,
-    note: null,
+    note: 'Das musst du lesen.',
     created_at: '2026-09-17T09:00:00Z',
     ...changes,
   }

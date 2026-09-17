@@ -95,9 +95,21 @@ describe('BookDetail, recommending', () => {
     expect(recommend).toHaveBeenCalledWith(book, 'Für alle, die Herrndorf mögen.')
   })
 
-  it('turns an empty sentence into nothing rather than into a blank', () => {
-    const book = aBook({ status: BookStatus.Read })
-    const { recommend } = open(book)
+  it('keeps the dialog shut until something is written', () => {
+    const { recommend } = open(aBook({ status: BookStatus.Read }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Empfehlen' }))
+    const send = theDialog().getByRole('button', { name: 'Empfehlen' })
+
+    expect(send).toBeDisabled()
+
+    fireEvent.click(send)
+
+    expect(recommend).not.toHaveBeenCalled()
+  })
+
+  it('does not take blanks for a sentence', () => {
+    const { recommend } = open(aBook({ status: BookStatus.Read }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Empfehlen' }))
     fireEvent.change(screen.getByLabelText('Ein Satz zur Empfehlung'), {
@@ -105,7 +117,23 @@ describe('BookDetail, recommending', () => {
     })
     fireEvent.click(theDialog().getByRole('button', { name: 'Empfehlen' }))
 
-    expect(recommend).toHaveBeenCalledWith(book, null)
+    expect(recommend).not.toHaveBeenCalled()
+    expect(theDialog().getByRole('button', { name: 'Empfehlen' })).toBeDisabled()
+  })
+
+  it('opens the way out again as soon as a sentence stands', () => {
+    const { recommend } = open(aBook({ status: BookStatus.Read }))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Empfehlen' }))
+    fireEvent.change(screen.getByLabelText('Ein Satz zur Empfehlung'), {
+      target: { value: 'Kurz, aber wahr.' },
+    })
+
+    expect(theDialog().getByRole('button', { name: 'Empfehlen' })).toBeEnabled()
+
+    fireEvent.click(theDialog().getByRole('button', { name: 'Empfehlen' }))
+
+    expect(recommend).toHaveBeenCalledTimes(1)
   })
 
   it('lets somebody back out of the dialog without recommending', () => {
