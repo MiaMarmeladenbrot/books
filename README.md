@@ -9,12 +9,16 @@ The interface is German; everything else in this repository is English.
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS 4, React Router
 - **Backend:** Supabase — auth, Postgres with row level security, storage for covers
-- **Data:** a `books` table, loaded once and filtered in the browser, and a
-  `profiles` table of one row per reader
+- **Data:** a `books` table, loaded once and filtered in the browser, a
+  `profiles` table of one row per reader, and a `recommendations` table, the only
+  place where an account reads rows it does not own
 
 Every book is loaded at startup, about 500 KB, which makes search, filtering and
 all statistics instant without a further request. Covers stay out of that payload
-on purpose; they are files in a bucket, so the browser can cache them.
+on purpose; they are files in a bucket, so the browser can cache them. The feed
+is not in it either and is fetched when its tab is first opened: it is the one
+thing on screen that depends on what other people did, and the splash should not
+wait on that.
 
 Supabase is asked for in parts — `auth-js`, `postgrest-js` and `storage-js`
 rather than `supabase-js`, which builds a realtime client in its constructor that
@@ -32,18 +36,21 @@ cp .env.example .env   # project URL and publishable key
 npm run dev
 ```
 
-Five things are prepared in Supabase itself:
+Six things are prepared in Supabase itself:
 
 1. Run `supabase/schema.sql` once in the SQL editor. It creates the enums, the
    `books` table, its indexes, four RLS policies and the `updated_at` trigger.
 2. Run `supabase/profiles.sql`. It adds `profiles`, its two policies and a
    trigger on `auth.users` that gives every account a row.
-3. Create each account by hand under Authentication. The app has no sign-up on
+3. Run `supabase/recommendations.sql`, after the other two, because it points at
+   both. Besides the new table it replaces the select policy on `profiles`,
+   which is the only thing any of these files change about an existing table.
+4. Create each account by hand under Authentication. The app has no sign-up on
    purpose, so a new reader is one row in `auth.users` and the row the trigger
    makes for it.
-4. Create a public storage bucket named `cover` and grant the accounts access to
+5. Create a public storage bucket named `cover` and grant the accounts access to
    it, see `supabase/storage.sql`.
-5. Under Authentication → URL Configuration, set the site URL to the deployed
+6. Under Authentication → URL Configuration, set the site URL to the deployed
    address and add `http://localhost:5180/**` to the redirect list. A password
    reset only returns to addresses on that list, and falls back to the site URL
    without an error when it matches none.
@@ -109,6 +116,14 @@ invent one. The six pictures are drawn in `src/components/Avatar.tsx`: a coloure
 disc, a motif in cream, and in every one the same golden book — which is why no
 disc can go yellow.
 
+Every signed-in account can read every row of it, which is what a feed needs to
+name who recommended a book. The table was written to hold nothing else so that
+this would cost nothing when the day came. It did cost one thing, worth knowing
+about anywhere else the same shape appears: `ProfileContext` used to ask for its
+row with no filter and let row level security return the only one it was allowed
+to see. Ten rows came back the moment the policy opened. RLS is a gate, not a
+where clause, and a query that wants one row has to say so.
+
 There is no unique handle. A unique key only earns its place when a string has
 to resolve to one person with nobody there to be asked: a pasted link, a name in
 somebody else's text. Choosing from a list is not that case, and neither is a
@@ -119,6 +134,50 @@ The profile also holds the backup: JSON as a complete, re-importable copy
 including `source_meta`, CSV with German headers for a spreadsheet, both
 generated in the browser. The covers are not part of it, but they can be fetched
 again from their ISBN.
+
+## Recommendations
+
+A recommendation is something somebody does, not something derived from a shelf.
+Nothing about a book leaves its account until a reader recommends it, on that
+book's own page, which is why there is no per-book switch for what may be shared:
+the act is the switch.
+
+The row copies the title, the authors and the ISBN rather than pointing at a
+`books` row. That is what keeps the rest of the app intact — no account ever
+reads a book that is not its own, and every policy on `books` is still
+`auth.uid() = user_id`. It also makes a recommendation a statement from a day
+rather than a live view: rename the book or delete it, and what was said about it
+stands.
+
+```sql
+with check (
+  auth.uid() = user_id
+  and exists (
+    select 1 from public.books b
+    where b.id = book_id and b.user_id = auth.uid()
+      and b.status in ('read', 'reading')
+  )
+)
+```
+
+That one `exists` does three things. It proves the book belongs to whoever is
+recommending it, because the subquery runs with their rights and can only find
+their own rows. It keeps the someday pile and the abandoned ones out. And a null
+`book_id` fails it, which is the rule that recommending starts at a book. There
+is no update policy on purpose — a recommendation is taken back, not rewritten.
+
+The cards show covers without storing a path to one. They derive
+`isbn/<isbn>.jpg`, the shared address from the Covers section: public, never
+deleted, and written by whoever first added that edition. A recommendation can
+therefore never point into a stranger's folder, and a book whose cover nobody has
+uploaded yet quietly gets one on the day somebody does.
+
+A card carries a single button and it always speaks about the book — the copy on
+your shelf if you have it, your stack if you do not. Taking a recommendation back
+is not one of them; that lives on the book's own page, next to the button that
+made it, rather than in two places. `findOnShelf` decides which of the two a card
+offers, by ISBN or else by title and author, and normalises to NFC on the way,
+because the imported titles spell their umlauts in two code points.
 
 ## Passwords
 
@@ -204,16 +263,25 @@ preview rather than a LAN address.
 - A panel for audiobooks: hours rather than pages. They carry no length at all —
   `page_count` counts pages, and the import refused figures counting CDs.
 - A calendar of when each book was started and finished.
-- A feed of recommendations, shareable lists and shareable statistics, with a
-  switch on the profile for what is shared at all.
+- Mentions in a recommendation — picked from a list, stored as an id, shown as
+  the current name. Notes are plain text and none of them holds a marker yet, so
+  this is client work; only asking where somebody is mentioned would want a
+  column.
+- Reactions under a recommendation. Its own table, unique on the pair of
+  recommendation and reader, nothing to change about what is there now.
+- Shareable lists and shareable statistics, with a switch on the profile for what
+  is shared at all.
 
-The sharing ideas are the only ones that are not a column and a field. Every
-policy on `books` says `auth.uid() = user_id`, and the whole app is written on
-the assumption that a browser can see nothing but its own rows. The shared covers
-are the one thing several accounts already hold in common, and they get away with
-it by holding nothing private: a picture of an edition says only that the edition
-exists. Anything shared beyond that needs a second way in that grants a reader
-something without handing over the shelf, which is a change to the security model
-before it is a screen. `profiles` is the first piece of it — a feed has to name
-who recommended a book, so its select policy opens on the day the feed lands,
-which is why the table holds nothing that has to stay private.
+The last one is the only one that is not a column and a field, or a table beside
+the ones already there. Every policy on `books` says `auth.uid() = user_id`, and
+the whole app is written on the assumption that a browser can see nothing but its
+own rows. The shared covers were the one thing several accounts already held in
+common, and they got away with it by holding nothing private: a picture of an
+edition says only that the edition exists. `recommendations` is the second such
+thing and takes the same way out — it shares what a reader chose to say, not what
+a reader owns.
+
+A shelf somebody can open, on the other hand, would be the first time a `books`
+row is read by an account that does not own it, and that is a change to the
+security model before it is a screen. The switch belongs to that day, not to the
+feed: what the feed shares is decided one recommendation at a time.
