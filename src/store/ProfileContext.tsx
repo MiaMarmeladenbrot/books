@@ -11,14 +11,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const userId = useAuth().user?.id ?? null
 
   const reload = useCallback(async () => {
-    const { data, error: queryError } = await db.from('profiles').select('*').maybeSingle()
+    if (!userId) return
+    const { data, error: queryError } = await db
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle()
     if (queryError) setError(queryError.message)
     else {
       setError(null)
       setProfile(data as Profile | null)
     }
     setLoading(false)
-  }, [])
+  }, [userId])
 
   useEffect(() => {
     if (!userId) return
