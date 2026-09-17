@@ -14,7 +14,9 @@ type UpdateBook = Mock<(id: string, patch: Partial<BookDraft>) => Promise<Book>>
 
 vi.mock('../lib/supabase', () => ({
   coverUrl: () => null,
-  uploadCover: vi.fn().mockResolvedValue('cover/pfad.jpg'),
+  sharedCoverPath: (isbn: string) => (/^\d{13}$/.test(isbn) ? `isbn/${isbn}.jpg` : null),
+  uploadOwnCover: vi.fn().mockResolvedValue('konto/pfad.jpg'),
+  uploadSharedCover: vi.fn().mockResolvedValue('isbn/9783499256356.jpg'),
   releaseCover: vi.fn().mockResolvedValue(undefined),
 }))
 
