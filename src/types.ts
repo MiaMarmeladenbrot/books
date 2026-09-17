@@ -163,7 +163,7 @@ export interface Recommendation {
   title: string
   authors: string[]
   isbn: string | null
-  note: string | null
+  note: string
   created_at: string
 }
 

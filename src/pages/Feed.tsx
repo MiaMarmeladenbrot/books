@@ -62,11 +62,9 @@ function Card({ entry }: { entry: FeedEntry }) {
           {entry.authors.length > 0 && (
             <p className="text-ink-2 mt-1 text-sm">{entry.authors.join(', ')}</p>
           )}
-          {entry.note && (
-            <p className="font-serif mt-2.5 text-sm leading-relaxed whitespace-pre-line italic">
-              {entry.note}
-            </p>
-          )}
+          <p className="font-serif mt-2.5 text-sm leading-relaxed whitespace-pre-line italic">
+            {entry.note}
+          </p>
 
           <div className="mt-3.5 flex justify-end">
             {onShelf ? (

@@ -40,12 +40,15 @@ function RecommendDialog({ book, onClose }: { book: Book; onClose: () => void })
     dialog.current?.showModal()
   }, [])
 
+  const written = note.trim()
+
   const submit = async (event: SyntheticEvent) => {
     event.preventDefault()
+    if (written === '') return
     setFailed('')
     setBusy(true)
     try {
-      await recommend(book, note.trim() === '' ? null : note.trim())
+      await recommend(book, written)
       onClose()
     } catch {
       setFailed('Das hat nicht geklappt.')
@@ -73,19 +76,22 @@ function RecommendDialog({ book, onClose }: { book: Book; onClose: () => void })
           onChange={(event) => setNote(event.target.value)}
           maxLength={NOTE_LIMIT}
           rows={3}
+          required
           autoFocus
           placeholder="Warum mochtest du dieses Buch? Wem könnte es ebenfalls gefallen?"
           aria-label="Ein Satz zur Empfehlung"
           className="border-line bg-paper focus:border-accent w-full resize-none rounded-xl border px-3.5 py-3 text-base outline-none"
         />
-        <p className="text-ink-3 mt-1 mb-5 text-right text-xs">{NOTE_LIMIT - note.length}</p>
+        <p className="text-ink-3 mt-1 mb-5 text-right text-xs">
+          {NOTE_LIMIT - note.length}/{NOTE_LIMIT}
+        </p>
 
         {failed && <p className="text-danger mb-3 text-sm">{failed}</p>}
 
         <div className="flex flex-col gap-2">
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || written === ''}
             className="bg-accent rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-60"
           >
             {busy ? 'Sendet…' : 'Empfehlen'}

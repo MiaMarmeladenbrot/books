@@ -49,7 +49,7 @@ export function RecommendationsProvider({ children }: { children: ReactNode }) {
     setLoadingFeed(false)
   }, [])
 
-  const recommend = useCallback(async (book: Book, note: string | null) => {
+  const recommend = useCallback(async (book: Book, note: string) => {
     const { data, error: insertError } = await db
       .from('recommendations')
       .insert({

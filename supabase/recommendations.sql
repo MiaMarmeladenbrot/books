@@ -6,7 +6,7 @@ create table public.recommendations (
   title text not null check (length(btrim(title)) between 1 and 300),
   authors text[] not null default '{}',
   isbn text,
-  note text check (length(btrim(note)) between 1 and 280),
+  note text not null check (length(btrim(note)) between 1 and 280),
   created_at timestamptz not null default now()
 );
 

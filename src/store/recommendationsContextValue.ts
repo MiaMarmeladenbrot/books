@@ -7,7 +7,7 @@ interface RecommendationsValue {
   loadingFeed: boolean
   error: string | null
   loadFeed: () => Promise<void>
-  recommend: (book: Book, note: string | null) => Promise<Recommendation>
+  recommend: (book: Book, note: string) => Promise<Recommendation>
   withdraw: (id: string) => Promise<void>
 }
 
