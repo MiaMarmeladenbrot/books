@@ -3,6 +3,7 @@ export const config = { runtime: 'edge' }
 const MVB_COVER = 'https://portal.dnb.de/opac/mvb/cover'
 const OPENLIBRARY_COVER = 'https://covers.openlibrary.org/b/isbn'
 const OPENLIBRARY_WORK_COVER = 'https://covers.openlibrary.org/b/id'
+const GOOGLE_BOOKS = 'https://www.googleapis.com/books/v1/volumes'
 const USER_AGENT = 'lesestapel/1.0 (private library app)'
 
 const MIN_BYTES = 5000
@@ -60,6 +61,38 @@ async function tryFetch(url: string) {
   }
 }
 
+async function googleCover(isbn: string) {
+  const key = process.env.GOOGLE_BOOKS_API_KEY
+  if (!key) return null
+
+  const asked = new URLSearchParams({
+    q: `isbn:${isbn}`,
+    country: 'DE',
+    maxResults: '1',
+    fields: 'items(volumeInfo/imageLinks/thumbnail)',
+    key,
+  })
+  try {
+    const response = await fetch(`${GOOGLE_BOOKS}?${asked}`, {
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT),
+    })
+    if (!response.ok) return null
+    const body = (await response.json()) as {
+      items?: { volumeInfo?: { imageLinks?: { thumbnail?: string } } }[]
+    }
+    const thumbnail = body.items?.[0]?.volumeInfo?.imageLinks?.thumbnail
+    if (!thumbnail) return null
+
+    const full = thumbnail
+      .replace('http://', 'https://')
+      .replace(/&zoom=\d+/, '&zoom=0')
+      .replace('&edge=curl', '')
+    return await tryFetch(full)
+  } catch {
+    return null
+  }
+}
+
 export default async function handler(request: Request) {
   const parameters = new URL(request.url).searchParams
   const raw = (parameters.get('isbn') ?? '').replace(/[^0-9Xx]/g, '')
@@ -72,7 +105,8 @@ export default async function handler(request: Request) {
   const bytes =
     (isbn ? await tryFetch(`${MVB_COVER}?isbn=${isbn}`) : null) ??
     (isbn ? await tryFetch(`${OPENLIBRARY_COVER}/${isbn}-L.jpg?default=false`) : null) ??
-    (cover ? await tryFetch(`${OPENLIBRARY_WORK_COVER}/${cover}-L.jpg`) : null)
+    (cover ? await tryFetch(`${OPENLIBRARY_WORK_COVER}/${cover}-L.jpg`) : null) ??
+    (isbn ? await googleCover(isbn) : null)
 
   if (!bytes) return new Response('kein Cover gefunden', { status: 404 })
 
