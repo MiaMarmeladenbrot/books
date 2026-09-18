@@ -1,7 +1,6 @@
 import { BookFormat } from '../types'
 
 const DNB_ENDPOINT = 'https://services.dnb.de/sru/dnb'
-const OPENLIBRARY_ISBN = 'https://openlibrary.org/api/books'
 const OPENLIBRARY_SEARCH = 'https://openlibrary.org/search.json'
 const MARC_NAMESPACE = 'http://www.loc.gov/MARC21/slim'
 
@@ -366,28 +365,29 @@ async function searchDnb(query: string, limit: number): Promise<DnbResult> {
 
 async function searchOpenLibraryIsbn(isbn: string): Promise<Candidate[]> {
   const parameters = new URLSearchParams({
-    bibkeys: `ISBN:${isbn}`,
-    format: 'json',
-    jscmd: 'data',
+    q: `isbn:${isbn}`,
+    fields: 'title,subtitle,author_name,first_publish_year,cover_i',
+    limit: '1',
   })
-  const response = await fetchCatalogue(`${OPENLIBRARY_ISBN}?${parameters}`, OPENLIBRARY_TIMEOUT)
-  const record = (await response.json())[`ISBN:${isbn}`]
-  if (!record?.title) return []
+  const response = await fetchCatalogue(`${OPENLIBRARY_SEARCH}?${parameters}`, OPENLIBRARY_TIMEOUT)
+  const document: Record<string, unknown> = (await response.json()).docs?.[0] ?? {}
+  const title = String(document.title ?? '').trim()
+  if (!title) return []
 
   return [
     {
-      title: String(record.title).trim(),
-      subtitle: record.subtitle ? String(record.subtitle).trim() : null,
-      authors: (record.authors ?? []).map((author: { name: string }) => author.name),
-      series: cleanSeries(record.series?.[0]?.name ?? null),
+      title,
+      subtitle: document.subtitle ? String(document.subtitle).trim() : null,
+      authors: ((document.author_name as string[]) ?? []).slice(0, 3),
+      series: null,
       series_volume: null,
       isbn,
-      published_year: firstNumber(String(record.publish_date ?? ''), /(1[4-9]\d{2}|20[0-4]\d)/),
-      page_count: record.number_of_pages ?? null,
-      publisher: record.publishers?.[0]?.name ?? null,
+      published_year: (document.first_publish_year as number) ?? null,
+      page_count: null,
+      publisher: null,
       language: null,
       format: null,
-      cover_url: coverForIsbn(isbn),
+      cover_url: coverForIsbn(isbn, (document.cover_i as number | undefined) ?? null),
       source: 'OpenLibrary',
     },
   ]

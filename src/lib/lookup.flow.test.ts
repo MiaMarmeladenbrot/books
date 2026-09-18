@@ -8,7 +8,7 @@ import DNB_EMPTY from './fixtures/dnb-empty.xml?raw'
 import OPENLIBRARY_NOVEL from './fixtures/openlibrary-isbn-9783499256356.json?raw'
 import OPENLIBRARY_SEARCH from './fixtures/openlibrary-tschick-search.json?raw'
 
-const OPENLIBRARY_UNKNOWN = '{}'
+const OPENLIBRARY_UNKNOWN = '{"numFound":0,"docs":[]}'
 
 const UNREACHABLE = Symbol('unreachable')
 
@@ -100,7 +100,7 @@ describe('looking a scanned barcode up', () => {
   it('falls through to OpenLibrary when the DNB is unreachable', async () => {
     catalogues(
       { when: 'services.dnb.de', answer: UNREACHABLE },
-      { when: 'openlibrary.org/api/books', answer: OPENLIBRARY_NOVEL }
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_NOVEL }
     )
     const lookupBooks = await freshLookup()
 
@@ -112,16 +112,31 @@ describe('looking a scanned barcode up', () => {
       title: 'Tschick',
       authors: ['Wolfgang Herrndorf'],
       isbn: '9783499256356',
-      published_year: 2012,
-      publisher: 'Rowohlt Verlag',
+      published_year: 2010,
       source: 'OpenLibrary',
+    })
+  })
+
+  it('leaves the fields the index only averages empty', async () => {
+    catalogues(
+      { when: 'services.dnb.de', answer: UNREACHABLE },
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_NOVEL }
+    )
+    const lookupBooks = await freshLookup()
+
+    const lookup = await lookupBooks('9783499256356')
+
+    expect(lookup.results[0]).toMatchObject({
+      page_count: null,
+      publisher: null,
+      language: null,
     })
   })
 
   it('comes back empty when no catalogue has the number, and asks again next time', async () => {
     catalogues(
       { when: 'services.dnb.de', answer: DNB_EMPTY },
-      { when: 'openlibrary.org/api/books', answer: OPENLIBRARY_UNKNOWN }
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_UNKNOWN }
     )
     const lookupBooks = await freshLookup()
 

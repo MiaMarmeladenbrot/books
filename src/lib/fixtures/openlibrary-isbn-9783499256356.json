@@ -1,41 +1,19 @@
 {
-  "ISBN:9783499256356": {
-    "url": "http://openlibrary.org/books/OL32183774M/Tschick",
-    "key": "/books/OL32183774M",
-    "title": "Tschick",
-    "authors": [
-      {
-        "url": "http://openlibrary.org/authors/OL3173518A/Wolfgang_Herrndorf",
-        "name": "Wolfgang Herrndorf"
-      }
-    ],
-    "identifiers": {
-      "wikidata": [
-        "Q28471485"
+  "numFound": 1,
+  "start": 0,
+  "numFoundExact": true,
+  "num_found": 1,
+  "documentation_url": "https://openlibrary.org/dev/docs/api/search",
+  "q": "isbn:9783499256356",
+  "offset": null,
+  "docs": [
+    {
+      "author_name": [
+        "Wolfgang Herrndorf"
       ],
-      "isbn_10": [
-        "3499256355"
-      ],
-      "isbn_13": [
-        "9783499256356"
-      ],
-      "openlibrary": [
-        "OL32183774M"
-      ]
-    },
-    "publishers": [
-      {
-        "name": "Rowohlt Verlag"
-      },
-      {
-        "name": "EUROPEAN SCHOOLBOOKS LTD"
-      }
-    ],
-    "publish_date": "Apr 08, 2012",
-    "cover": {
-      "small": "https://covers.openlibrary.org/b/id/10838632-S.jpg",
-      "medium": "https://covers.openlibrary.org/b/id/10838632-M.jpg",
-      "large": "https://covers.openlibrary.org/b/id/10838632-L.jpg"
+      "cover_i": 8418261,
+      "first_publish_year": 2010,
+      "title": "Tschick"
     }
-  }
+  ]
 }
