@@ -30,7 +30,7 @@ export function CoverPicker({
   return (
     <div className="mb-5 flex gap-4">
       <div className="w-24 shrink-0">
-        <Cover title={title || 'Neues Buch'} authors={authors} src={shown} />
+        <Cover title={title || 'Buch ins Regal legen'} authors={authors} src={shown} />
       </div>
 
       <div className="flex flex-col items-start gap-2 pt-1">

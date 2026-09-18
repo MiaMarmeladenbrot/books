@@ -279,7 +279,7 @@ export function BookForm() {
           <X size={22} className="text-ink-3" />
         </button>
         <h1 className="font-serif text-xl font-semibold tracking-tight">
-          {existing ? 'Buch bearbeiten' : 'Neues Buch'}
+          {existing ? 'Buch bearbeiten' : 'Buch ins Regal legen'}
         </h1>
         <button
           type="submit"
