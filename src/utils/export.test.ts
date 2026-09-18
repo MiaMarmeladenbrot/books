@@ -6,7 +6,7 @@ import type { Book } from '../types'
 const BOM = '﻿'
 
 const HEADER =
-  'Titel,Untertitel,Autor(en),Reihe,Band,ISBN,Erschienen,Seiten,Format,Sprache,Erhalten als,Status,Lesebeginn,Leseende,Erhalten am,Bewertung,Notiz'
+  'Titel,Untertitel,Autor(en),Reihe,Band,ISBN,Erschienen,Seiten,Format,Sprache,Herkunft,Stapel,Lesebeginn,Leseende,Erhalten am,Bewertung,Notiz'
 
 function book(changes: Partial<Book> = {}): Book {
   return {

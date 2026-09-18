@@ -175,7 +175,7 @@ describe('filling the form in', () => {
     form()
 
     fireEvent.click(screen.getByRole('button', { name: 'Fertig' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Irgendwann' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Wunsch' }))
 
     expect(screen.queryByLabelText('Gelesen von')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('bis')).not.toBeInTheDocument()

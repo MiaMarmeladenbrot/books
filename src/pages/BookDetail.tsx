@@ -49,11 +49,7 @@ export function BookDetail() {
       <main className="mx-auto max-w-xl px-4 pt-5">
         <div className="mb-5 flex gap-4">
           <div className="w-29 shrink-0">
-            <Cover
-              title={book.title}
-              authors={book.authors}
-              src={coverUrl(book.cover_path)}
-            />
+            <Cover title={book.title} authors={book.authors} src={coverUrl(book.cover_path)} />
           </div>
           <div>
             <h2 className="font-serif text-xl leading-tight font-semibold tracking-tight">
@@ -85,21 +81,13 @@ export function BookDetail() {
         />
         <Row label="Format" value={book.format ? FORMAT_LABEL[book.format] : null} />
         <Row label="Sprache" value={book.language ? languageLabel(book.language) : null} />
-        <Row
-          label="Erhalten als"
-          value={book.provenance ? PROVENANCE_LABEL[book.provenance] : null}
-        />
-        <Row
-          label="Erschienen"
-          value={book.published_year ? String(book.published_year) : null}
-        />
+        <Row label="Herkunft" value={book.provenance ? PROVENANCE_LABEL[book.provenance] : null} />
+        <Row label="Erschienen" value={book.published_year ? String(book.published_year) : null} />
         <Row label="ISBN" value={book.isbn} />
 
         {book.notes && (
           <div className="border-accent/35 mt-6 border-l-2 pl-4">
-            <p className="text-ink-3 mb-1 text-xs font-bold tracking-widest uppercase">
-              Notiz
-            </p>
+            <p className="text-ink-3 mb-1 text-xs font-bold tracking-widest uppercase">Notiz</p>
             <p className="font-serif text-sm leading-relaxed whitespace-pre-line italic">
               {book.notes}
             </p>

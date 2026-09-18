@@ -48,7 +48,7 @@ export const AVATAR_LABEL: Record<AvatarName, string> = {
 }
 
 export const STATUS_LABEL: Record<BookStatus, string> = {
-  [BookStatus.WantToRead]: 'Irgendwann',
+  [BookStatus.WantToRead]: 'Wunsch',
   [BookStatus.Reading]: 'Mittendrin',
   [BookStatus.Read]: 'Fertig',
   [BookStatus.Abandoned]: 'Abgebrochen',

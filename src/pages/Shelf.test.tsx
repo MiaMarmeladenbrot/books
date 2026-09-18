@@ -33,7 +33,7 @@ function shelf({ books = [], loading = false, error = null, reload, at = '/' }: 
       <BooksContext.Provider value={value}>
         <Shelf />
       </BooksContext.Provider>
-    </MemoryRouter>
+    </MemoryRouter>,
   )
 
   return value
@@ -73,13 +73,18 @@ describe('the shelf as it stands', () => {
   })
 
   it('puts a book with no date of its own at the end, under Ohne Datum', () => {
-    const undated = aBook({ title: 'Irgendwann', status: BookStatus.WantToRead, started_on: null, finished_on: null })
+    const undated = aBook({
+      title: 'Wunsch',
+      status: BookStatus.WantToRead,
+      started_on: null,
+      finished_on: null,
+    })
     shelf({ books: [SEPTEMBER, undated] })
 
     const last = screen.getAllByRole('heading', { level: 2 }).at(-1)
     expect(last).toHaveTextContent('Ohne Datum')
     expect(
-      within(last!.closest('section')!).getByRole('heading', { level: 3, name: 'Irgendwann' })
+      within(last!.closest('section')!).getByRole('heading', { level: 3, name: 'Wunsch' }),
     ).toBeInTheDocument()
   })
 
@@ -93,7 +98,11 @@ describe('the shelf as it stands', () => {
   })
 
   it('searches the author and the series, not only the title', () => {
-    const inSeries = aBook({ title: 'Eragon', authors: ['Christopher Paolini'], series: 'Eragon-Saga' })
+    const inSeries = aBook({
+      title: 'Eragon',
+      authors: ['Christopher Paolini'],
+      series: 'Eragon-Saga',
+    })
     shelf({ books: [SEPTEMBER, inSeries] })
 
     search('herrndorf')
@@ -114,11 +123,11 @@ describe('the shelf as it stands', () => {
     expect(titles()[0]?.normalize('NFC')).toBe('Wüstenblume')
   })
 
-  it('narrows to a status and hands back a way out', () => {
+  it('narrows to a stack and hands back a way out', () => {
     const reading = aBook({ title: 'Mittendrin', status: BookStatus.Reading, finished_on: null })
     shelf({ books: [reading, SEPTEMBER] })
 
-    fireEvent.change(screen.getByLabelText('Jeder Status'), { target: { value: BookStatus.Reading } })
+    fireEvent.change(screen.getByLabelText('Stapel'), { target: { value: BookStatus.Reading } })
     expect(titles()).toEqual(['Mittendrin'])
 
     fireEvent.click(screen.getByLabelText('Mittendrin entfernen'))
@@ -129,7 +138,7 @@ describe('the shelf as it stands', () => {
     const reading = aBook({ title: 'Tschick', status: BookStatus.Reading, finished_on: null })
     shelf({ books: [reading, SEPTEMBER] })
 
-    fireEvent.change(screen.getByLabelText('Jeder Status'), { target: { value: BookStatus.Reading } })
+    fireEvent.change(screen.getByLabelText('Stapel'), { target: { value: BookStatus.Reading } })
     search('tschick')
 
     expect(titles()).toEqual(['Tschick'])

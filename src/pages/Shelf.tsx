@@ -13,6 +13,7 @@ import {
   PROVENANCE_LABEL,
   PROVENANCE_ORDER,
   STATUS_LABEL,
+  STATUS_ORDER,
 } from '../types'
 import type { Book } from '../types'
 
@@ -31,13 +32,8 @@ function buildDimensions(books: Book[]): Dimension[] {
   const dimensions: Dimension[] = [
     {
       param: 'status',
-      all: 'Jeder Status',
-      choices: [
-        BookStatus.Read,
-        BookStatus.Reading,
-        BookStatus.WantToRead,
-        BookStatus.Abandoned,
-      ].map((status) => ({
+      all: 'Stapel',
+      choices: STATUS_ORDER.map((status) => ({
         value: status,
         label: STATUS_LABEL[status],
         matches: (book: Book) => book.status === status,
@@ -45,7 +41,7 @@ function buildDimensions(books: Book[]): Dimension[] {
     },
     {
       param: 'year',
-      all: 'Jedes Jahr',
+      all: 'Jahr',
       choices: years.map((year) => ({
         value: year,
         label: year,
@@ -54,7 +50,7 @@ function buildDimensions(books: Book[]): Dimension[] {
     },
     {
       param: 'format',
-      all: 'Jedes Format',
+      all: 'Format',
       choices: FORMAT_ORDER.filter((format) => books.some((book) => book.format === format)).map(
         (format) => ({
           value: format,
@@ -65,7 +61,7 @@ function buildDimensions(books: Book[]): Dimension[] {
     },
     {
       param: 'provenance',
-      all: 'Jede Herkunft',
+      all: 'Herkunft',
       choices: PROVENANCE_ORDER.filter((source) =>
         books.some((book) => book.provenance === source),
       ).map((source) => ({
@@ -248,9 +244,7 @@ export function Shelf() {
           <section key={group.key} className="mt-9 first:mt-0">
             <h2 className="font-serif mb-2.5 flex items-baseline gap-2.5 text-sm font-semibold">
               <span>{group.key === NO_DATE_KEY ? 'Ohne Datum' : monthLabel(group.key)}</span>
-              <span className="text-ink-3 font-sans text-xs font-medium">
-                {group.books.length}
-              </span>
+              <span className="text-ink-3 font-sans text-xs font-medium">{group.books.length}</span>
               <span className="bg-line h-px flex-1" />
             </h2>
 
