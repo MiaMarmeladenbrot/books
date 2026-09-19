@@ -7,6 +7,7 @@ import DNB_BROAD from './fixtures/dnb-tschick-broad.xml?raw'
 import DNB_EMPTY from './fixtures/dnb-empty.xml?raw'
 import OPENLIBRARY_NOVEL from './fixtures/openlibrary-isbn-9783499256356.json?raw'
 import OPENLIBRARY_SEARCH from './fixtures/openlibrary-tschick-search.json?raw'
+import OPENLIBRARY_EDITION from './fixtures/openlibrary-edition-9783499256356.json?raw'
 import GOOGLE_NOVEL from './fixtures/google-isbn-9783499256356.json?raw'
 
 const OPENLIBRARY_UNKNOWN = '{"numFound":0,"docs":[]}'
@@ -133,6 +134,23 @@ describe('looking a scanned barcode up', () => {
       publisher: null,
       language: null,
     })
+  })
+
+  it('fills those fields from the edition the ISBN names', async () => {
+    catalogues(
+      { when: 'services.dnb.de', answer: UNREACHABLE },
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_NOVEL },
+      { when: 'openlibrary.org/isbn/', answer: OPENLIBRARY_EDITION }
+    )
+    const lookupBooks = await freshLookup()
+
+    const lookup = await lookupBooks('9783499256356')
+
+    expect(lookup.results[0]).toMatchObject({
+      publisher: 'Rowohlt Verlag',
+      cover_url: '/api/cover?isbn=9783499256356&cover=10838632',
+    })
+    expect(asked.some((url) => url.includes('openlibrary.org/isbn/9783499256356.json'))).toBe(true)
   })
 
   it('takes the third catalogue when neither of the first two knows the number', async () => {

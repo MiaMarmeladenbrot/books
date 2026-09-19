@@ -2,6 +2,7 @@ import { BookFormat } from '../types'
 
 const DNB_ENDPOINT = 'https://services.dnb.de/sru/dnb'
 const OPENLIBRARY_SEARCH = 'https://openlibrary.org/search.json'
+const OPENLIBRARY_EDITION = 'https://openlibrary.org/isbn'
 const GOOGLE_BOOKS = '/api/books'
 const MARC_NAMESPACE = 'http://www.loc.gov/MARC21/slim'
 
@@ -9,6 +10,7 @@ const FETCH_LIMIT = 20
 const EXACT_LIMIT = 10
 const REQUEST_TIMEOUT = 8000
 const OPENLIBRARY_TIMEOUT = 4000
+const EDITION_TIMEOUT = 2500
 const GOOGLE_TIMEOUT = 4000
 const LATE_ANSWER_TIMEOUT = 10000
 
@@ -365,6 +367,32 @@ async function searchDnb(query: string, limit: number): Promise<DnbResult> {
   return { candidates, total: Number(reported ?? candidates.length) }
 }
 
+interface OpenLibraryEdition {
+  publishers?: string[]
+  number_of_pages?: number
+  covers?: number[]
+}
+
+async function withEdition(candidate: Candidate): Promise<Candidate> {
+  if (!candidate.isbn) return candidate
+  try {
+    const response = await fetchCatalogue(
+      `${OPENLIBRARY_EDITION}/${candidate.isbn}.json`,
+      EDITION_TIMEOUT
+    )
+    const edition: OpenLibraryEdition = await response.json()
+    const cover = edition.covers?.find((identifier) => identifier > 0) ?? null
+    return {
+      ...candidate,
+      page_count: edition.number_of_pages ?? null,
+      publisher: edition.publishers?.[0] ?? null,
+      cover_url: cover ? coverForIsbn(candidate.isbn, cover) : candidate.cover_url,
+    }
+  } catch {
+    return candidate
+  }
+}
+
 async function searchOpenLibraryIsbn(isbn: string): Promise<Candidate[]> {
   const parameters = new URLSearchParams({
     q: `isbn:${isbn}`,
@@ -376,23 +404,23 @@ async function searchOpenLibraryIsbn(isbn: string): Promise<Candidate[]> {
   const title = String(document.title ?? '').trim()
   if (!title) return []
 
-  return [
-    {
-      title,
-      subtitle: document.subtitle ? String(document.subtitle).trim() : null,
-      authors: ((document.author_name as string[]) ?? []).slice(0, 3),
-      series: null,
-      series_volume: null,
-      isbn,
-      published_year: (document.first_publish_year as number) ?? null,
-      page_count: null,
-      publisher: null,
-      language: null,
-      format: null,
-      cover_url: coverForIsbn(isbn, (document.cover_i as number | undefined) ?? null),
-      source: 'OpenLibrary',
-    },
-  ]
+  const found: Candidate = {
+    title,
+    subtitle: document.subtitle ? String(document.subtitle).trim() : null,
+    authors: ((document.author_name as string[]) ?? []).slice(0, 3),
+    series: null,
+    series_volume: null,
+    isbn,
+    published_year: (document.first_publish_year as number) ?? null,
+    page_count: null,
+    publisher: null,
+    language: null,
+    format: null,
+    cover_url: coverForIsbn(isbn, (document.cover_i as number | undefined) ?? null),
+    source: 'OpenLibrary',
+  }
+
+  return [await withEdition(found)]
 }
 
 async function searchOpenLibraryText(text: string, limit: number): Promise<Candidate[]> {
