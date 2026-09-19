@@ -73,10 +73,10 @@ async function googleCover(isbn: string) {
     fields: 'items(volumeInfo/imageLinks/thumbnail)',
     key,
   })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), GOOGLE_BUDGET)
   try {
-    const response = await fetch(`${GOOGLE_BOOKS}?${asked}`, {
-      signal: AbortSignal.timeout(GOOGLE_BUDGET),
-    })
+    const response = await fetch(`${GOOGLE_BOOKS}?${asked}`, { signal: controller.signal })
     if (!response.ok) return null
     const body = (await response.json()) as {
       items?: { volumeInfo?: { imageLinks?: { thumbnail?: string } } }[]
@@ -92,6 +92,8 @@ async function googleCover(isbn: string) {
     return null
   } catch {
     return null
+  } finally {
+    clearTimeout(timer)
   }
 }
 
