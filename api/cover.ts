@@ -7,10 +7,11 @@ const GOOGLE_BOOKS = 'https://www.googleapis.com/books/v1/volumes'
 const USER_AGENT = 'lesestapel/1.0 (private library app)'
 
 const MIN_BYTES = 5000
-const MIN_WIDTH = 280
 const MIN_RATIO = 0.5
 const MAX_RATIO = 0.85
 const UPSTREAM_TIMEOUT = 8000
+const GOOGLE_BUDGET = 2500
+const GOOGLE_ZOOMS = [0, 4]
 
 function jpegSize(bytes: Uint8Array) {
   let position = 2
@@ -38,14 +39,14 @@ function jpegSize(bytes: Uint8Array) {
 function usable(bytes: Uint8Array) {
   if (bytes.length < MIN_BYTES) return false
   const size = jpegSize(bytes)
-  if (!size || size.width < MIN_WIDTH) return false
+  if (!size) return false
   const ratio = size.width / size.height
   return ratio >= MIN_RATIO && ratio <= MAX_RATIO
 }
 
-async function tryFetch(url: string) {
+async function tryFetch(url: string, timeout = UPSTREAM_TIMEOUT) {
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT)
+  const timer = setTimeout(() => controller.abort(), timeout)
   try {
     const response = await fetch(url, {
       headers: { 'User-Agent': USER_AGENT },
@@ -72,10 +73,10 @@ async function googleCover(isbn: string) {
     fields: 'items(volumeInfo/imageLinks/thumbnail)',
     key,
   })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), GOOGLE_BUDGET)
   try {
-    const response = await fetch(`${GOOGLE_BOOKS}?${asked}`, {
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT),
-    })
+    const response = await fetch(`${GOOGLE_BOOKS}?${asked}`, { signal: controller.signal })
     if (!response.ok) return null
     const body = (await response.json()) as {
       items?: { volumeInfo?: { imageLinks?: { thumbnail?: string } } }[]
@@ -83,13 +84,16 @@ async function googleCover(isbn: string) {
     const thumbnail = body.items?.[0]?.volumeInfo?.imageLinks?.thumbnail
     if (!thumbnail) return null
 
-    const full = thumbnail
-      .replace('http://', 'https://')
-      .replace(/&zoom=\d+/, '&zoom=0')
-      .replace('&edge=curl', '')
-    return await tryFetch(full)
+    const picture = thumbnail.replace('http://', 'https://').replace('&edge=curl', '')
+    for (const zoom of GOOGLE_ZOOMS) {
+      const bytes = await tryFetch(picture.replace(/&zoom=\d+/, `&zoom=${zoom}`), GOOGLE_BUDGET)
+      if (bytes) return bytes
+    }
+    return null
   } catch {
     return null
+  } finally {
+    clearTimeout(timer)
   }
 }
 

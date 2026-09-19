@@ -371,6 +371,7 @@ async function searchDnb(query: string, limit: number): Promise<DnbResult> {
 interface OpenLibraryEdition {
   publishers?: string[]
   number_of_pages?: number
+  publish_date?: string
   covers?: number[]
 }
 
@@ -383,8 +384,10 @@ async function withEdition(candidate: Candidate): Promise<Candidate> {
     )
     const edition: OpenLibraryEdition = await response.json()
     const cover = edition.covers?.find((identifier) => identifier > 0) ?? null
+    const printed = firstNumber(String(edition.publish_date ?? ''), /(1[4-9]\d{2}|20[0-4]\d)/)
     return {
       ...candidate,
+      published_year: printed ?? candidate.published_year,
       page_count: edition.number_of_pages ?? null,
       publisher: edition.publishers?.[0] ?? null,
       cover_url: cover ? coverForIsbn(candidate.isbn, cover) : candidate.cover_url,

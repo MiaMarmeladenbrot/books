@@ -5,26 +5,22 @@ const FIELDS =
   'items(volumeInfo(title,subtitle,authors,publishedDate,pageCount,publisher,language,' +
   'industryIdentifiers,imageLinks/thumbnail))'
 const UPSTREAM_TIMEOUT = 8000
-const MAX_RESULTS = 10
 
 export default async function handler(request: Request) {
   const parameters = new URL(request.url).searchParams
   const raw = (parameters.get('isbn') ?? '').replace(/[^0-9Xx]/g, '')
   const isbn = raw.length === 10 || raw.length === 13 ? raw : null
-  const text = (parameters.get('q') ?? '').trim()
-  if (!isbn && !text) {
-    return new Response('isbn oder q fehlt', { status: 400 })
+  if (!isbn) {
+    return new Response('isbn fehlt', { status: 400 })
   }
 
   const key = process.env.GOOGLE_BOOKS_API_KEY
   if (!key) return new Response('GOOGLE_BOOKS_API_KEY fehlt', { status: 503 })
 
-  const wanted = Number(parameters.get('limit') ?? '')
-  const limit = Number.isFinite(wanted) && wanted > 0 ? wanted : MAX_RESULTS
   const asked = new URLSearchParams({
-    q: isbn ? `isbn:${isbn}` : text,
+    q: `isbn:${isbn}`,
     country: 'DE',
-    maxResults: String(Math.min(limit, MAX_RESULTS)),
+    maxResults: '1',
     fields: FIELDS,
     key,
   })
