@@ -2,12 +2,14 @@ import { BookFormat } from '../types'
 
 const DNB_ENDPOINT = 'https://services.dnb.de/sru/dnb'
 const OPENLIBRARY_SEARCH = 'https://openlibrary.org/search.json'
+const GOOGLE_BOOKS = '/api/books'
 const MARC_NAMESPACE = 'http://www.loc.gov/MARC21/slim'
 
 const FETCH_LIMIT = 20
 const EXACT_LIMIT = 10
 const REQUEST_TIMEOUT = 8000
 const OPENLIBRARY_TIMEOUT = 4000
+const GOOGLE_TIMEOUT = 4000
 const LATE_ANSWER_TIMEOUT = 10000
 
 class CatalogueUnavailable extends Error {}
@@ -87,7 +89,7 @@ export interface Candidate {
   language: string | null
   format: BookFormat | null
   cover_url: string | null
-  source: 'DNB' | 'OpenLibrary'
+  source: 'DNB' | 'OpenLibrary' | 'Google'
 }
 
 const MARC_LANGUAGES: Record<string, string> = {
@@ -432,6 +434,49 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
     .filter((candidate) => !looksLikeStudyGuide(candidate.title))
 }
 
+interface GoogleVolume {
+  title?: string
+  subtitle?: string
+  authors?: string[]
+  publishedDate?: string
+  pageCount?: number
+  publisher?: string
+  language?: string
+  industryIdentifiers?: { type: string; identifier: string }[]
+}
+
+function googleCandidate(volume: GoogleVolume, isbn: string | null): Candidate {
+  const pages = volume.pageCount ?? 0
+  return {
+    title: String(volume.title ?? '').trim(),
+    subtitle: volume.subtitle ? String(volume.subtitle).trim() : null,
+    authors: (volume.authors ?? []).slice(0, 3),
+    series: null,
+    series_volume: null,
+    isbn,
+    published_year: firstNumber(String(volume.publishedDate ?? ''), /(1[4-9]\d{2}|20[0-4]\d)/),
+    page_count: pages > 0 ? pages : null,
+    publisher: volume.publisher ?? null,
+    language: volume.language ? volume.language.slice(0, 2).toLowerCase() : null,
+    format: null,
+    cover_url: coverForIsbn(isbn),
+    source: 'Google',
+  }
+}
+
+async function askGoogle(parameters: URLSearchParams, timeout: number) {
+  const response = await fetchCatalogue(`${GOOGLE_BOOKS}?${parameters}`, timeout)
+  const items: { volumeInfo?: GoogleVolume }[] = (await response.json()).items ?? []
+  return items.map((item) => item.volumeInfo ?? {})
+}
+
+async function searchGoogleIsbn(isbn: string): Promise<Candidate[]> {
+  const volumes = await askGoogle(new URLSearchParams({ isbn, limit: '1' }), GOOGLE_TIMEOUT)
+  return volumes
+    .map((volume) => googleCandidate(volume, isbn))
+    .filter((candidate) => candidate.title.length > 0)
+}
+
 function normalizeText(text: string) {
   return text
     .normalize('NFC')
@@ -553,6 +598,7 @@ export async function lookupBooks(
     const sources = [
       async () => (await searchDnb(`num=${isbn}`, 1)).candidates,
       () => searchOpenLibraryIsbn(isbn),
+      () => searchGoogleIsbn(isbn),
     ]
     for (const search of sources) {
       asked += 1

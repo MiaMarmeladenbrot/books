@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "volumeInfo": {
+        "title": "Tschick",
+        "subtitle": "Roman",
+        "authors": [
+          "Wolfgang Herrndorf"
+        ],
+        "publishedDate": "2012",
+        "industryIdentifiers": [
+          {
+            "type": "ISBN_10",
+            "identifier": "3499256355"
+          },
+          {
+            "type": "ISBN_13",
+            "identifier": "9783499256356"
+          }
+        ],
+        "pageCount": 253,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=PEVxtQAACAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api"
+        },
+        "language": "de"
+      }
+    }
+  ]
+}
