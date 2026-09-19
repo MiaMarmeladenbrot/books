@@ -198,10 +198,10 @@ export function BookSearch() {
           </div>
           <button
             type="submit"
-            disabled={term.trim().length < 3 || outcome.kind === 'searching'}
+            disabled={term.trim().length < 3 || asking}
             className="bg-accent mt-3 w-full rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-40"
           >
-            {outcome.kind === 'searching' ? 'Sucht…' : 'Suchen'}
+            {asking ? 'Sucht…' : 'Suchen'}
           </button>
         </form>
 
