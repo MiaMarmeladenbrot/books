@@ -7,7 +7,6 @@ const GOOGLE_BOOKS = 'https://www.googleapis.com/books/v1/volumes'
 const USER_AGENT = 'lesestapel/1.0 (private library app)'
 
 const MIN_BYTES = 5000
-const MIN_WIDTH = 280
 const MIN_RATIO = 0.5
 const MAX_RATIO = 0.85
 const UPSTREAM_TIMEOUT = 8000
@@ -40,7 +39,7 @@ function jpegSize(bytes: Uint8Array) {
 function usable(bytes: Uint8Array) {
   if (bytes.length < MIN_BYTES) return false
   const size = jpegSize(bytes)
-  if (!size || size.width < MIN_WIDTH) return false
+  if (!size) return false
   const ratio = size.width / size.height
   return ratio >= MIN_RATIO && ratio <= MAX_RATIO
 }
