@@ -31,9 +31,9 @@ at once.
 ## Setup
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env   # project URL and publishable key
-npm run dev
+pnpm dev
 ```
 
 Six things are prepared in Supabase itself:
@@ -61,12 +61,14 @@ to the next free one would break the way back in and say nothing.
 
 ## Scripts
 
-| Command           | Purpose                        |
-| ----------------- | ------------------------------ |
-| `npm run dev`     | Development server             |
-| `npm run build`   | Type check and production build |
-| `npm run preview` | Serve the production build     |
-| `npm run lint`    | Run oxlint over the project    |
+| Command           | Purpose                         |
+| ----------------- | ------------------------------- |
+| `pnpm dev`        | Development server              |
+| `pnpm build`      | Type check and production build |
+| `pnpm preview`    | Serve the production build      |
+| `pnpm lint`       | Run oxlint over the project     |
+| `pnpm test`       | Run the test suite once         |
+| `pnpm test:watch` | Re-run tests as files change    |
 
 ## Covers
 

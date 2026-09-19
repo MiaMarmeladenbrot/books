@@ -212,10 +212,7 @@ export function BookDetail() {
         />
         <Row label="Format" value={book.format ? FORMAT_LABEL[book.format] : null} />
         <Row label="Sprache" value={book.language ? languageLabel(book.language) : null} />
-        <Row
-          label="Erhalten als"
-          value={book.provenance ? PROVENANCE_LABEL[book.provenance] : null}
-        />
+        <Row label="Herkunft" value={book.provenance ? PROVENANCE_LABEL[book.provenance] : null} />
         <Row label="Erschienen" value={book.published_year ? String(book.published_year) : null} />
         <Row label="ISBN" value={book.isbn} />
 

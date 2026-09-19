@@ -7,7 +7,7 @@ import { formatNumber } from '../utils/format'
 import { FORMAT_LABEL } from '../types'
 
 const BarcodeScanner = lazy(() =>
-  import('../components/BarcodeScanner').then((module) => ({ default: module.BarcodeScanner }))
+  import('../components/BarcodeScanner').then((module) => ({ default: module.BarcodeScanner })),
 )
 
 type Outcome =
@@ -20,7 +20,7 @@ type Outcome =
 
 const PAGE_SIZE = 8
 
-const MANUAL_ENTRY = 'Von Hand eintragen'
+const MANUAL_ENTRY = 'Selber eintragen'
 
 function describe(candidate: Candidate) {
   return [
@@ -70,18 +70,20 @@ export function BookSearch() {
     setOutcome({ kind: 'searching' })
 
     try {
-      const { results, asked: tried, silent, moreAvailable } = await lookupBooks(
-        trimmed,
-        (first) => {
-          if (run !== attempt.current || first.results.length === 0) return
-          shown = true
-          setOutcome({
-            kind: 'partial',
-            results: first.results,
-            moreAvailable: first.moreAvailable,
-          })
-        }
-      )
+      const {
+        results,
+        asked: tried,
+        silent,
+        moreAvailable,
+      } = await lookupBooks(trimmed, (first) => {
+        if (run !== attempt.current || first.results.length === 0) return
+        shown = true
+        setOutcome({
+          kind: 'partial',
+          results: first.results,
+          moreAvailable: first.moreAvailable,
+        })
+      })
       if (run !== attempt.current) return
 
       if (results.length === 0) {
@@ -91,7 +93,7 @@ export function BookSearch() {
                 kind: 'failed',
                 message: 'Der Katalog antwortet nicht. Nochmal versuchen oder von Hand eintragen.',
               }
-            : { kind: 'empty', oneSourceQuiet: silent > 0 }
+            : { kind: 'empty', oneSourceQuiet: silent > 0 },
         )
         return
       }
@@ -151,7 +153,7 @@ export function BookSearch() {
         <button type="button" onClick={leave} aria-label="Abbrechen">
           <X size={22} className="text-ink-3" />
         </button>
-        <h1 className="font-serif text-xl font-semibold tracking-tight">Buch hinzufügen</h1>
+        <h1 className="font-serif text-xl font-semibold tracking-tight">Bücher durchstöbern</h1>
         {asking && (
           <span
             aria-hidden
@@ -196,10 +198,10 @@ export function BookSearch() {
           </div>
           <button
             type="submit"
-            disabled={term.trim().length < 3 || outcome.kind === 'searching'}
+            disabled={term.trim().length < 3 || asking}
             className="bg-accent mt-3 w-full rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-40"
           >
-            {outcome.kind === 'searching' ? 'Sucht…' : 'Suchen'}
+            {asking ? 'Sucht…' : 'Suchen'}
           </button>
         </form>
 
@@ -207,7 +209,9 @@ export function BookSearch() {
 
         {outcome.kind === 'empty' && (
           <div className="mt-8 text-center">
-            <p className="font-serif mb-1.5 text-base font-semibold">Dazu weiß der Katalog nichts</p>
+            <p className="font-serif mb-1.5 text-base font-semibold">
+              Dazu weiß der Katalog nichts
+            </p>
             <p className="text-ink-2 mx-auto mb-5 max-w-[34ch] text-sm leading-relaxed">
               Neuerscheinungen und englische Ausgaben fehlen oft. Deine Angaben sind dann die
               besseren.
@@ -274,11 +278,14 @@ export function BookSearch() {
               </button>
             )}
 
-            {outcome.kind === 'results' && visible >= listed.results.length && listed.moreAvailable && (
-              <p className="text-ink-3 mt-5 text-center text-xs leading-relaxed">
-                Der Katalog hat noch mehr Ausgaben. Suche verfeinern, etwa mit dem Autorennamen.
-              </p>
-            )}
+            {outcome.kind === 'results' &&
+              visible >= listed.results.length &&
+              listed.moreAvailable && (
+                <p className="text-ink-3 mt-5 text-center text-xs leading-relaxed">
+                  Der Katalog hat noch mehr Ausgaben. Verfeinere deine Suche, etwa mit dem
+                  Autor:innennamen.
+                </p>
+              )}
 
             <div className="border-line mt-6 border-t pt-5 text-center">
               <p className="text-ink-2 mb-3 text-sm">Nichts davon passt?</p>

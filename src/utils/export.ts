@@ -15,10 +15,10 @@ const CSV_COLUMNS: { header: string; value: (book: Book) => string }[] = [
   { header: 'Format', value: (book) => (book.format ? FORMAT_LABEL[book.format] : '') },
   { header: 'Sprache', value: (book) => (book.language ? languageLabel(book.language) : '') },
   {
-    header: 'Erhalten als',
+    header: 'Herkunft',
     value: (book) => (book.provenance ? PROVENANCE_LABEL[book.provenance] : ''),
   },
-  { header: 'Status', value: (book) => STATUS_LABEL[book.status] },
+  { header: 'Stapel', value: (book) => STATUS_LABEL[book.status] },
   { header: 'Lesebeginn', value: (book) => book.started_on ?? '' },
   { header: 'Leseende', value: (book) => book.finished_on ?? '' },
   { header: 'Erhalten am', value: (book) => book.acquired_on ?? '' },

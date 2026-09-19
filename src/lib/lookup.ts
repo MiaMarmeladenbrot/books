@@ -1,14 +1,17 @@
 import { BookFormat } from '../types'
 
 const DNB_ENDPOINT = 'https://services.dnb.de/sru/dnb'
-const OPENLIBRARY_ISBN = 'https://openlibrary.org/api/books'
 const OPENLIBRARY_SEARCH = 'https://openlibrary.org/search.json'
+const OPENLIBRARY_EDITION = 'https://openlibrary.org/isbn'
+const GOOGLE_BOOKS = '/api/books'
 const MARC_NAMESPACE = 'http://www.loc.gov/MARC21/slim'
 
 const FETCH_LIMIT = 20
 const EXACT_LIMIT = 10
 const REQUEST_TIMEOUT = 8000
 const OPENLIBRARY_TIMEOUT = 4000
+const EDITION_TIMEOUT = 2500
+const GOOGLE_TIMEOUT = 4000
 const LATE_ANSWER_TIMEOUT = 10000
 
 class CatalogueUnavailable extends Error {}
@@ -88,7 +91,7 @@ export interface Candidate {
   language: string | null
   format: BookFormat | null
   cover_url: string | null
-  source: 'DNB' | 'OpenLibrary'
+  source: 'DNB' | 'OpenLibrary' | 'Google'
 }
 
 const MARC_LANGUAGES: Record<string, string> = {
@@ -364,33 +367,63 @@ async function searchDnb(query: string, limit: number): Promise<DnbResult> {
   return { candidates, total: Number(reported ?? candidates.length) }
 }
 
+interface OpenLibraryEdition {
+  publishers?: string[]
+  number_of_pages?: number
+  publish_date?: string
+  covers?: number[]
+}
+
+async function withEdition(candidate: Candidate): Promise<Candidate> {
+  if (!candidate.isbn) return candidate
+  try {
+    const response = await fetchCatalogue(
+      `${OPENLIBRARY_EDITION}/${candidate.isbn}.json`,
+      EDITION_TIMEOUT
+    )
+    const edition: OpenLibraryEdition = await response.json()
+    const cover = edition.covers?.find((identifier) => identifier > 0) ?? null
+    const printed = firstNumber(String(edition.publish_date ?? ''), /(1[4-9]\d{2}|20[0-4]\d)/)
+    return {
+      ...candidate,
+      published_year: printed ?? candidate.published_year,
+      page_count: edition.number_of_pages ?? null,
+      publisher: edition.publishers?.[0] ?? null,
+      cover_url: cover ? coverForIsbn(candidate.isbn, cover) : candidate.cover_url,
+    }
+  } catch {
+    return candidate
+  }
+}
+
 async function searchOpenLibraryIsbn(isbn: string): Promise<Candidate[]> {
   const parameters = new URLSearchParams({
-    bibkeys: `ISBN:${isbn}`,
-    format: 'json',
-    jscmd: 'data',
+    q: `isbn:${isbn}`,
+    fields: 'title,subtitle,author_name,first_publish_year,cover_i',
+    limit: '1',
   })
-  const response = await fetchCatalogue(`${OPENLIBRARY_ISBN}?${parameters}`, OPENLIBRARY_TIMEOUT)
-  const record = (await response.json())[`ISBN:${isbn}`]
-  if (!record?.title) return []
+  const response = await fetchCatalogue(`${OPENLIBRARY_SEARCH}?${parameters}`, OPENLIBRARY_TIMEOUT)
+  const document: Record<string, unknown> = (await response.json()).docs?.[0] ?? {}
+  const title = String(document.title ?? '').trim()
+  if (!title) return []
 
-  return [
-    {
-      title: String(record.title).trim(),
-      subtitle: record.subtitle ? String(record.subtitle).trim() : null,
-      authors: (record.authors ?? []).map((author: { name: string }) => author.name),
-      series: cleanSeries(record.series?.[0]?.name ?? null),
-      series_volume: null,
-      isbn,
-      published_year: firstNumber(String(record.publish_date ?? ''), /(1[4-9]\d{2}|20[0-4]\d)/),
-      page_count: record.number_of_pages ?? null,
-      publisher: record.publishers?.[0]?.name ?? null,
-      language: null,
-      format: null,
-      cover_url: coverForIsbn(isbn),
-      source: 'OpenLibrary',
-    },
-  ]
+  const found: Candidate = {
+    title,
+    subtitle: document.subtitle ? String(document.subtitle).trim() : null,
+    authors: ((document.author_name as string[]) ?? []).slice(0, 3),
+    series: null,
+    series_volume: null,
+    isbn,
+    published_year: (document.first_publish_year as number) ?? null,
+    page_count: null,
+    publisher: null,
+    language: null,
+    format: null,
+    cover_url: coverForIsbn(isbn, (document.cover_i as number | undefined) ?? null),
+    source: 'OpenLibrary',
+  }
+
+  return [await withEdition(found)]
 }
 
 async function searchOpenLibraryText(text: string, limit: number): Promise<Candidate[]> {
@@ -430,6 +463,49 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
     })
     .filter((candidate) => candidate.title.length > 0)
     .filter((candidate) => !looksLikeStudyGuide(candidate.title))
+}
+
+interface GoogleVolume {
+  title?: string
+  subtitle?: string
+  authors?: string[]
+  publishedDate?: string
+  pageCount?: number
+  publisher?: string
+  language?: string
+  industryIdentifiers?: { type: string; identifier: string }[]
+}
+
+function googleCandidate(volume: GoogleVolume, isbn: string | null): Candidate {
+  const pages = volume.pageCount ?? 0
+  return {
+    title: String(volume.title ?? '').trim(),
+    subtitle: volume.subtitle ? String(volume.subtitle).trim() : null,
+    authors: (volume.authors ?? []).slice(0, 3),
+    series: null,
+    series_volume: null,
+    isbn,
+    published_year: firstNumber(String(volume.publishedDate ?? ''), /(1[4-9]\d{2}|20[0-4]\d)/),
+    page_count: pages > 0 ? pages : null,
+    publisher: volume.publisher ?? null,
+    language: volume.language ? volume.language.slice(0, 2).toLowerCase() : null,
+    format: null,
+    cover_url: coverForIsbn(isbn),
+    source: 'Google',
+  }
+}
+
+async function askGoogle(parameters: URLSearchParams, timeout: number) {
+  const response = await fetchCatalogue(`${GOOGLE_BOOKS}?${parameters}`, timeout)
+  const items: { volumeInfo?: GoogleVolume }[] = (await response.json()).items ?? []
+  return items.map((item) => item.volumeInfo ?? {})
+}
+
+async function searchGoogleIsbn(isbn: string): Promise<Candidate[]> {
+  const volumes = await askGoogle(new URLSearchParams({ isbn, limit: '1' }), GOOGLE_TIMEOUT)
+  return volumes
+    .map((volume) => googleCandidate(volume, isbn))
+    .filter((candidate) => candidate.title.length > 0)
 }
 
 function normalizeText(text: string) {
@@ -553,6 +629,7 @@ export async function lookupBooks(
     const sources = [
       async () => (await searchDnb(`num=${isbn}`, 1)).candidates,
       () => searchOpenLibraryIsbn(isbn),
+      () => searchGoogleIsbn(isbn),
     ]
     for (const search of sources) {
       asked += 1

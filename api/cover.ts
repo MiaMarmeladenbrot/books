@@ -3,13 +3,15 @@ export const config = { runtime: 'edge' }
 const MVB_COVER = 'https://portal.dnb.de/opac/mvb/cover'
 const OPENLIBRARY_COVER = 'https://covers.openlibrary.org/b/isbn'
 const OPENLIBRARY_WORK_COVER = 'https://covers.openlibrary.org/b/id'
+const GOOGLE_BOOKS = 'https://www.googleapis.com/books/v1/volumes'
 const USER_AGENT = 'lesestapel/1.0 (private library app)'
 
 const MIN_BYTES = 5000
-const MIN_WIDTH = 280
 const MIN_RATIO = 0.5
 const MAX_RATIO = 0.85
 const UPSTREAM_TIMEOUT = 8000
+const GOOGLE_BUDGET = 2500
+const GOOGLE_ZOOMS = [0, 4]
 
 function jpegSize(bytes: Uint8Array) {
   let position = 2
@@ -37,14 +39,14 @@ function jpegSize(bytes: Uint8Array) {
 function usable(bytes: Uint8Array) {
   if (bytes.length < MIN_BYTES) return false
   const size = jpegSize(bytes)
-  if (!size || size.width < MIN_WIDTH) return false
+  if (!size) return false
   const ratio = size.width / size.height
   return ratio >= MIN_RATIO && ratio <= MAX_RATIO
 }
 
-async function tryFetch(url: string) {
+async function tryFetch(url: string, timeout = UPSTREAM_TIMEOUT) {
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT)
+  const timer = setTimeout(() => controller.abort(), timeout)
   try {
     const response = await fetch(url, {
       headers: { 'User-Agent': USER_AGENT },
@@ -53,6 +55,41 @@ async function tryFetch(url: string) {
     if (!response.ok) return null
     const bytes = new Uint8Array(await response.arrayBuffer())
     return usable(bytes) ? bytes : null
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function googleCover(isbn: string) {
+  const key = process.env.GOOGLE_BOOKS_API_KEY
+  if (!key) return null
+
+  const asked = new URLSearchParams({
+    q: `isbn:${isbn}`,
+    country: 'DE',
+    maxResults: '1',
+    fields: 'items(volumeInfo/imageLinks/thumbnail)',
+    key,
+  })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), GOOGLE_BUDGET)
+  try {
+    const response = await fetch(`${GOOGLE_BOOKS}?${asked}`, { signal: controller.signal })
+    if (!response.ok) return null
+    const body = (await response.json()) as {
+      items?: { volumeInfo?: { imageLinks?: { thumbnail?: string } } }[]
+    }
+    const thumbnail = body.items?.[0]?.volumeInfo?.imageLinks?.thumbnail
+    if (!thumbnail) return null
+
+    const picture = thumbnail.replace('http://', 'https://').replace('&edge=curl', '')
+    for (const zoom of GOOGLE_ZOOMS) {
+      const bytes = await tryFetch(picture.replace(/&zoom=\d+/, `&zoom=${zoom}`), GOOGLE_BUDGET)
+      if (bytes) return bytes
+    }
+    return null
   } catch {
     return null
   } finally {
@@ -72,7 +109,8 @@ export default async function handler(request: Request) {
   const bytes =
     (isbn ? await tryFetch(`${MVB_COVER}?isbn=${isbn}`) : null) ??
     (isbn ? await tryFetch(`${OPENLIBRARY_COVER}/${isbn}-L.jpg?default=false`) : null) ??
-    (cover ? await tryFetch(`${OPENLIBRARY_WORK_COVER}/${cover}-L.jpg`) : null)
+    (cover ? await tryFetch(`${OPENLIBRARY_WORK_COVER}/${cover}-L.jpg`) : null) ??
+    (isbn ? await googleCover(isbn) : null)
 
   if (!bytes) return new Response('kein Cover gefunden', { status: 404 })
 

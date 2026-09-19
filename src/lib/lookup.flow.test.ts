@@ -7,8 +7,11 @@ import DNB_BROAD from './fixtures/dnb-tschick-broad.xml?raw'
 import DNB_EMPTY from './fixtures/dnb-empty.xml?raw'
 import OPENLIBRARY_NOVEL from './fixtures/openlibrary-isbn-9783499256356.json?raw'
 import OPENLIBRARY_SEARCH from './fixtures/openlibrary-tschick-search.json?raw'
+import OPENLIBRARY_EDITION from './fixtures/openlibrary-edition-9783499256356.json?raw'
+import GOOGLE_NOVEL from './fixtures/google-isbn-9783499256356.json?raw'
 
-const OPENLIBRARY_UNKNOWN = '{}'
+const OPENLIBRARY_UNKNOWN = '{"numFound":0,"docs":[]}'
+const GOOGLE_UNKNOWN = '{}'
 
 const UNREACHABLE = Symbol('unreachable')
 
@@ -100,7 +103,7 @@ describe('looking a scanned barcode up', () => {
   it('falls through to OpenLibrary when the DNB is unreachable', async () => {
     catalogues(
       { when: 'services.dnb.de', answer: UNREACHABLE },
-      { when: 'openlibrary.org/api/books', answer: OPENLIBRARY_NOVEL }
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_NOVEL }
     )
     const lookupBooks = await freshLookup()
 
@@ -112,27 +115,97 @@ describe('looking a scanned barcode up', () => {
       title: 'Tschick',
       authors: ['Wolfgang Herrndorf'],
       isbn: '9783499256356',
-      published_year: 2012,
-      publisher: 'Rowohlt Verlag',
+      published_year: 2010,
       source: 'OpenLibrary',
+    })
+  })
+
+  it('leaves the fields the index only averages empty', async () => {
+    catalogues(
+      { when: 'services.dnb.de', answer: UNREACHABLE },
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_NOVEL }
+    )
+    const lookupBooks = await freshLookup()
+
+    const lookup = await lookupBooks('9783499256356')
+
+    expect(lookup.results[0]).toMatchObject({
+      page_count: null,
+      publisher: null,
+      language: null,
+    })
+  })
+
+  it('fills those fields from the edition the ISBN names', async () => {
+    catalogues(
+      { when: 'services.dnb.de', answer: UNREACHABLE },
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_NOVEL },
+      { when: 'openlibrary.org/isbn/', answer: OPENLIBRARY_EDITION }
+    )
+    const lookupBooks = await freshLookup()
+
+    const lookup = await lookupBooks('9783499256356')
+
+    expect(lookup.results[0]).toMatchObject({
+      publisher: 'Rowohlt Verlag',
+      cover_url: '/api/cover?isbn=9783499256356&cover=10838632',
+    })
+    expect(asked.some((url) => url.includes('openlibrary.org/isbn/9783499256356.json'))).toBe(true)
+  })
+
+  it('dates the edition that was scanned, not the work it belongs to', async () => {
+    catalogues(
+      { when: 'services.dnb.de', answer: UNREACHABLE },
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_NOVEL },
+      { when: 'openlibrary.org/isbn/', answer: OPENLIBRARY_EDITION }
+    )
+    const lookupBooks = await freshLookup()
+
+    const lookup = await lookupBooks('9783499256356')
+
+    expect(lookup.results[0].published_year).toBe(2012)
+  })
+
+  it('takes the third catalogue when neither of the first two knows the number', async () => {
+    catalogues(
+      { when: 'services.dnb.de', answer: DNB_EMPTY },
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_UNKNOWN },
+      { when: 'api/books', answer: GOOGLE_NOVEL }
+    )
+    const lookupBooks = await freshLookup()
+
+    const lookup = await lookupBooks('9783499256356')
+
+    expect(lookup.asked).toBe(3)
+    expect(lookup.silent).toBe(0)
+    expect(lookup.results[0]).toMatchObject({
+      title: 'Tschick',
+      subtitle: 'Roman',
+      authors: ['Wolfgang Herrndorf'],
+      isbn: '9783499256356',
+      published_year: 2012,
+      page_count: 253,
+      language: 'de',
+      source: 'Google',
     })
   })
 
   it('comes back empty when no catalogue has the number, and asks again next time', async () => {
     catalogues(
       { when: 'services.dnb.de', answer: DNB_EMPTY },
-      { when: 'openlibrary.org/api/books', answer: OPENLIBRARY_UNKNOWN }
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_UNKNOWN },
+      { when: 'api/books', answer: GOOGLE_UNKNOWN }
     )
     const lookupBooks = await freshLookup()
 
     const lookup = await lookupBooks('9783518000000')
 
     expect(lookup.results).toEqual([])
-    expect(lookup.asked).toBe(2)
+    expect(lookup.asked).toBe(3)
     expect(lookup.silent).toBe(0)
 
     await lookupBooks('9783518000000')
-    expect(asked).toHaveLength(4)
+    expect(asked).toHaveLength(6)
   })
 })
 

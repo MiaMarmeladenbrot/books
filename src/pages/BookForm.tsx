@@ -258,7 +258,7 @@ export function BookForm() {
           <X size={22} className="text-ink-3" />
         </button>
         <h1 className="font-serif text-xl font-semibold tracking-tight">
-          {existing ? 'Buch bearbeiten' : 'Neues Buch'}
+          {existing ? 'Buch bearbeiten' : 'Buch ins Regal legen'}
         </h1>
         <button
           type="submit"
@@ -317,7 +317,7 @@ export function BookForm() {
         </label>
 
         <div className="mb-4">
-          <span className={labelClass}>Status</span>
+          <span className={labelClass}>Stapel</span>
           <div className="grid grid-cols-2 gap-2">
             {STATUS_ORDER.map((status) => (
               <button
@@ -394,7 +394,7 @@ export function BookForm() {
 
         <div className="mb-4 grid grid-cols-2 gap-3">
           <label className="block">
-            <span className={labelClass}>Erhalten als</span>
+            <span className={labelClass}>Herkunft</span>
             <Select
               value={draft.provenance ?? ''}
               onChange={(event) =>
