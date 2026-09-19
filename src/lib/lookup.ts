@@ -8,6 +8,7 @@ const MARC_NAMESPACE = 'http://www.loc.gov/MARC21/slim'
 
 const FETCH_LIMIT = 20
 const EXACT_LIMIT = 10
+const EDITIONS_LOOKED_UP = 3
 const REQUEST_TIMEOUT = 8000
 const OPENLIBRARY_TIMEOUT = 4000
 const EDITION_TIMEOUT = 2500
@@ -426,14 +427,12 @@ async function searchOpenLibraryIsbn(isbn: string): Promise<Candidate[]> {
 async function searchOpenLibraryText(text: string, limit: number): Promise<Candidate[]> {
   const parameters = new URLSearchParams({
     q: text,
-    fields:
-      'title,subtitle,author_name,first_publish_year,number_of_pages_median,publisher,isbn,' +
-      'cover_i,language',
+    fields: 'title,subtitle,author_name,first_publish_year,isbn,cover_i,language',
     limit: String(limit),
   })
   const response = await fetchCatalogue(`${OPENLIBRARY_SEARCH}?${parameters}`, LATE_ANSWER_TIMEOUT)
   const documents: Record<string, unknown>[] = (await response.json()).docs ?? []
-  return documents
+  const candidates = documents
     .map((document) => {
       const isbnList = (document.isbn as string[]) ?? []
       const coverId = (document.cover_i as number | undefined) ?? null
@@ -450,8 +449,8 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
         series_volume: null,
         isbn,
         published_year: (document.first_publish_year as number) ?? null,
-        page_count: (document.number_of_pages_median as number) ?? null,
-        publisher: ((document.publisher as string[]) ?? [])[0] ?? null,
+        page_count: null,
+        publisher: null,
         language,
         format: null,
         cover_url: coverForIsbn(isbn, coverId),
@@ -460,6 +459,9 @@ async function searchOpenLibraryText(text: string, limit: number): Promise<Candi
     })
     .filter((candidate) => candidate.title.length > 0)
     .filter((candidate) => !looksLikeStudyGuide(candidate.title))
+
+  const onTheFirstPage = await Promise.all(candidates.slice(0, EDITIONS_LOOKED_UP).map(withEdition))
+  return [...onTheFirstPage, ...candidates.slice(EDITIONS_LOOKED_UP)]
 }
 
 interface GoogleVolume {
