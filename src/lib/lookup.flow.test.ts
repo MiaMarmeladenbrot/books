@@ -153,6 +153,19 @@ describe('looking a scanned barcode up', () => {
     expect(asked.some((url) => url.includes('openlibrary.org/isbn/9783499256356.json'))).toBe(true)
   })
 
+  it('dates the edition that was scanned, not the work it belongs to', async () => {
+    catalogues(
+      { when: 'services.dnb.de', answer: UNREACHABLE },
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_NOVEL },
+      { when: 'openlibrary.org/isbn/', answer: OPENLIBRARY_EDITION }
+    )
+    const lookupBooks = await freshLookup()
+
+    const lookup = await lookupBooks('9783499256356')
+
+    expect(lookup.results[0].published_year).toBe(2012)
+  })
+
   it('takes the third catalogue when neither of the first two knows the number', async () => {
     catalogues(
       { when: 'services.dnb.de', answer: DNB_EMPTY },
