@@ -1,0 +1,231 @@
+{
+  "items": [
+    {
+      "volumeInfo": {
+        "title": "Tschick Adjø ,Berlin!",
+        "authors": [
+          "Wolfgang Herrndorf"
+        ],
+        "publisher": "Bastion Forlag",
+        "publishedDate": "2013-06-04",
+        "industryIdentifiers": [
+          {
+            "type": "ISBN_13",
+            "identifier": "9788290583830"
+          },
+          {
+            "type": "ISBN_10",
+            "identifier": "8290583834"
+          }
+        ],
+        "pageCount": 175,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=ybO1BAAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
+        },
+        "language": "no"
+      }
+    },
+    {
+      "volumeInfo": {
+        "title": "Skeleton Man",
+        "authors": [
+          "Joseph Bruchac"
+        ],
+        "publisher": "Harper Collins",
+        "publishedDate": "2009-04-21",
+        "industryIdentifiers": [
+          {
+            "type": "ISBN_13",
+            "identifier": "9780061909016"
+          },
+          {
+            "type": "ISBN_10",
+            "identifier": "0061909017"
+          }
+        ],
+        "pageCount": 132,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=Fq0KX2mQ35EC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
+        },
+        "language": "en"
+      }
+    },
+    {
+      "volumeInfo": {
+        "title": "Totgesagte leben länger. Das Pop-Phänomen im 21. Jahrhundert am Beispiel von Herrndorfs \"Tschick\".",
+        "authors": [
+          "Andrea Hahnfeld"
+        ],
+        "publisher": "GRIN Verlag",
+        "publishedDate": "2015-11-24",
+        "industryIdentifiers": [
+          {
+            "type": "ISBN_13",
+            "identifier": "9783668093683"
+          },
+          {
+            "type": "ISBN_10",
+            "identifier": "3668093687"
+          }
+        ],
+        "pageCount": 32,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=46Y3CwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
+        },
+        "language": "de"
+      }
+    },
+    {
+      "volumeInfo": {
+        "title": "Jugendliche Rebellion und Identitätsfindung. Die Protagonisten im modernen und postmodernen Adoleszenzroman",
+        "subtitle": "Eine Analyse von \"Der Fänger im Roggen\", \"Crazy\" und \"Tschick\"",
+        "authors": [
+          "P. Bert"
+        ],
+        "publisher": "GRIN Verlag",
+        "publishedDate": "2024-09-30",
+        "industryIdentifiers": [
+          {
+            "type": "ISBN_13",
+            "identifier": "9783389073292"
+          },
+          {
+            "type": "ISBN_10",
+            "identifier": "3389073299"
+          }
+        ],
+        "pageCount": 31,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=JW8lEQAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
+        },
+        "language": "de"
+      }
+    },
+    {
+      "volumeInfo": {
+        "title": "Men Crucified",
+        "authors": [
+          "Bruno Heilig"
+        ],
+        "publishedDate": "1942",
+        "industryIdentifiers": [
+          {
+            "type": "OTHER",
+            "identifier": "IOWA:31858048419422"
+          }
+        ],
+        "pageCount": 322,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=9oWVOUCFwgMC&printsec=frontcover&img=1&zoom=1&source=gbs_api"
+        },
+        "language": "en"
+      }
+    },
+    {
+      "volumeInfo": {
+        "title": "Geschichte des R. und R. infanterie-regiments Freiherr von Appel nr. 60",
+        "subtitle": "Im auftrage des rgiments-commandos auf grundlage der ersten im jahre 1871 von Rupprecht von Virtsolog verfassten ausgabe bearbeitet und bie zur gegenwart fortgesetzt von Rudolf, freih. v. Fiedler, Leopold Pick",
+        "authors": [
+          "Rudolf freiherr von Fiedler",
+          "Leopold Pick"
+        ],
+        "publishedDate": "1898",
+        "industryIdentifiers": [
+          {
+            "type": "OTHER",
+            "identifier": "HARVARD:HWYP63"
+          }
+        ],
+        "pageCount": 694,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=TjgoAAAAYAAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
+        },
+        "language": "de"
+      }
+    },
+    {
+      "volumeInfo": {
+        "title": "Bildungsbenachteiligung als Thema der Interkulturellen Pädagogik",
+        "authors": [
+          "Anna Hümmecke"
+        ],
+        "publisher": "GRIN Verlag",
+        "publishedDate": "2017-11-29",
+        "industryIdentifiers": [
+          {
+            "type": "ISBN_13",
+            "identifier": "9783668583542"
+          },
+          {
+            "type": "ISBN_10",
+            "identifier": "3668583544"
+          }
+        ],
+        "pageCount": 20,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=sPJADwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
+        },
+        "language": "de"
+      }
+    },
+    {
+      "volumeInfo": {
+        "title": "Pilsener Zeitung",
+        "subtitle": "Zeitung fÃ¼r Politik, allgemeine Interessen und Unterhaltung",
+        "publishedDate": "1871",
+        "industryIdentifiers": [
+          {
+            "type": "OTHER",
+            "identifier": "ONB:+Z254607206"
+          }
+        ],
+        "pageCount": 452,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=2v8J798oMCgC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
+        },
+        "language": "de"
+      }
+    },
+    {
+      "volumeInfo": {
+        "title": "Der Schauspielführer",
+        "authors": [
+          "Joseph Gregor"
+        ],
+        "publishedDate": "2017",
+        "industryIdentifiers": [
+          {
+            "type": "OTHER",
+            "identifier": "VAND:30081044133472"
+          }
+        ],
+        "pageCount": 344,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=ljwKwIvzAdcC&printsec=frontcover&img=1&zoom=1&source=gbs_api"
+        },
+        "language": "de"
+      }
+    },
+    {
+      "volumeInfo": {
+        "title": "Thierleben",
+        "subtitle": "allgemeine Kunde des Thierreichs",
+        "authors": [
+          "Alfred Edmund Brehm"
+        ],
+        "publishedDate": "1879",
+        "industryIdentifiers": [
+          {
+            "type": "OTHER",
+            "identifier": "SRLF:AA0012363503"
+          }
+        ],
+        "pageCount": 768,
+        "imageLinks": {
+          "thumbnail": "http://books.google.com/books/content?id=DYlNAQAAMAAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
+        },
+        "language": "de"
+      }
+    }
+  ]
+}

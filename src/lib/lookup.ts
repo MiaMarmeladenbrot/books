@@ -505,6 +505,32 @@ async function searchGoogleIsbn(isbn: string): Promise<Candidate[]> {
     .filter((candidate) => candidate.title.length > 0)
 }
 
+function isbnFromGoogle(volume: GoogleVolume) {
+  const identifiers = volume.industryIdentifiers ?? []
+  const thirteen = identifiers.find((entry) => entry.type === 'ISBN_13')
+  const ten = identifiers.find((entry) => entry.type === 'ISBN_10')
+  return thirteen?.identifier ?? ten?.identifier ?? null
+}
+
+const WORD_WORTH_MATCHING = 2
+
+async function searchGoogleText(text: string, limit: number): Promise<Candidate[]> {
+  const asked = new URLSearchParams({ q: text, limit: String(limit) })
+  const volumes = await askGoogle(asked, LATE_ANSWER_TIMEOUT)
+  const words = normalizeText(text)
+    .split(' ')
+    .filter((word) => word.length > WORD_WORTH_MATCHING)
+
+  return volumes
+    .map((volume) => googleCandidate(volume, isbnFromGoogle(volume)))
+    .filter((candidate) => candidate.title.length > 0 && candidate.isbn !== null)
+    .filter((candidate) => !looksLikeStudyGuide(`${candidate.title} ${candidate.subtitle ?? ''}`))
+    .filter((candidate) => {
+      const mentioned = normalizeText(`${candidate.title} ${candidate.authors.join(' ')}`)
+      return words.some((word) => mentioned.includes(word))
+    })
+}
+
 function normalizeText(text: string) {
   return text
     .normalize('NFC')
@@ -646,6 +672,7 @@ export async function lookupBooks(
   const { exact, broad } = dnbQueries(trimmed)
   const empty = { candidates: [], total: 0 }
   const slowly = searchOpenLibraryText(trimmed, FETCH_LIMIT).catch(() => null)
+  const alsoSlowly = searchGoogleText(trimmed, EXACT_LIMIT).catch(() => null)
   const promptly = await Promise.allSettled([
     searchDnb(exact, EXACT_LIMIT),
     searchDnb(broad, FETCH_LIMIT),
@@ -657,7 +684,7 @@ export async function lookupBooks(
   const moreAvailable = byTitle.total + byWords.total > fromDnb.length
   const silent = promptly.filter((outcome) => outcome.status === 'rejected').length
 
-  const asked = promptly.length + 1
+  const asked = promptly.length + 2
 
   if (onFirstAnswer && fromDnb.length > 0) {
     onFirstAnswer({
@@ -669,13 +696,15 @@ export async function lookupBooks(
     })
   }
 
-  const fromOpenLibrary = await slowly
+  const [fromOpenLibrary, fromGoogle] = await Promise.all([slowly, alsoSlowly])
 
   return remember(key, {
     query: 'text',
-    results: dedupe(rankCandidates([...fromDnb, ...(fromOpenLibrary ?? [])], trimmed)),
+    results: dedupe(
+      rankCandidates([...fromDnb, ...(fromOpenLibrary ?? []), ...(fromGoogle ?? [])], trimmed)
+    ),
     asked,
-    silent: silent + (fromOpenLibrary === null ? 1 : 0),
+    silent: silent + (fromOpenLibrary === null ? 1 : 0) + (fromGoogle === null ? 1 : 0),
     moreAvailable,
   })
 }

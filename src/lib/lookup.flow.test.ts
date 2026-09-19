@@ -9,6 +9,7 @@ import OPENLIBRARY_NOVEL from './fixtures/openlibrary-isbn-9783499256356.json?ra
 import OPENLIBRARY_SEARCH from './fixtures/openlibrary-tschick-search.json?raw'
 import OPENLIBRARY_EDITION from './fixtures/openlibrary-edition-9783499256356.json?raw'
 import GOOGLE_NOVEL from './fixtures/google-isbn-9783499256356.json?raw'
+import GOOGLE_SEARCH from './fixtures/google-tschick-search.json?raw'
 
 const OPENLIBRARY_UNKNOWN = '{"numFound":0,"docs":[]}'
 const GOOGLE_UNKNOWN = '{}'
@@ -201,7 +202,8 @@ describe('looking a title up', () => {
     catalogues(
       { when: 'query=tst', answer: DNB_EXACT },
       { when: 'query=tit', answer: DNB_BROAD },
-      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_SEARCH }
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_SEARCH },
+      { when: 'api/books', answer: GOOGLE_SEARCH }
     )
 
   it('asks both DNB queries and OpenLibrary, each with its own limit', async () => {
@@ -211,7 +213,7 @@ describe('looking a title up', () => {
     const lookup = await lookupBooks('Tschick')
 
     expect(lookup.query).toBe('text')
-    expect(lookup.asked).toBe(3)
+    expect(lookup.asked).toBe(4)
     expect(lookup.silent).toBe(0)
     expect(asked.some((url) => url.includes('query=tst') && url.includes('maximumRecords=10'))).toBe(
       true
@@ -220,6 +222,28 @@ describe('looking a title up', () => {
       true
     )
     expect(asked.some((url) => url.includes('openlibrary.org/search.json'))).toBe(true)
+  })
+
+  it('keeps the Google hits that name what was asked', async () => {
+    textSearch()
+    const lookupBooks = await freshLookup()
+
+    const lookup = await lookupBooks('Tschick')
+
+    expect(titled(lookup, 'Adjø')).toHaveLength(1)
+    expect(titled(lookup, 'Adjø')[0].source).toBe('Google')
+  })
+
+  it('drops the Google hits that only came along for the ride', async () => {
+    textSearch()
+    const lookupBooks = await freshLookup()
+
+    const lookup = await lookupBooks('Tschick')
+
+    expect(titled(lookup, 'Skeleton Man')).toEqual([])
+    expect(titled(lookup, 'Jugendliche Rebellion')).toEqual([])
+    expect(titled(lookup, 'Pilsener Zeitung')).toEqual([])
+    expect(titled(lookup, 'Thierleben')).toEqual([])
   })
 
   it('keeps the edition that both DNB queries returned exactly once', async () => {
@@ -297,13 +321,14 @@ describe('looking a title up', () => {
     catalogues(
       { when: 'query=tst', answer: UNREACHABLE },
       { when: 'query=tit', answer: DNB_BROAD },
-      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_SEARCH }
+      { when: 'openlibrary.org/search.json', answer: OPENLIBRARY_SEARCH },
+      { when: 'api/books', answer: GOOGLE_SEARCH }
     )
     const lookupBooks = await freshLookup()
 
     const lookup = await lookupBooks('Tschick')
 
-    expect(lookup.asked).toBe(3)
+    expect(lookup.asked).toBe(4)
     expect(lookup.silent).toBe(1)
     expect(lookup.results.length).toBeGreaterThan(0)
   })
