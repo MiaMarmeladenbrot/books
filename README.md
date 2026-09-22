@@ -243,11 +243,19 @@ copy of a publisher's catalogue.
 
 The same record carries the page count, the year and the series, so they come
 back in the same answer. A series only survives if it is not a publisher imprint
-— `src/lib/imprint.ts` holds that list, shared with the search — and if its
+— `api/_imprint.ts` holds that list, shared with the search — and if its
 volume number is 30 or lower, because `edition suhrkamp 2842` is a shelf mark and
 `Winge und Cardell ermitteln 2` is a story. Eleven of 207 German books pass both
 gates, and only for those does the page offer the one fact that changes a
 decision: whether something else comes first.
+
+That list sits under `api/` rather than beside the rest of the library code, and
+the underscore keeps it from becoming a route. Vercel bundles an edge function
+from its own directory and refuses an import that reaches outside it, so a file
+in `src/` can be read by the browser and not by the function. The other direction
+works: Vite bundles whatever the app imports, wherever it lies. The constraint
+therefore decides the address, and the app reaches into `api/` for this one
+module rather than a second copy of the list drifting out of step with the first.
 
 One asymmetry to expect: the DNB separates paragraphs, sometimes with `<br>` and
 sometimes with a self-closing `<p />`, while Google returns one flat string every

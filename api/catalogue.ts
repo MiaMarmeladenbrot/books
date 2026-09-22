@@ -1,4 +1,4 @@
-import { cleanSeries, storyVolume } from '../src/lib/imprint.ts'
+import { cleanSeries, storyVolume } from './_imprint.ts'
 
 export const config = { runtime: 'edge' }
 

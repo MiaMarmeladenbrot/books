@@ -1,5 +1,5 @@
 import { BookFormat } from '../types'
-import { cleanSeries } from './imprint'
+import { cleanSeries } from '../../api/_imprint'
 import { coverForIsbn } from './coverEndpoint'
 
 const DNB_ENDPOINT = 'https://services.dnb.de/sru/dnb'
