@@ -106,6 +106,15 @@ describe('Feed', () => {
     expect(screen.getByText('Ohne Namen')).toBeInTheDocument()
   })
 
+  it('lets the whole card lead to the recommendation, not just its title', () => {
+    open({ feed: [aFeedEntry({ id: 'r7', user_id: 'u2', title: 'Tschick' })] })
+
+    const opener = screen.getByRole('link', { name: 'Tschick — Empfehlung öffnen' })
+
+    expect(opener).toHaveAttribute('href', '/empfehlung/r7')
+    expect(opener).toHaveClass('absolute', 'inset-0')
+  })
+
   it('offers the stack for a book that is not on the shelf', () => {
     open({ feed: [aFeedEntry({ user_id: 'u2' })] })
 
