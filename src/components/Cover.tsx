@@ -7,28 +7,37 @@ const COVER_SHAPE =
 interface CoverProps {
   title: string
   authors: string[]
-  src?: string | null
+  src?: string | null | (string | null)[]
   showText?: boolean
   className?: string
 }
 
 export function Cover({ title, authors, src, showText = true, className = '' }: CoverProps) {
-  const [settled, setSettled] = useState<{ src: string; arrived: boolean } | null>(null)
-  const known = settled?.src === src ? settled : null
+  const chain = (Array.isArray(src) ? src : [src]).filter((one): one is string => Boolean(one))
+  const offered = chain.join('\n')
 
-  if (src && !(known && !known.arrived)) {
+  const [tried, setTried] = useState({ offered, spent: [] as string[], arrived: '' })
+  const restart = tried.offered !== offered
+  if (restart) setTried({ offered, spent: [], arrived: '' })
+
+  const spent = restart ? [] : tried.spent
+  const arrived = restart ? '' : tried.arrived
+  const shown = chain.find((one) => !spent.includes(one)) ?? null
+
+  if (shown) {
     return (
       <div className={`${COVER_SHAPE} bg-shade w-full ${className}`}>
         <img
-          src={src}
+          key={shown}
+          src={shown}
           alt=""
           loading="lazy"
           decoding="async"
-          onLoad={() => setSettled({ src, arrived: true })}
-          onError={() => setSettled({ src, arrived: false })}
+          onLoad={() => setTried((before) => ({ ...before, arrived: shown }))}
+          onError={() => setTried((before) => ({ ...before, spent: [...before.spent, shown] }))}
           className="absolute inset-0 h-full w-full object-cover"
         />
-        {!known && (
+        {arrived !== shown && (
           <span aria-hidden className="bg-line absolute inset-0 overflow-hidden">
             <span className="catalogue-sweep absolute inset-y-0 left-0 w-1/2 bg-linear-to-r from-transparent via-white/70 to-transparent" />
           </span>

@@ -1,6 +1,7 @@
 import { AuthClient } from '@supabase/auth-js'
 import { PostgrestClient } from '@supabase/postgrest-js'
 import { StorageClient } from '@supabase/storage-js'
+import { isbnThirteen } from './isbn'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
@@ -52,9 +53,8 @@ export function coverUrl(path: string | null) {
 }
 
 export function sharedCoverPath(isbn: string) {
-  const compact = isbn.replace(/[^0-9Xx]/g, '').toUpperCase()
-  if (!/^(\d{9}[\dX]|\d{13})$/.test(compact)) return null
-  return `${SHARED_FOLDER}/${compact}.jpg`
+  const thirteen = isbnThirteen(isbn)
+  return thirteen ? `${SHARED_FOLDER}/${thirteen}.jpg` : null
 }
 
 export function ownCoverPath(userId: string, stem: string, stamp = Date.now()) {

@@ -1,4 +1,5 @@
 import { BookFormat } from '../types'
+import { coverForIsbn } from './coverEndpoint'
 
 const DNB_ENDPOINT = 'https://services.dnb.de/sru/dnb'
 const OPENLIBRARY_SEARCH = 'https://openlibrary.org/search.json'
@@ -181,13 +182,6 @@ function flipName(name: string) {
 function firstNumber(value: string, pattern: RegExp) {
   const match = value.match(pattern)
   return match ? Number(match[1]) : null
-}
-
-function coverForIsbn(isbn: string | null, fallback: number | null = null) {
-  const asked = new URLSearchParams()
-  if (isbn) asked.set('isbn', isbn)
-  if (fallback) asked.set('cover', String(fallback))
-  return asked.size > 0 ? `/api/cover?${asked}` : null
 }
 
 const ISBN_GROUPS: Record<string, string[]> = {

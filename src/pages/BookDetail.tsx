@@ -4,7 +4,7 @@ import { ChevronLeft, Gem } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { useRecommendations } from '../store/useRecommendations'
 import { Cover } from '../components/Cover'
-import { coverUrl } from '../lib/supabase'
+import { coverSources } from '../lib/cover'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { formatNumber, formatRange, readingDays } from '../utils/format'
 import {
@@ -157,7 +157,11 @@ export function BookDetail() {
       <main className="mx-auto max-w-xl px-4 pt-5">
         <div className="mb-5 flex gap-4">
           <div className="w-29 shrink-0">
-            <Cover title={book.title} authors={book.authors} src={coverUrl(book.cover_path)} />
+            <Cover
+              title={book.title}
+              authors={book.authors}
+              src={coverSources(book.isbn, book.cover_path)}
+            />
           </div>
           <div className="min-w-0 grow">
             <h2 className="font-serif text-xl leading-tight font-semibold tracking-tight">

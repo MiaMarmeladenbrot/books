@@ -7,7 +7,10 @@ import { aBook } from '../test-books'
 import { BookStatus } from '../types'
 import type { Book } from '../types'
 
-vi.mock('../lib/supabase', () => ({ coverUrl: () => null }))
+vi.mock('../lib/supabase', () => ({
+  coverUrl: (path: string | null) => (path ? `https://bucket.test/${path}` : null),
+  sharedCoverPath: (isbn: string) => `isbn/${isbn}.jpg`,
+}))
 
 interface Shelved {
   books?: Book[]
@@ -49,7 +52,7 @@ function titles() {
   return screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)
 }
 
-const NOVEMBER = aBook({ title: 'Der Wisent', finished_on: '2026-11-02' })
+const NOVEMBER = aBook({ title: 'Der Wisent', finished_on: '2026-11-02', isbn: '9783446269149' })
 const SEPTEMBER = aBook({ title: 'Tschick', authors: ['Wolfgang Herrndorf'] })
 const ALSO_SEPTEMBER = aBook({ title: 'Slags', authors: ['Emma Jane Unsworth'] })
 
