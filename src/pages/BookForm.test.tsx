@@ -12,13 +12,19 @@ import type { Candidate } from '../lib/lookup'
 type AddBook = Mock<(draft: BookDraft) => Promise<Book>>
 type UpdateBook = Mock<(id: string, patch: Partial<BookDraft>) => Promise<Book>>
 
-vi.mock('../lib/supabase', () => ({
-  coverUrl: () => null,
-  sharedCoverPath: (isbn: string) => (/^\d{13}$/.test(isbn) ? `isbn/${isbn}.jpg` : null),
-  uploadOwnCover: vi.fn().mockResolvedValue('konto/pfad.jpg'),
-  uploadSharedCover: vi.fn().mockResolvedValue('isbn/9783499256356.jpg'),
-  releaseCover: vi.fn().mockResolvedValue(undefined),
-}))
+vi.mock('../lib/supabase', async () => {
+  const { isbnThirteen } = await import('../lib/isbn')
+  return {
+    coverUrl: () => null,
+    sharedCoverPath: (isbn: string) => {
+      const edition = isbnThirteen(isbn)
+      return edition ? `isbn/${edition}.jpg` : null
+    },
+    uploadOwnCover: vi.fn().mockResolvedValue('konto/pfad.jpg'),
+    uploadSharedCover: vi.fn().mockResolvedValue('isbn/9783499256356.jpg'),
+    releaseCover: vi.fn().mockResolvedValue(undefined),
+  }
+})
 
 const TODAY = '2026-09-16'
 
