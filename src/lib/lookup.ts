@@ -1,4 +1,5 @@
 import { BookFormat } from '../types'
+import { cleanSeries } from './imprint'
 import { coverForIsbn } from './coverEndpoint'
 
 const DNB_ENDPOINT = 'https://services.dnb.de/sru/dnb'
@@ -30,38 +31,6 @@ async function fetchCatalogue(url: string, timeout = REQUEST_TIMEOUT) {
     clearTimeout(timer)
   }
 }
-
-const IMPRINT_PREFIXES = [
-  'kiwi',
-  'goldmann',
-  'piper',
-  'knaur',
-  'heyne',
-  'oetinger',
-  'leykam',
-  'dtv',
-  'rowohlt',
-  'rororo',
-  'ullstein',
-  'suhrkamp',
-  'reclam',
-  'diogenes',
-  'btb',
-  'blanvalet',
-  'penguin',
-  'bastei',
-  'lübbe',
-  'luebbe',
-  'carlsen',
-  'ravensburger',
-  'beltz',
-  'hanser',
-  'klett',
-  'ueberreuter',
-]
-
-const IMPRINT_EXACT = ['arena', 'insel', 'fischer', 'aufbau', 'hanser berlin', 'tropen']
-const IMPRINT_ANYWHERE = ['taschenbuch', 'allgemeine reihe']
 
 const STUDY_GUIDE_MARKERS = [
   'lektüreschlüssel',
@@ -124,23 +93,6 @@ function languageFromMarc(code: string) {
 export function looksLikeIsbn(input: string) {
   const digits = input.replace(/[^0-9Xx]/g, '')
   return digits.length === 10 || digits.length === 13
-}
-
-function looksLikeImprint(lowered: string) {
-  if (IMPRINT_EXACT.includes(lowered)) return true
-  if (IMPRINT_ANYWHERE.some((word) => lowered.includes(word))) return true
-  return IMPRINT_PREFIXES.some((imprint) => {
-    if (lowered === imprint) return true
-    if (!lowered.startsWith(imprint)) return false
-    const next = lowered.charAt(imprint.length)
-    return next === '' || !/[a-zäöüß]/.test(next)
-  })
-}
-
-function cleanSeries(name: string | null) {
-  const trimmed = (name ?? '').replace(/[;,\s]+$/, '').trim()
-  if (!trimmed || /^\d+$/.test(trimmed)) return null
-  return looksLikeImprint(trimmed.toLowerCase()) ? null : trimmed
 }
 
 const STUDY_GUIDE_PATTERNS = STUDY_GUIDE_MARKERS.map(

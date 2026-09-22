@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
+import { Blurb } from '../components/Blurb'
 import { Cover } from '../components/Cover'
+import { useCatalogue } from '../lib/catalogue'
 import { coverSources } from '../lib/cover'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { formatNumber, formatRange, readingDays } from '../utils/format'
@@ -25,6 +27,7 @@ export function BookDetail() {
   const [confirming, setConfirming] = useState(false)
 
   const book = books.find((entry) => entry.id === id)
+  const catalogue = useCatalogue(book?.isbn ?? null, book?.language ?? null)
 
   if (!book) {
     return <p className="text-ink-2 px-4 py-20 text-center text-sm">Buch nicht gefunden.</p>
@@ -88,6 +91,8 @@ export function BookDetail() {
         <Row label="Herkunft" value={book.provenance ? PROVENANCE_LABEL[book.provenance] : null} />
         <Row label="Erschienen" value={book.published_year ? String(book.published_year) : null} />
         <Row label="ISBN" value={book.isbn} />
+
+        <Blurb text={catalogue.entry?.text ?? null} asking={catalogue.asking} />
 
         {book.notes && (
           <div className="border-accent/35 mt-6 border-l-2 pl-4">

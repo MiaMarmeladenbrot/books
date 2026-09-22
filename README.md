@@ -204,6 +204,56 @@ prefilled is worse than a second of waiting.
 A camera needs a secure context, so trying a scan from a phone means a deployed
 preview rather than a LAN address.
 
+## Blurbs
+
+A book page says when it was read and how long it is, but nothing about what the
+book is. `api/catalogue.ts` answers that from an ISBN, and it is deployed for the
+same reason `api/cover.ts` is: the text cannot be fetched by a browser.
+
+```mermaid
+flowchart LR
+  I["ISBN"] -->|"German or unknown"| D["DNB record"]
+  I -->|"English"| G["Google Books"]
+  D --> L{"856 with Inhaltstext?"}
+  L -->|yes| B["blurb page, tags stripped"]
+  L -->|no| G
+  D --> F["pages · year · series<br/>from the same record"]
+```
+
+The blurb is not in the MARC record. Over a sample of 350 of the shelf's ISBNs,
+field 520 was filled zero times; the text hangs off field 856 as a link marked
+`$3 Inhaltstext`, pointing at `services.dnb.de/plus/idn/<idn>/blurb/`. That page
+is public and carries the German publisher's copy — but unlike the SRU endpoint
+beside it, it sends no `access-control-allow-origin`, so the browser cannot have
+it.
+
+The two catalogues divide the work by language, which is why the request carries
+one. The DNB has a blurb for 85% of the German books and 2% of the English ones,
+Google Books for 90% of the English and 25% of the German; asked in that order
+they cover 93%. Open Library was measured and left out: it added eight books out
+of 350, and for German titles it mostly answered in English. Order matters
+beyond coverage — for German books Google returns the English blurb often enough
+(7 of 52) that it belongs second.
+
+Nothing is stored. A blurb belongs to an ISBN rather than to an account, like the
+shared cover in the Covers section, so the answer is cached at the edge for a
+month and the first reader to open a book pays the 400ms for everyone. That also
+keeps the `recommendations` table what it is — what somebody said on a day, not a
+copy of a publisher's catalogue.
+
+The same record carries the page count, the year and the series, so they come
+back in the same answer. A series only survives if it is not a publisher imprint
+— `src/lib/imprint.ts` holds that list, shared with the search — and if its
+volume number is 30 or lower, because `edition suhrkamp 2842` is a shelf mark and
+`Winge und Cardell ermitteln 2` is a story. Eleven of 207 German books pass both
+gates, and only for those does the page offer the one fact that changes a
+decision: whether something else comes first.
+
+One asymmetry to expect: the DNB separates paragraphs, sometimes with `<br>` and
+sometimes with a self-closing `<p />`, while Google returns one flat string every
+time — 24 of 24 in a sample, no tags, no newlines. German blurbs therefore have
+paragraphs and English ones cannot.
+
 ## Planned
 
 - Ratings. The column is decided: `smallint` between 1 and 5, so half stars
