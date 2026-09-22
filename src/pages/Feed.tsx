@@ -1,47 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Avatar } from '../components/Avatar'
 import { Cover } from '../components/Cover'
+import { TakeButton } from '../components/TakeButton'
 import { coverSources } from '../lib/cover'
-import { sharedCoverPath } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
-import { useBooks } from '../store/useBooks'
 import { useRecommendations } from '../store/useRecommendations'
 import { formatDay } from '../utils/format'
-import { findOnShelf } from '../utils/shelf'
-import { BookStatus, EMPTY_DRAFT } from '../types'
 import type { FeedEntry } from '../types'
 
 function Card({ entry }: { entry: FeedEntry }) {
   const userId = useAuth().user?.id ?? null
-  const { books, addBook } = useBooks()
-  const [busy, setBusy] = useState(false)
-  const [failed, setFailed] = useState('')
 
-  const onShelf = findOnShelf(books, entry)
   const isMine = entry.user_id === userId
   const cover = coverSources(entry.isbn)
 
-  const take = async () => {
-    setFailed('')
-    setBusy(true)
-    try {
-      await addBook({
-        ...EMPTY_DRAFT,
-        title: entry.title,
-        authors: entry.authors,
-        isbn: entry.isbn,
-        status: BookStatus.WantToRead,
-        cover_path: entry.isbn ? sharedCoverPath(entry.isbn) : null,
-      })
-    } catch {
-      setFailed('Das hat nicht geklappt.')
-    }
-    setBusy(false)
-  }
-
   return (
-    <li className="border-line bg-card rounded-2xl border px-4 py-4">
+    <li className="border-line bg-card relative rounded-2xl border px-4 py-4">
+      <Link
+        to={`/empfehlung/${entry.id}`}
+        aria-label={`${entry.title} — Empfehlung öffnen`}
+        className="absolute inset-0 rounded-2xl"
+      />
+
       <div className="flex items-center gap-2.5">
         <Avatar name={entry.profiles?.avatar ?? null} size={28} className="shrink-0" />
         <span className="truncate text-sm font-semibold">
@@ -67,29 +48,11 @@ function Card({ entry }: { entry: FeedEntry }) {
             {entry.note}
           </p>
 
-          <div className="mt-3.5 flex justify-end">
-            {onShelf ? (
-              <Link
-                to={`/buch/${onShelf.id}`}
-                className="border-line text-ink-2 shrink-0 rounded-xl border px-3.5 py-2 text-xs font-bold"
-              >
-                Meine Ausgabe anzeigen
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={take}
-                disabled={busy}
-                className="border-accent text-accent shrink-0 rounded-xl border px-3.5 py-2 text-xs font-bold disabled:opacity-50"
-              >
-                Auf meinen Stapel legen
-              </button>
-            )}
+          <div className="relative">
+            <TakeButton entry={entry} />
           </div>
         </div>
       </div>
-
-      {failed && <p className="text-danger mt-2 text-xs">{failed}</p>}
     </li>
   )
 }

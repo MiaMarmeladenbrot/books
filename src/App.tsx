@@ -17,6 +17,11 @@ import { BookDetail } from './pages/BookDetail'
 
 const Stats = lazy(() => import('./pages/Stats').then((module) => ({ default: module.Stats })))
 const Feed = lazy(() => import('./pages/Feed').then((module) => ({ default: module.Feed })))
+const RecommendationDetail = lazy(() =>
+  import('./pages/RecommendationDetail').then((module) => ({
+    default: module.RecommendationDetail,
+  })),
+)
 const BookForm = lazy(() =>
   import('./pages/BookForm').then((module) => ({ default: module.BookForm })),
 )
@@ -81,6 +86,7 @@ function Shell() {
             <Route path="statistik" element={<Stats />} />
             <Route path="profil" element={<Profile />} />
           </Route>
+          <Route path="empfehlung/:id" element={<RecommendationDetail />} />
           <Route path="buch/suchen" element={<BookSearch />} />
           <Route path="buch/neu" element={<BookForm />} />
           <Route path="buch/:id" element={<BookDetail />} />
