@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Search, X } from 'lucide-react'
+import { Gem, Plus, Search, X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
+import { useRecommendations } from '../store/useRecommendations'
 import { Cover } from '../components/Cover'
 import { Select } from '../components/Select'
 import { coverSources } from '../lib/cover'
@@ -107,7 +108,10 @@ function groupByMonth(books: Book[]) {
 
 export function Shelf() {
   const { books, loading, error, reload } = useBooks()
+  const { mine } = useRecommendations()
   const [retrying, setRetrying] = useState(false)
+
+  const recommended = useMemo(() => new Set(mine.map((entry) => entry.book_id)), [mine])
 
   const retry = async () => {
     setRetrying(true)
@@ -252,16 +256,27 @@ export function Shelf() {
               {group.books.map((book) => (
                 <li key={book.id}>
                   <Link to={`/buch/${book.id}`} className="block">
-                    <Cover
-                      title={book.title}
-                      authors={book.authors}
-                      src={coverSources(book.isbn, book.cover_path)}
-                      className={
-                        book.status === BookStatus.Reading
-                          ? 'outline-leaf outline-2 outline-offset-3'
-                          : ''
-                      }
-                    />
+                    <div className="relative">
+                      <Cover
+                        title={book.title}
+                        authors={book.authors}
+                        src={coverSources(book.isbn, book.cover_path)}
+                        className={
+                          book.status === BookStatus.Reading
+                            ? 'outline-leaf outline-2 outline-offset-3'
+                            : ''
+                        }
+                      />
+                      {recommended.has(book.id) && (
+                        <span
+                          role="img"
+                          aria-label="Von dir empfohlen"
+                          className="border-line bg-paper absolute -right-2 -bottom-2 flex size-8 items-center justify-center rounded-full border shadow-[0_4px_10px_-4px_rgb(30_26_21/0.5)]"
+                        >
+                          <Gem size={17} strokeWidth={2} className="text-gold" />
+                        </span>
+                      )}
+                    </div>
                     <h3 className="mt-2.5 line-clamp-2 text-sm leading-snug font-semibold">
                       {book.title}
                     </h3>
