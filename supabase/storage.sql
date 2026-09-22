@@ -4,7 +4,7 @@ create policy "Covers go to their folder"
     bucket_id = 'cover'
     and (
       (storage.foldername(name))[1] = (auth.uid())::text
-      or name ~ '^isbn/(\d{9}[\dX]|\d{13})\.jpe?g$'
+      or name ~ '^isbn/\d{13}\.jpe?g$'
     )
   );
 
