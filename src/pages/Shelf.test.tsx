@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import type { ComponentProps } from 'react'
 import { Shelf } from './Shelf'
 import { BooksContext } from '../store/booksContextValue'
-import { aBook } from '../test-books'
+import { RecommendationsContext } from '../store/recommendationsContextValue'
+import { aBook, aRecommendation } from '../test-books'
 import { BookStatus } from '../types'
-import type { Book } from '../types'
+import type { Book, Recommendation } from '../types'
 
 vi.mock('../lib/supabase', () => ({
   coverUrl: (path: string | null) => (path ? `https://bucket.test/${path}` : null),
@@ -18,9 +20,10 @@ interface Shelved {
   error?: string | null
   reload?: () => Promise<void>
   at?: string
+  mine?: Recommendation[]
 }
 
-function shelf({ books = [], loading = false, error = null, reload, at = '/' }: Shelved) {
+function shelf({ books = [], loading = false, error = null, reload, at = '/', mine = [] }: Shelved) {
   const value = {
     books,
     loading,
@@ -31,10 +34,22 @@ function shelf({ books = [], loading = false, error = null, reload, at = '/' }: 
     reload: reload ?? vi.fn().mockResolvedValue(undefined),
   }
 
+  const recommendations = {
+    mine,
+    feed: null,
+    loadingFeed: false,
+    error: null,
+    loadFeed: vi.fn(),
+    recommend: vi.fn(),
+    withdraw: vi.fn(),
+  } as unknown as ComponentProps<typeof RecommendationsContext.Provider>['value']
+
   render(
     <MemoryRouter initialEntries={[at]}>
       <BooksContext.Provider value={value}>
-        <Shelf />
+        <RecommendationsContext.Provider value={recommendations}>
+          <Shelf />
+        </RecommendationsContext.Provider>
       </BooksContext.Provider>
     </MemoryRouter>,
   )
@@ -180,6 +195,17 @@ describe('the shelf as it stands', () => {
     shelf({ books: [reading] })
 
     expect(screen.getByText(/^seit /)).toBeInTheDocument()
+  })
+
+  it('seals the books you recommended, and only those', () => {
+    const shared = aBook({ id: 'b1', title: 'Weitergereicht' })
+    const kept = aBook({ id: 'b2', title: 'Für mich' })
+    shelf({ books: [shared, kept], mine: [aRecommendation({ book_id: 'b1' })] })
+
+    const seals = screen.getAllByRole('img', { name: 'Von dir empfohlen' })
+
+    expect(seals).toHaveLength(1)
+    expect(seals[0].closest('a')).toHaveAttribute('href', '/buch/b1')
   })
 
   it('offers another try when the books could not be loaded', async () => {
