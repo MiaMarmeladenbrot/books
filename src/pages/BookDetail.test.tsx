@@ -9,7 +9,10 @@ import { aBook, aRecommendation } from '../test-books'
 import { BookStatus } from '../types'
 import type { Book, Recommendation } from '../types'
 
-vi.mock('../lib/supabase', () => ({ coverUrl: () => null }))
+vi.mock('../lib/supabase', () => ({
+  coverUrl: (path: string | null) => (path ? `https://bilder.test/${path}` : null),
+  sharedCoverPath: (isbn: string) => `isbn/${isbn}.jpg`,
+}))
 
 type Recommended = ComponentProps<typeof RecommendationsContext.Provider>['value']
 
@@ -59,7 +62,7 @@ function theDialog() {
 
 describe('BookDetail, recommending', () => {
   it('offers the stone on a book that is finished', () => {
-    open(aBook({ status: BookStatus.Read }))
+    open(aBook({ status: BookStatus.Read, isbn: '9783446269149' }))
 
     expect(screen.getByRole('button', { name: 'Empfehlen' })).toBeInTheDocument()
   })

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Avatar } from '../components/Avatar'
 import { Cover } from '../components/Cover'
-import { coverUrl, sharedCoverPath } from '../lib/supabase'
+import { coverSources } from '../lib/cover'
+import { sharedCoverPath } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import { useBooks } from '../store/useBooks'
 import { useRecommendations } from '../store/useRecommendations'
@@ -19,7 +20,7 @@ function Card({ entry }: { entry: FeedEntry }) {
 
   const onShelf = findOnShelf(books, entry)
   const isMine = entry.user_id === userId
-  const cover = coverUrl(entry.isbn ? sharedCoverPath(entry.isbn) : null)
+  const cover = coverSources(entry.isbn)
 
   const take = async () => {
     setFailed('')
