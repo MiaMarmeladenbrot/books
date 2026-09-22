@@ -193,6 +193,30 @@ made it, rather than in two places. `findOnShelf` decides which of the two a car
 offers, by ISBN or else by title and author, and normalises to NFC on the way,
 because the imported titles spell their umlauts in two code points.
 
+The whole card opens the recommendation's own page at `/empfehlung/:id`, through
+a link laid across it rather than a click handler: the button inside keeps its
+own tab stop, and no link ends up inside another one. That page is a route and
+not a dialog because the dialogs here all mean "do this one thing now", while a
+page means "here is something to read" — and because a statement somebody made
+is a thing you want to be able to point at. It finds its entry in the feed that
+is already loaded, which is also its limit: the feed stops at sixty, and an older
+recommendation says it is gone rather than fetching itself.
+
+What the page adds to the card is the Blurbs section below — the blurb, the page
+count, the year, and the volume when the book belongs to a series. That last one
+is the only fact on the page that can change a decision, by answering whether
+something else comes first.
+
+Gold carries the act throughout. The stone on the book page is the switch,
+outlined to recommend and filled once recommended; the badge on the page and the
+seal on the shelf repeat it. Terracotta stays with your own notes, which is why
+the quote on the recommendation page had to leave that colour behind — a
+stranger's sentence and your private note should not look the same. The seal sits
+in a pale disc across the cover's corner rather than on the artwork, where a
+filled stone drowns in a picture, and it is a corner mark rather than a second
+outline because a book can be in the middle of being read and recommended at
+once. It stays out of the feed: there, every card is a recommendation already.
+
 ## Passwords
 
 Changing a password signs in again with the old one first. Supabase does not ask
