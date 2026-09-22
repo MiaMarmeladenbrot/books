@@ -2,7 +2,7 @@ import { defineConfig, loadEnv, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-const API_ROUTES = ['cover', 'books']
+const API_ROUTES = ['cover', 'books', 'catalogue']
 
 function serveApiRoutesInDevelopment(mode: string) {
   Object.assign(process.env, loadEnv(mode, process.cwd(), ''))
@@ -17,6 +17,7 @@ function serveApiRoutesInDevelopment(mode: string) {
             const result: Response = await module.default(new Request(url))
             response.statusCode = result.status
             result.headers.forEach((value, key) => response.setHeader(key, value))
+            response.setHeader('Cache-Control', 'no-store')
             response.end(Buffer.from(await result.arrayBuffer()))
           } catch (error) {
             response.statusCode = 500
