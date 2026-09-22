@@ -4,7 +4,7 @@ import { Plus, Search, X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { Cover } from '../components/Cover'
 import { Select } from '../components/Select'
-import { coverUrl } from '../lib/supabase'
+import { coverSources } from '../lib/cover'
 import { formatDay, formatNumber, monthKey, monthLabel } from '../utils/format'
 import {
   BookStatus,
@@ -255,7 +255,7 @@ export function Shelf() {
                     <Cover
                       title={book.title}
                       authors={book.authors}
-                      src={coverUrl(book.cover_path)}
+                      src={coverSources(book.isbn, book.cover_path)}
                       className={
                         book.status === BookStatus.Reading
                           ? 'outline-leaf outline-2 outline-offset-3'

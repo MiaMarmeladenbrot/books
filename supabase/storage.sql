@@ -14,3 +14,10 @@ create policy "Own covers can be deleted"
     bucket_id = 'cover'
     and (storage.foldername(name))[1] = (auth.uid())::text
   );
+
+create policy "Own folder is listable"
+  on storage.objects for select to authenticated
+  using (
+    bucket_id = 'cover'
+    and (storage.foldername(name))[1] = (auth.uid())::text
+  );

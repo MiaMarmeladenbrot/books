@@ -80,9 +80,16 @@ gets; whoever wants another chooses their own.
 
 The rule is the path, not a hidden `owner_id`. A name under `isbn/` has to look
 like an ISBN, checked in the client and again in the policy, because the form's
-ISBN field is free text and `unbekannt` strips down to nothing. There is no
-select policy: the bucket is public and `getPublicUrl` needs no request, while
-allowing reads would allow listing — and the file names are ISBNs.
+ISBN field is free text and `unbekannt` strips down to nothing. A ten digit ISBN
+is converted to its thirteen digit form first, so an edition has one address and
+not two — a scanner only ever yields EAN-13.
+
+The select policy reaches no further than the reader's own folder. Reading is not
+needed to show a cover, because the bucket is public and `getPublicUrl` sends no
+request, and listing `isbn/` would hand out ISBNs. But deleting needs it: storage
+looks an object up before it removes it, that lookup runs under row level
+security, and without select it finds nothing, removes nothing and reports an
+empty list rather than an error.
 
 A dashboard changes policies without leaving a diff, so the file is worth nothing
 unchecked:
