@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { Cover } from '../components/Cover'
+import { EmptyStack } from '../components/EmptyStack'
+import { ShelfGap } from '../components/ShelfGap'
 import { Select } from '../components/Select'
 import { coverSources } from '../lib/cover'
 import { formatDay, formatNumber, monthKey, monthLabel } from '../utils/format'
@@ -149,6 +151,7 @@ export function Shelf() {
   }, [books, dimensions, params, query])
 
   const groups = useMemo(() => groupByMonth(visible), [visible])
+  const empty = !loading && !error && books.length === 0
 
   return (
     <div className="pb-28">
@@ -238,10 +241,30 @@ export function Shelf() {
           </div>
         )}
 
-        {!loading && visible.length === 0 && (
-          <p className="text-ink-2 py-16 text-center text-sm">
-            {books.length === 0 ? m.shelf_empty() : m.shelf_no_match()}
-          </p>
+        {empty && (
+          <div className="mx-auto flex max-w-xs flex-col items-center py-14 text-center">
+            <EmptyStack />
+            <p className="font-serif mt-7 mb-2 text-xl font-semibold tracking-tight">
+              {m.shelf_empty()}
+            </p>
+            <p className="text-ink-2 mb-6 text-sm leading-relaxed">{m.shelf_empty_body()}</p>
+            <Link
+              to="/buch/suchen"
+              className="bg-accent flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white"
+            >
+              <Plus size={18} strokeWidth={2.4} />
+              {m.shelf_empty_action()}
+            </Link>
+          </div>
+        )}
+
+        {!loading && books.length > 0 && visible.length === 0 && (
+          <div className="py-14 text-center">
+            <ShelfGap />
+            <p className="font-serif mt-7 text-xl font-semibold tracking-tight">
+              {m.shelf_no_match()}
+            </p>
+          </div>
         )}
 
         {groups.map((group) => (
@@ -279,18 +302,20 @@ export function Shelf() {
         ))}
       </main>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20">
-        <div className="mx-auto flex max-w-296 justify-end px-4">
-          <button
-            type="button"
-            onClick={() => navigate('/buch/suchen')}
-            aria-label={m.shelf_add()}
-            className="bg-accent pointer-events-auto flex size-14 items-center justify-center rounded-full text-white shadow-[0_8px_20px_-6px_rgb(180_85_47/0.7)]"
-          >
-            <Plus size={26} />
-          </button>
+      {!empty && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20">
+          <div className="mx-auto flex max-w-296 justify-end px-4">
+            <button
+              type="button"
+              onClick={() => navigate('/buch/suchen')}
+              aria-label={m.shelf_add()}
+              className="bg-accent pointer-events-auto flex size-14 items-center justify-center rounded-full text-white shadow-[0_8px_20px_-6px_rgb(180_85_47/0.7)]"
+            >
+              <Plus size={26} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

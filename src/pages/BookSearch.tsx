@@ -2,6 +2,7 @@ import { lazy, Suspense, useRef, useState, type SyntheticEvent } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ScanBarcode, Search, X } from 'lucide-react'
 import { Cover } from '../components/Cover'
+import { ShelfGap } from '../components/ShelfGap'
 import { looksLikeIsbn, lookupBooks, rememberedLookup, type Candidate } from '../lib/lookup'
 import { m } from '../paraglide/messages.js'
 import { FORMAT_LABEL } from '../types'
@@ -206,8 +207,9 @@ export function BookSearch() {
         {outcome.kind === 'failed' && <p className="text-danger mt-4 text-sm">{outcome.message}</p>}
 
         {outcome.kind === 'empty' && (
-          <div className="mt-8 text-center">
-            <p className="font-serif mb-1.5 text-base font-semibold">
+          <div className="mt-10 text-center">
+            <ShelfGap />
+            <p className="font-serif mt-6 mb-1.5 text-lg font-semibold">
               {m.search_empty_title()}
             </p>
             <p className="text-ink-2 mx-auto mb-5 max-w-[34ch] text-sm leading-relaxed">
