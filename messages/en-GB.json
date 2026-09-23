@@ -148,7 +148,9 @@
   "blurb_less": "Read less",
 
   "feed_title": "Recommendations",
-  "feed_empty": "Nobody has recommended anything yet. A book you are reading, or have read, you can recommend from its own page.",
+  "feed_empty": "Nobody has recommended anything yet",
+  "feed_empty_body": "Be the first! There are bound to be a few treasures in your shelf.",
+  "feed_empty_action": "Go to the shelf",
   "feed_card_open": "{title} — open the recommendation",
   "feed_you": "You",
 

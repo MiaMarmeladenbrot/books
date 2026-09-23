@@ -148,7 +148,9 @@
   "blurb_less": "Weniger",
 
   "feed_title": "Empfehlungen",
-  "feed_empty": "Noch hat niemand etwas empfohlen. Ein Buch, das du liest oder gelesen hast, kannst du auf seiner Seite empfehlen.",
+  "feed_empty": "Noch hat niemand etwas empfohlen.",
+  "feed_empty_body": "Sei die erste! In deinem Regal liegen garantiert ein paar Schätze.",
+  "feed_empty_action": "Zum Regal",
   "feed_card_open": "{title} — Empfehlung öffnen",
   "feed_you": "Du",
 
