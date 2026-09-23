@@ -77,7 +77,7 @@ describe('RecommendationDetail', () => {
     const { loadFeed } = open({ feed: null, loadingFeed: true })
 
     expect(loadFeed).toHaveBeenCalled()
-    expect(screen.getByText('Lädt…')).toBeInTheDocument()
+    expect(screen.getByText('Lädt …')).toBeInTheDocument()
   })
 
   it('shows the book, who recommended it and what they wrote', () => {

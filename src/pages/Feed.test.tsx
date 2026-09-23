@@ -191,12 +191,12 @@ describe('Feed', () => {
     open({ feed: null, error: 'permission denied for table recommendations' })
 
     expect(screen.getByText('permission denied for table recommendations')).toBeInTheDocument()
-    expect(screen.queryByText('Lädt…')).not.toBeInTheDocument()
+    expect(screen.queryByText('Lädt …')).not.toBeInTheDocument()
   })
 
   it('waits visibly while the feed is on its way', () => {
     open({ feed: null, loadingFeed: true })
 
-    expect(screen.getByText('Lädt…')).toBeInTheDocument()
+    expect(screen.getByText('Lädt …')).toBeInTheDocument()
   })
 })
