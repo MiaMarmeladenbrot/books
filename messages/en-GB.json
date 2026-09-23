@@ -28,6 +28,7 @@
   "error_image_convert": "That image can't be converted.",
   "error_search_failed": "Search failed.",
   "error_catalogue_silent": "The catalogue isn't answering. Try again, or enter it yourself.",
+  "error_did_not_work": "That didn't work.",
 
   "nav_shelf": "Shelf",
   "nav_recommendations": "Recommendations",
@@ -143,6 +144,28 @@
   "blurb_title": "Blurb",
   "blurb_more": "Read more",
   "blurb_less": "Read less",
+
+  "feed_title": "Recommendations",
+  "feed_empty": "Nobody has recommended anything yet. A book you are reading, or have read, you can recommend from its own page.",
+  "feed_card_open": "{title} — open the recommendation",
+  "feed_you": "You",
+
+  "recommendation_heading": "Recommendation",
+  "recommendation_gone": "This recommendation is gone.",
+  "recommendation_series": "Volume {volume} of “{series}”",
+
+  "take_show_mine": "Show my copy",
+  "take_onto_pile": "Put it on my pile",
+
+  "recommend_action": "Recommend",
+  "recommend_intro": "You liked “{title}”? Then do pass it on to other readers.",
+  "recommend_placeholder": "Why did you like this book? Who else might?",
+  "recommend_note_label": "A sentence for the recommendation",
+  "recommend_sending": "Sending …",
+  "recommend_withdraw": "Withdraw the recommendation",
+  "recommend_withdraw_title": "Withdraw the recommendation?",
+  "recommend_withdraw_body": "“{title}” disappears from everyone else's recommendations.",
+  "recommend_withdraw_confirm": "Withdraw",
 
   "form_title_new": "Put a book on the shelf",
   "form_title_edit": "Edit book",

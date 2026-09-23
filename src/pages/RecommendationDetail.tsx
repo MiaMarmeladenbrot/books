@@ -10,16 +10,20 @@ import { coverSources } from '../lib/cover'
 import { useAuth } from '../store/useAuth'
 import { useRecommendations } from '../store/useRecommendations'
 import { formatDay } from '../utils/format'
+import { m } from '../paraglide/messages.js'
 
 function factsLine(entry: Catalogue | null) {
   if (!entry) return null
-  const parts = [entry.pages ? `${entry.pages} Seiten` : null, entry.year ? String(entry.year) : null]
+  const parts = [
+    entry.pages ? m.search_pages({ count: entry.pages }) : null,
+    entry.year ? String(entry.year) : null,
+  ]
   return parts.filter(Boolean).join(' · ') || null
 }
 
 function seriesLine(entry: Catalogue | null) {
   if (!entry?.series || entry.volume === null) return null
-  return `Band ${entry.volume} von »${entry.series}«`
+  return m.recommendation_series({ volume: entry.volume, series: entry.series })
 }
 
 export function RecommendationDetail() {
@@ -40,15 +44,17 @@ export function RecommendationDetail() {
   return (
     <div className="pb-16">
       <header className="border-line sticky top-0 z-10 flex items-center gap-3 border-b bg-paper/95 px-4 py-3 backdrop-blur">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Zurück">
+        <button type="button" onClick={() => navigate(-1)} aria-label={m.action_back()}>
           <ChevronLeft size={24} className="text-ink-3" />
         </button>
-        <h1 className="font-serif text-xl font-semibold tracking-tight">Empfehlung</h1>
+        <h1 className="font-serif text-xl font-semibold tracking-tight">
+          {m.recommendation_heading()}
+        </h1>
       </header>
 
       {entry === null ? (
         <p className="text-ink-2 px-4 py-20 text-center text-sm">
-          {feed === null && loadingFeed ? 'Lädt…' : 'Diese Empfehlung gibt es nicht mehr.'}
+          {feed === null && loadingFeed ? m.app_loading() : m.recommendation_gone()}
         </p>
       ) : (
         <main className="mx-auto max-w-xl px-4 pt-5">
@@ -59,7 +65,7 @@ export function RecommendationDetail() {
             <div className="flex min-w-0 grow flex-col">
               <span className="bg-gold-soft text-gold-ink text-2xs mb-2 inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 font-bold tracking-wider uppercase">
                 <Gem size={12} strokeWidth={2.5} />
-                Empfehlung
+                {m.recommendation_heading()}
               </span>
               <h2 className="font-serif text-xl leading-tight font-semibold tracking-tight text-balance">
                 {entry.title}
@@ -91,7 +97,9 @@ export function RecommendationDetail() {
             <div className="text-ink-2 mt-4 flex items-center justify-center gap-2 text-sm">
               <Avatar name={entry.profiles?.avatar ?? null} size={22} className="shrink-0" />
               <b className="text-ink font-semibold">
-                {entry.user_id === userId ? 'Du' : (entry.profiles?.display_name ?? 'Ohne Namen')}
+                {entry.user_id === userId
+                  ? m.feed_you()
+                  : (entry.profiles?.display_name ?? m.profile_no_name())}
               </b>
               <span className="text-ink-3 text-xs">
                 · {formatDay(entry.created_at.slice(0, 10))}

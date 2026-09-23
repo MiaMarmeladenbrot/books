@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { sharedCoverPath } from '../lib/supabase'
 import { useBooks } from '../store/useBooks'
 import { findOnShelf } from '../utils/shelf'
+import { m } from '../paraglide/messages.js'
 import { BookStatus, EMPTY_DRAFT } from '../types'
 import type { Recommendation } from '../types'
 
@@ -26,7 +27,7 @@ export function TakeButton({ entry }: { entry: Recommendation }) {
         cover_path: entry.isbn ? sharedCoverPath(entry.isbn) : null,
       })
     } catch {
-      setFailed('Das hat nicht geklappt.')
+      setFailed(m.error_did_not_work())
     }
     setBusy(false)
   }
@@ -39,7 +40,7 @@ export function TakeButton({ entry }: { entry: Recommendation }) {
             to={`/buch/${onShelf.id}`}
             className="border-line text-ink-2 shrink-0 rounded-xl border px-3.5 py-2 text-xs font-bold"
           >
-            Meine Ausgabe anzeigen
+            {m.take_show_mine()}
           </Link>
         ) : (
           <button
@@ -48,7 +49,7 @@ export function TakeButton({ entry }: { entry: Recommendation }) {
             disabled={busy}
             className="border-accent text-accent shrink-0 rounded-xl border px-3.5 py-2 text-xs font-bold disabled:opacity-50"
           >
-            Auf meinen Stapel legen
+            {m.take_onto_pile()}
           </button>
         )}
       </div>

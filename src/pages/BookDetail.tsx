@@ -55,7 +55,7 @@ function RecommendDialog({ book, onClose }: { book: Book; onClose: () => void })
       await recommend(book, written)
       onClose()
     } catch {
-      setFailed('Das hat nicht geklappt.')
+      setFailed(m.error_did_not_work())
       setBusy(false)
     }
   }
@@ -70,9 +70,11 @@ function RecommendDialog({ book, onClose }: { book: Book; onClose: () => void })
       className="bg-card m-auto w-[min(22rem,calc(100vw-2.5rem))] rounded-2xl p-6 shadow-[0_24px_50px_-20px_rgb(30_26_21/0.55)] backdrop:bg-ink/30 backdrop:backdrop-blur-sm"
     >
       <form onSubmit={submit}>
-        <h2 className="font-serif mb-2 text-xl font-semibold tracking-tight">Empfehlen</h2>
+        <h2 className="font-serif mb-2 text-xl font-semibold tracking-tight">
+          {m.recommend_action()}
+        </h2>
         <p className="text-ink-2 mb-4 text-sm leading-relaxed">
-          Dir hat »{book.title}« gefallen? Dann empfiehl es doch gerne anderen Leser:innen.
+          {m.recommend_intro({ title: book.title })}
         </p>
 
         <textarea
@@ -82,8 +84,8 @@ function RecommendDialog({ book, onClose }: { book: Book; onClose: () => void })
           rows={3}
           required
           autoFocus
-          placeholder="Warum mochtest du dieses Buch? Wem könnte es ebenfalls gefallen?"
-          aria-label="Ein Satz zur Empfehlung"
+          placeholder={m.recommend_placeholder()}
+          aria-label={m.recommend_note_label()}
           className="border-line bg-paper focus:border-accent w-full resize-none rounded-xl border px-3.5 py-3 text-base outline-none"
         />
         <p className="text-ink-3 mt-1 mb-5 text-right text-xs">
@@ -98,7 +100,7 @@ function RecommendDialog({ book, onClose }: { book: Book; onClose: () => void })
             disabled={busy || written === ''}
             className="bg-accent rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-60"
           >
-            {busy ? 'Sendet…' : 'Empfehlen'}
+            {busy ? m.recommend_sending() : m.recommend_action()}
           </button>
           <button
             type="button"
@@ -146,7 +148,7 @@ export function BookDetail() {
     try {
       await withdraw(recommended.id)
     } catch {
-      setWithdrawFailed('Das hat nicht geklappt.')
+      setWithdrawFailed(m.error_did_not_work())
     }
   }
 
@@ -170,7 +172,7 @@ export function BookDetail() {
             {canRecommend && (
               <CoverSeal
                 recommended={recommended !== null}
-                label={recommended ? 'Empfehlung zurücknehmen' : 'Empfehlen'}
+                label={recommended ? m.recommend_withdraw() : m.recommend_action()}
                 size="md"
                 onClick={() => (recommended ? setWithdrawing(true) : setRecommending(true))}
               />
@@ -266,9 +268,9 @@ export function BookDetail() {
 
       <ConfirmDialog
         open={withdrawing}
-        title="Empfehlung zurücknehmen?"
-        description={`»${book.title}« verschwindet aus den Empfehlungen der anderen.`}
-        confirmLabel="Zurücknehmen"
+        title={m.recommend_withdraw_title()}
+        description={m.recommend_withdraw_body({ title: book.title })}
+        confirmLabel={m.recommend_withdraw_confirm()}
         cancelLabel="Stehen lassen"
         onConfirm={handleWithdraw}
         onCancel={() => setWithdrawing(false)}

@@ -7,6 +7,7 @@ import { coverSources } from '../lib/cover'
 import { useAuth } from '../store/useAuth'
 import { useRecommendations } from '../store/useRecommendations'
 import { formatDay } from '../utils/format'
+import { m } from '../paraglide/messages.js'
 import type { FeedEntry } from '../types'
 
 function Card({ entry }: { entry: FeedEntry }) {
@@ -19,14 +20,14 @@ function Card({ entry }: { entry: FeedEntry }) {
     <li className="border-line bg-card relative rounded-2xl border px-4 py-4">
       <Link
         to={`/empfehlung/${entry.id}`}
-        aria-label={`${entry.title} — Empfehlung öffnen`}
+        aria-label={m.feed_card_open({ title: entry.title })}
         className="absolute inset-0 rounded-2xl"
       />
 
       <div className="flex items-center gap-2.5">
         <Avatar name={entry.profiles?.avatar ?? null} size={28} className="shrink-0" />
         <span className="truncate text-sm font-semibold">
-          {isMine ? 'Du' : (entry.profiles?.display_name ?? 'Ohne Namen')}
+          {isMine ? m.feed_you() : (entry.profiles?.display_name ?? m.profile_no_name())}
         </span>
         <span className="text-ink-3 shrink-0 text-xs">
           {formatDay(entry.created_at.slice(0, 10))}
@@ -68,7 +69,7 @@ export function Feed() {
     <div className="pb-28">
       <header className="border-line sticky top-0 z-10 border-b bg-paper/95 px-4 pt-3 pb-3 backdrop-blur">
         <div className="mx-auto max-w-xl">
-          <h1 className="font-serif text-2xl font-semibold tracking-tight">Empfehlungen</h1>
+          <h1 className="font-serif text-2xl font-semibold tracking-tight">{m.feed_title()}</h1>
         </div>
       </header>
 
@@ -77,12 +78,11 @@ export function Feed() {
 
         {feed === null ? (
           loadingFeed ? (
-            <p className="text-ink-3 py-20 text-center text-sm">Lädt…</p>
+            <p className="text-ink-3 py-20 text-center text-sm">{m.app_loading()}</p>
           ) : null
         ) : feed.length === 0 ? (
           <p className="text-ink-2 py-20 text-center text-sm leading-relaxed text-balance">
-            Noch hat niemand etwas empfohlen. Ein Buch, das du liest oder gelesen hast, kannst du
-            auf seiner Seite empfehlen.
+            {m.feed_empty()}
           </p>
         ) : (
           <ul className="flex flex-col gap-3.5">

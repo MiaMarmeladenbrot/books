@@ -3,11 +3,11 @@
 
   "action_cancel": "Abbrechen",
   "action_save": "Sichern",
-  "action_busy": "Moment…",
+  "action_busy": "Moment …",
   "action_edit": "Bearbeiten",
   "action_delete": "Löschen",
   "action_back": "Zurück",
-  "app_loading": "Lädt…",
+  "app_loading": "Lädt …",
   "loader_label": "Lädt",
 
   "error_sign_in": "E-Mail oder Passwort falsch",
@@ -28,6 +28,7 @@
   "error_image_convert": "Bild kann nicht umgewandelt werden.",
   "error_search_failed": "Suche fehlgeschlagen.",
   "error_catalogue_silent": "Der Katalog antwortet nicht. Nochmal versuchen oder selber eintragen.",
+  "error_did_not_work": "Das hat nicht geklappt.",
 
   "nav_shelf": "Regal",
   "nav_recommendations": "Empfehlungen",
@@ -143,6 +144,28 @@
   "blurb_title": "Klappentext",
   "blurb_more": "Weiterlesen",
   "blurb_less": "Weniger",
+
+  "feed_title": "Empfehlungen",
+  "feed_empty": "Noch hat niemand etwas empfohlen. Ein Buch, das du liest oder gelesen hast, kannst du auf seiner Seite empfehlen.",
+  "feed_card_open": "{title} — Empfehlung öffnen",
+  "feed_you": "Du",
+
+  "recommendation_heading": "Empfehlung",
+  "recommendation_gone": "Diese Empfehlung gibt es nicht mehr.",
+  "recommendation_series": "Band {volume} von »{series}«",
+
+  "take_show_mine": "Meine Ausgabe anzeigen",
+  "take_onto_pile": "Auf meinen Stapel legen",
+
+  "recommend_action": "Empfehlen",
+  "recommend_intro": "Dir hat »{title}« gefallen? Dann empfiehl es doch gerne anderen Leser:innen.",
+  "recommend_placeholder": "Warum mochtest du dieses Buch? Wem könnte es ebenfalls gefallen?",
+  "recommend_note_label": "Ein Satz zur Empfehlung",
+  "recommend_sending": "Sendet …",
+  "recommend_withdraw": "Empfehlung zurücknehmen",
+  "recommend_withdraw_title": "Empfehlung zurücknehmen?",
+  "recommend_withdraw_body": "»{title}« verschwindet aus den Empfehlungen der anderen.",
+  "recommend_withdraw_confirm": "Zurücknehmen",
 
   "form_title_new": "Buch ins Regal legen",
   "form_title_edit": "Buch bearbeiten",
