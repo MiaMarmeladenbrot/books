@@ -158,7 +158,7 @@ describe('the shelf as it stands', () => {
   it('says when the shelf itself is empty', () => {
     shelf({ books: [] })
 
-    expect(screen.getByText('Noch keine Bücher')).toBeInTheDocument()
+    expect(screen.getByText('Dein Stapel ist noch leer')).toBeInTheDocument()
   })
 
   it('says something else when only the search came up empty', () => {
@@ -167,7 +167,7 @@ describe('the shelf as it stands', () => {
     search('gibt es nicht')
 
     expect(screen.getByText('Nichts gefunden')).toBeInTheDocument()
-    expect(screen.queryByText('Noch keine Bücher')).not.toBeInTheDocument()
+    expect(screen.queryByText('Dein Stapel ist noch leer')).not.toBeInTheDocument()
   })
 
   it('says when a reading book was started', () => {
@@ -199,6 +199,6 @@ describe('the shelf as it stands', () => {
     shelf({ books: [], loading: true })
 
     expect(screen.getByText('lädt …')).toBeInTheDocument()
-    expect(screen.queryByText('Noch keine Bücher')).not.toBeInTheDocument()
+    expect(screen.queryByText('Dein Stapel ist noch leer')).not.toBeInTheDocument()
   })
 })
