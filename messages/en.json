@@ -293,6 +293,8 @@
   "csv_rating": "Rating",
   "csv_note": "Note",
 
+  "manifest_description": "Your own bookshelf: scan it in, shelve it, look it up.",
+
   "install_body": "Your shelf can sit on your home screen as an icon, like a real app.",
   "install_body_ios": "Your shelf can sit on your home screen as an icon: tap {share} below, then “Add to Home Screen”.",
   "install_share": "Share",

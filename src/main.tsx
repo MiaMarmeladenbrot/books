@@ -6,6 +6,9 @@ import { getLocale } from './paraglide/runtime.js'
 
 document.documentElement.lang = getLocale()
 
+const manifestLink = document.querySelector<HTMLLinkElement>('link[rel="manifest"]')
+if (manifestLink) manifestLink.href = `/manifest-${getLocale()}.webmanifest`
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

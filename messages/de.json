@@ -293,6 +293,8 @@
   "csv_rating": "Bewertung",
   "csv_note": "Notiz",
 
+  "manifest_description": "Das eigene Bücherregal: scannen, einsortieren, nachschlagen.",
+
   "install_body": "Dein Regal kann als Symbol auf dem Startbildschirm liegen, wie eine richtige App.",
   "install_body_ios": "Dein Regal kann als Symbol auf dem Startbildschirm liegen: unten auf {share} tippen, dann „Zum Home-Bildschirm“.",
   "install_share": "Teilen",
