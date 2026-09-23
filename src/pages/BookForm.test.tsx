@@ -246,9 +246,9 @@ describe('editing a book that is already on the shelf', () => {
   })
 
   it('holds on to a language no list of ours knows', () => {
-    form({ books: [aBook({ id: 'b-geo', language: 'geo' })], at: '/buch/b-geo/bearbeiten' })
+    form({ books: [aBook({ id: 'b-xx', language: 'xx' })], at: '/buch/b-xx/bearbeiten' })
 
-    expect(screen.getByLabelText('Sprache')).toHaveValue('geo')
-    expect(screen.getByRole('option', { name: 'GEO' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Sprache')).toHaveValue('xx')
+    expect(screen.getByRole('option', { name: 'XX' })).toBeInTheDocument()
   })
 })
