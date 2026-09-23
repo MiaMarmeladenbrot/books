@@ -59,7 +59,7 @@ describe('the page somebody lands on after the link', () => {
     type('kurz')
     save()
 
-    expect(screen.getByText('Mindestens 8 Zeichen.')).toBeInTheDocument()
+    expect(screen.getByText('Mindestens 8 Zeichen')).toBeInTheDocument()
     expect(updateUser).not.toHaveBeenCalled()
   })
 

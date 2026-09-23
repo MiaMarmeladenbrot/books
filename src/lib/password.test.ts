@@ -7,11 +7,11 @@ describe('how short is too short', () => {
   })
 
   it('turns seven down and says how many it wants', () => {
-    expect(tooShort('1234567')).toBe('Mindestens 8 Zeichen.')
+    expect(tooShort('1234567')).toBe('Mindestens 8 Zeichen')
   })
 
   it('counts characters, not words', () => {
-    expect(tooShort('       ')).toBe('Mindestens 8 Zeichen.')
+    expect(tooShort('       ')).toBe('Mindestens 8 Zeichen')
     expect(tooShort('        ')).toBe('')
   })
 })

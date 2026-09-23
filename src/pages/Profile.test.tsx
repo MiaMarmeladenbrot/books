@@ -177,7 +177,7 @@ describe('the password behind the account', () => {
     fireEvent.change(screen.getByLabelText('Neues Passwort'), { target: { value: 'kurz' } })
     fireEvent.click(screen.getByText('Ändern'))
 
-    expect(screen.getByText('Mindestens 8 Zeichen.')).toBeInTheDocument()
+    expect(screen.getByText('Mindestens 8 Zeichen')).toBeInTheDocument()
     expect(signInWithPassword).not.toHaveBeenCalled()
   })
 })
