@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Gem, Plus, Search, X } from 'lucide-react'
+import { Plus, Search, X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { useRecommendations } from '../store/useRecommendations'
 import { Cover } from '../components/Cover'
+import { CoverSeal } from '../components/CoverSeal'
 import { Select } from '../components/Select'
 import { coverSources } from '../lib/cover'
 import { formatDay, formatNumber, monthKey, monthLabel } from '../utils/format'
@@ -267,15 +268,7 @@ export function Shelf() {
                             : ''
                         }
                       />
-                      {recommended.has(book.id) && (
-                        <span
-                          role="img"
-                          aria-label="Von dir empfohlen"
-                          className="border-line bg-paper absolute -right-2 -bottom-2 flex size-8 items-center justify-center rounded-full border shadow-[0_4px_10px_-4px_rgb(30_26_21/0.5)]"
-                        >
-                          <Gem size={17} strokeWidth={2} className="text-gold" />
-                        </span>
-                      )}
+                      {recommended.has(book.id) && <CoverSeal recommended label="Von dir empfohlen" />}
                     </div>
                     <h3 className="mt-2.5 line-clamp-2 text-sm leading-snug font-semibold">
                       {book.title}

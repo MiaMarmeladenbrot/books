@@ -157,14 +157,14 @@ describe('BookDetail, taking it back', () => {
   it('shows the recommended stone instead of the offer', () => {
     open(book, already())
 
-    expect(screen.getByRole('button', { name: 'Empfohlen — zurücknehmen' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Empfehlung zurücknehmen' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Empfehlen' })).not.toBeInTheDocument()
   })
 
   it('asks before it takes anything back', () => {
     const { withdraw } = open(book, already())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Empfohlen — zurücknehmen' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Empfehlung zurücknehmen' }))
 
     expect(screen.getByText('Empfehlung zurücknehmen?')).toBeInTheDocument()
     expect(withdraw).not.toHaveBeenCalled()
@@ -173,7 +173,7 @@ describe('BookDetail, taking it back', () => {
   it('takes it back once, by its own id, after the question is answered', () => {
     const { withdraw } = open(book, already())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Empfohlen — zurücknehmen' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Empfehlung zurücknehmen' }))
     fireEvent.click(screen.getByRole('button', { name: 'Zurücknehmen' }))
 
     expect(withdraw).toHaveBeenCalledTimes(1)
@@ -183,7 +183,7 @@ describe('BookDetail, taking it back', () => {
   it('leaves the recommendation standing when the question is declined', () => {
     const { withdraw } = open(book, already())
 
-    fireEvent.click(screen.getByRole('button', { name: 'Empfohlen — zurücknehmen' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Empfehlung zurücknehmen' }))
     fireEvent.click(screen.getByRole('button', { name: 'Stehen lassen' }))
 
     expect(withdraw).not.toHaveBeenCalled()

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, Gem, Pencil, Trash2 } from 'lucide-react'
+import { ChevronLeft, Pencil, Trash2 } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { useRecommendations } from '../store/useRecommendations'
 import { Blurb } from '../components/Blurb'
 import { Cover } from '../components/Cover'
+import { CoverSeal } from '../components/CoverSeal'
 import { useCatalogue } from '../lib/catalogue'
 import { coverSources } from '../lib/cover'
 import { ConfirmDialog } from '../components/ConfirmDialog'
@@ -165,26 +166,14 @@ export function BookDetail() {
               authors={book.authors}
               src={coverSources(book.isbn, book.cover_path)}
             />
-            {canRecommend &&
-              (recommended ? (
-                <button
-                  type="button"
-                  onClick={() => setWithdrawing(true)}
-                  aria-label="Empfohlen — zurücknehmen"
-                  className="border-line bg-paper absolute -right-2.5 -bottom-2.5 flex size-10 items-center justify-center rounded-full border shadow-[0_4px_10px_-4px_rgb(30_26_21/0.5)]"
-                >
-                  <Gem size={20} strokeWidth={2} className="text-gold" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setRecommending(true)}
-                  aria-label="Empfehlen"
-                  className="border-gold/60 bg-paper absolute -right-2.5 -bottom-2.5 flex size-10 items-center justify-center rounded-full border border-dashed shadow-[0_4px_10px_-4px_rgb(30_26_21/0.5)]"
-                >
-                  <Gem size={20} strokeWidth={2} className="text-gold/60" />
-                </button>
-              ))}
+            {canRecommend && (
+              <CoverSeal
+                recommended={recommended !== null}
+                label={recommended ? 'Empfehlung zurücknehmen' : 'Empfehlen'}
+                size="md"
+                onClick={() => (recommended ? setWithdrawing(true) : setRecommending(true))}
+              />
+            )}
           </div>
           <div className="flex min-w-0 grow flex-col">
             <h2 className="font-serif text-xl leading-tight font-semibold tracking-tight">
