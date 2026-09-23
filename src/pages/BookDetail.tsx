@@ -8,6 +8,7 @@ import { useCatalogue } from '../lib/catalogue'
 import { coverSources } from '../lib/cover'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { formatNumber, formatRange, readingDays } from '../utils/format'
+import { m } from '../paraglide/messages.js'
 import { FORMAT_LABEL, PROVENANCE_LABEL, STATUS_LABEL, languageLabel } from '../types'
 
 function Row({ label, value }: { label: string; value: string | null }) {
@@ -30,7 +31,7 @@ export function BookDetail() {
   const catalogue = useCatalogue(book?.isbn ?? null, book?.language ?? null)
 
   if (!book) {
-    return <p className="text-ink-2 px-4 py-20 text-center text-sm">Buch nicht gefunden.</p>
+    return <p className="text-ink-2 px-4 py-20 text-center text-sm">{m.error_book_not_found()}</p>
   }
 
   const days = readingDays(book.started_on, book.finished_on)
@@ -43,10 +44,10 @@ export function BookDetail() {
   return (
     <div className="pb-16">
       <header className="border-line sticky top-0 z-10 flex items-center gap-3 border-b bg-paper/95 px-4 py-3 backdrop-blur">
-        <button type="button" onClick={() => navigate(-1)} aria-label="Zurück">
+        <button type="button" onClick={() => navigate(-1)} aria-label={m.action_back()}>
           <ChevronLeft size={24} className="text-ink-3" />
         </button>
-        <h1 className="font-serif text-xl font-semibold tracking-tight">Buch</h1>
+        <h1 className="font-serif text-xl font-semibold tracking-tight">{m.detail_heading()}</h1>
       </header>
 
       <main className="mx-auto max-w-xl px-4 pt-5">
@@ -72,14 +73,14 @@ export function BookDetail() {
               <button
                 type="button"
                 onClick={() => setConfirming(true)}
-                aria-label="Löschen"
+                aria-label={m.action_delete()}
                 className="border-line text-ink-3 flex size-10 items-center justify-center rounded-xl border"
               >
                 <Trash2 size={18} strokeWidth={2} />
               </button>
               <Link
                 to={`/buch/${book.id}/bearbeiten`}
-                aria-label="Bearbeiten"
+                aria-label={m.action_edit()}
                 className="border-accent text-accent flex size-10 items-center justify-center rounded-xl border"
               >
                 <Pencil size={18} strokeWidth={2} />
@@ -88,33 +89,53 @@ export function BookDetail() {
           </div>
         </div>
 
-        <Row label="Zeitraum" value={formatRange(book.started_on, book.finished_on)} />
+        <Row label={m.label_period()} value={formatRange(book.started_on, book.finished_on)} />
         <Row
-          label="Dauer"
-          value={days === null ? null : days === 0 ? 'an einem Tag' : `${days} Tage`}
+          label={m.label_duration()}
+          value={
+            days === null
+              ? null
+              : days === 0
+                ? m.detail_duration_same_day()
+                : m.detail_duration_days({ count: days })
+          }
         />
-        <Row label="Seiten" value={book.page_count ? formatNumber(book.page_count) : null} />
         <Row
-          label="Reihe"
+          label={m.label_pages()}
+          value={book.page_count ? formatNumber(book.page_count) : null}
+        />
+        <Row
+          label={m.label_series()}
           value={
             book.series
               ? book.series_volume
-                ? `${book.series}, Band ${book.series_volume}`
+                ? m.detail_series_volume({ series: book.series, volume: book.series_volume })
                 : book.series
               : null
           }
         />
-        <Row label="Format" value={book.format ? FORMAT_LABEL[book.format]() : null} />
-        <Row label="Sprache" value={book.language ? languageLabel(book.language) : null} />
-        <Row label="Herkunft" value={book.provenance ? PROVENANCE_LABEL[book.provenance]() : null} />
-        <Row label="Erschienen" value={book.published_year ? String(book.published_year) : null} />
-        <Row label="ISBN" value={book.isbn} />
+        <Row label={m.label_format()} value={book.format ? FORMAT_LABEL[book.format]() : null} />
+        <Row
+          label={m.label_language()}
+          value={book.language ? languageLabel(book.language) : null}
+        />
+        <Row
+          label={m.label_provenance()}
+          value={book.provenance ? PROVENANCE_LABEL[book.provenance]() : null}
+        />
+        <Row
+          label={m.label_published()}
+          value={book.published_year ? String(book.published_year) : null}
+        />
+        <Row label={m.label_isbn()} value={book.isbn} />
 
         <Blurb text={catalogue.entry?.text ?? null} asking={catalogue.asking} />
 
         {book.notes && (
           <div className="border-accent/35 mt-6 border-l-2 pl-4">
-            <p className="text-ink-3 mb-1 text-xs font-bold tracking-widest uppercase">Notiz</p>
+            <p className="text-ink-3 mb-1 text-xs font-bold tracking-widest uppercase">
+              {m.label_note()}
+            </p>
             <p className="font-serif text-sm leading-relaxed whitespace-pre-line italic">
               {book.notes}
             </p>
@@ -124,10 +145,10 @@ export function BookDetail() {
 
       <ConfirmDialog
         open={confirming}
-        title="Buch löschen?"
-        description={`»${book.title}« wird endgültig entfernt. Das lässt sich nicht rückgängig machen.`}
-        confirmLabel="Endgültig löschen"
-        cancelLabel="Behalten"
+        title={m.detail_delete_title()}
+        description={m.detail_delete_body({ title: book.title })}
+        confirmLabel={m.detail_delete_confirm()}
+        cancelLabel={m.detail_delete_cancel()}
         onConfirm={handleDelete}
         onCancel={() => setConfirming(false)}
       />

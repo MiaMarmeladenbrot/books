@@ -61,7 +61,7 @@ export function Profile() {
       })
       setEditing(false)
     } catch {
-      setSaveError('Speichern fehlgeschlagen.')
+      setSaveError(m.error_save_failed())
     }
     setSaving(false)
   }
@@ -80,7 +80,7 @@ export function Profile() {
       password: currentPassword,
     })
     if (wrongPassword) {
-      setPasswordError('Das aktuelle Passwort stimmt nicht.')
+      setPasswordError(m.error_password_wrong())
       setPasswordBusy(false)
       return
     }
@@ -101,7 +101,7 @@ export function Profile() {
     <div className="pb-28">
       <header className="border-line sticky top-0 z-10 border-b bg-paper/95 px-4 pt-3 pb-3 backdrop-blur">
         <div className="mx-auto max-w-xl">
-          <h1 className="font-serif text-2xl font-semibold tracking-tight">Profil</h1>
+          <h1 className="font-serif text-2xl font-semibold tracking-tight">{m.profile_title()}</h1>
         </div>
       </header>
 
@@ -110,14 +110,14 @@ export function Profile() {
           <Avatar name={shownAvatar} size={80} className="shrink-0" />
           <div className="min-w-0 grow">
             <p className="font-serif truncate text-2xl leading-tight font-semibold tracking-tight">
-              {profile?.display_name ?? 'Ohne Namen'}
+              {profile?.display_name ?? m.profile_no_name()}
             </p>
           </div>
           {!editing && (
             <button
               type="button"
               onClick={startEditing}
-              aria-label="Profil bearbeiten"
+              aria-label={m.profile_edit()}
               className="border-line text-ink-2 shrink-0 rounded-full border p-2.5"
             >
               <Pencil size={17} strokeWidth={1.9} />
@@ -126,9 +126,9 @@ export function Profile() {
         </div>
 
         {editing && (
-          <Panel title="Bearbeiten">
+          <Panel title={m.profile_edit_panel()}>
             <form onSubmit={handleSave}>
-              <span className={labelClass}>Bild</span>
+              <span className={labelClass}>{m.profile_avatar()}</span>
               <div className="mb-5 flex flex-wrap gap-2">
                 {AVATAR_ORDER.map((name) => (
                   <button
@@ -145,12 +145,12 @@ export function Profile() {
               </div>
 
               <label className="block">
-                <span className={labelClass}>Anzeigename</span>
+                <span className={labelClass}>{m.profile_display_name()}</span>
                 <input
                   value={displayName}
                   onChange={(event) => setDisplayName(event.target.value)}
                   maxLength={40}
-                  placeholder="Wie du genannt wirst"
+                  placeholder={m.profile_display_name_placeholder()}
                   className={fieldClass}
                 />
               </label>
@@ -163,24 +163,24 @@ export function Profile() {
                   onClick={() => setEditing(false)}
                   className={quietButtonClass}
                 >
-                  Abbrechen
+                  {m.action_cancel()}
                 </button>
                 <button type="submit" disabled={saving} className={strongButtonClass}>
-                  {saving ? 'Moment…' : 'Sichern'}
+                  {saving ? m.action_busy() : m.action_save()}
                 </button>
               </div>
             </form>
           </Panel>
         )}
 
-        <Panel title="Konto">
-          <span className={labelClass}>E-Mail</span>
+        <Panel title={m.profile_account()}>
+          <span className={labelClass}>{m.label_email()}</span>
           <p className="text-ink text-sm break-all">{user?.email}</p>
 
           {changing ? (
             <form onSubmit={handlePassword} className="border-line mt-4 border-t pt-4">
               <label className="mb-4 block">
-                <span className={labelClass}>Aktuelles Passwort</span>
+                <span className={labelClass}>{m.profile_current_password()}</span>
                 <input
                   type="password"
                   autoComplete="current-password"
@@ -191,7 +191,7 @@ export function Profile() {
                 />
               </label>
               <PasswordField
-                label="Neues Passwort"
+                label={m.profile_new_password()}
                 value={nextPassword}
                 onChange={setNextPassword}
               />
@@ -204,10 +204,10 @@ export function Profile() {
                   onClick={() => setChanging(false)}
                   className={quietButtonClass}
                 >
-                  Abbrechen
+                  {m.action_cancel()}
                 </button>
                 <button type="submit" disabled={passwordBusy} className={strongButtonClass}>
-                  {passwordBusy ? 'Moment…' : 'Ändern'}
+                  {passwordBusy ? m.action_busy() : m.profile_change()}
                 </button>
               </div>
             </form>
@@ -220,11 +220,11 @@ export function Profile() {
               }}
               className="text-accent mt-4 text-sm font-semibold"
             >
-              Passwort ändern
+              {m.profile_change_password()}
             </button>
           )}
 
-          {passwordDone && <p className="text-leaf mt-3 text-sm">Das Passwort ist geändert.</p>}
+          {passwordDone && <p className="text-leaf mt-3 text-sm">{m.profile_password_changed()}</p>}
         </Panel>
 
         <Panel title={m.label_language()}>
@@ -254,15 +254,15 @@ export function Profile() {
           onClick={() => setLeaving(true)}
           className="border-danger text-danger mt-6 w-full rounded-xl border py-3.5 text-sm font-semibold"
         >
-          Abmelden
+          {m.profile_sign_out()}
         </button>
       </main>
 
       <ConfirmDialog
         open={leaving}
-        title="Abmelden?"
-        description="Beim nächsten Mal brauchst du deine E-Mail und dein Passwort wieder."
-        confirmLabel="Abmelden"
+        title={m.profile_sign_out_title()}
+        description={m.profile_sign_out_body()}
+        confirmLabel={m.profile_sign_out()}
         onConfirm={() => void signOut()}
         onCancel={() => setLeaving(false)}
       />

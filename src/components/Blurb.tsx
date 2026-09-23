@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { m } from '../paraglide/messages.js'
 
 const PRAISE = /^[»„“"']/
 const PRAISE_LENGTH = 220
@@ -8,7 +9,9 @@ const WAITING_WIDTHS = ['w-full', 'w-11/12', 'w-10/12', 'w-2/3']
 function WaitingBlurb() {
   return (
     <div className="mt-6" aria-hidden>
-      <p className="text-ink-3 mb-1.5 text-xs font-bold tracking-widest uppercase">Klappentext</p>
+      <p className="text-ink-3 mb-1.5 text-xs font-bold tracking-widest uppercase">
+        {m.blurb_title()}
+      </p>
       <div className="flex flex-col gap-3 py-1.5">
         {WAITING_WIDTHS.map((width) => (
           <span key={width} className={`bg-shade h-2.5 rounded-full ${width}`} />
@@ -41,7 +44,9 @@ export function Blurb({ text, asking = false }: { text: string | null; asking?: 
 
   return (
     <div className="mt-6">
-      <p className="text-ink-3 mb-1.5 text-xs font-bold tracking-widest uppercase">Klappentext</p>
+      <p className="text-ink-3 mb-1.5 text-xs font-bold tracking-widest uppercase">
+        {m.blurb_title()}
+      </p>
 
       {open ? (
         <>
@@ -55,7 +60,7 @@ export function Blurb({ text, asking = false }: { text: string | null; asking?: 
             onClick={() => setOpen(false)}
             className="text-accent mt-2 text-xs font-bold"
           >
-            Weniger
+            {m.blurb_less()}
           </button>
         </>
       ) : (
@@ -70,7 +75,7 @@ export function Blurb({ text, asking = false }: { text: string | null; asking?: 
                 onClick={() => setOpen(true)}
                 className="text-accent text-xs font-bold"
               >
-                Weiterlesen
+                {m.blurb_more()}
               </button>
             </div>
           )}

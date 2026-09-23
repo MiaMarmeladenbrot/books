@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { m } from '../paraglide/messages.js'
 
 const BOOKS = [
   { width: 156, tint: 'bg-accent', tilt: '-1.4deg', offset: -3 },
@@ -12,7 +13,7 @@ const CYCLE = 4.5
 
 export function StackLoader() {
   return (
-    <div className="relative h-[120px] w-[156px]" role="status" aria-label="Lädt">
+    <div className="relative h-[120px] w-[156px]" role="status" aria-label={m.loader_label()}>
       {BOOKS.map((book, index) => (
         <div
           key={book.tint}

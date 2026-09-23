@@ -203,6 +203,7 @@
   ],
 
   "scanner_close": "Scannen abbrechen",
+  "scanner_back_to_search": "Zurück zur Suche",
   "scanner_starting": "Kamera startet …",
   "scanner_hint_aiming": "Barcode auf der Rückseite in den Rahmen halten",
   "scanner_hint_sighted": "Barcode erkannt, bitte kurz ruhig halten",

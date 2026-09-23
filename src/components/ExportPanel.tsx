@@ -1,7 +1,8 @@
 import { Download } from 'lucide-react'
 import { Panel } from './Panel'
 import { booksToCsv, booksToJson, download } from '../utils/export'
-import { formatNumber, todayIso } from '../utils/format'
+import { todayIso } from '../utils/format'
+import { m } from '../paraglide/messages.js'
 import type { Book } from '../types'
 
 const buttonClass =
@@ -11,10 +12,9 @@ export function ExportPanel({ books }: { books: Book[] }) {
   const stamp = todayIso()
 
   return (
-    <Panel title="Sicherung">
+    <Panel title={m.export_title()}>
       <p className="text-ink-2 mb-3.5 text-sm leading-relaxed">
-        {formatNumber(books.length)} Bücher herunterladen. Die JSON-Datei ist die vollständige
-        Sicherung, die CSV-Datei zum Anschauen in Numbers oder Excel.
+        {m.export_body({ count: books.length })}
       </p>
       <div className="flex gap-2.5">
         <button

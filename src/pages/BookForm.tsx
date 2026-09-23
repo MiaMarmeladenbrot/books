@@ -8,6 +8,7 @@ import { releaseCover, sharedCoverPath, uploadOwnCover, uploadSharedCover } from
 import type { Candidate } from '../lib/lookup'
 import { MAX_UPLOAD_BYTES, fetchGatedCoverJpeg, toCoverJpeg } from '../utils/image'
 import { todayIso } from '../utils/format'
+import { m } from '../paraglide/messages.js'
 import {
   BookStatus,
   FORMAT_LABEL,
@@ -156,7 +157,7 @@ export function BookForm() {
   const pickCover = async (file: File) => {
     setError('')
     if (file.size > MAX_UPLOAD_BYTES) {
-      setError('Das Bild ist zu groß. Bis 8 MB geht.')
+      setError(m.error_cover_too_big({ megabytes: MAX_UPLOAD_BYTES / 1024 / 1024 }))
       return
     }
     try {
@@ -166,7 +167,7 @@ export function BookForm() {
       setCandidateCover(null)
       setCoverPreview(URL.createObjectURL(image))
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Bild konnte nicht gelesen werden.')
+      setError(caught instanceof Error ? caught.message : m.error_cover_unreadable())
     }
   }
 
@@ -178,7 +179,7 @@ export function BookForm() {
   }
 
   if (isEdit && !existing) {
-    return <p className="text-ink-2 px-4 py-20 text-center text-sm">Buch nicht gefunden.</p>
+    return <p className="text-ink-2 px-4 py-20 text-center text-sm">{m.error_book_not_found()}</p>
   }
 
   const patch = (changes: Partial<BookDraft>) => setDraft((current) => ({ ...current, ...changes }))
@@ -216,7 +217,7 @@ export function BookForm() {
     event.preventDefault()
     setError('')
     if (!draft.title.trim()) {
-      setError('Ohne Titel geht es nicht.')
+      setError(m.error_no_title())
       return
     }
     setBusy(true)
@@ -247,7 +248,7 @@ export function BookForm() {
           if (previousCover) await releaseCover(previousCover)
         } catch {
           setSavedId(saved.id)
-          setError('Das Buch ist gespeichert, nur das Bild nicht. Nochmal versuchen?')
+          setError(m.error_cover_only())
           setBusy(false)
           return
         }
@@ -266,7 +267,7 @@ export function BookForm() {
       if (existing && cameFromApp) navigate(-1)
       else navigate(`/buch/${saved.id}`, { replace: true })
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Speichern fehlgeschlagen.')
+      setError(caught instanceof Error ? caught.message : m.error_save_failed())
       setBusy(false)
     }
   }
@@ -274,18 +275,18 @@ export function BookForm() {
   return (
     <form onSubmit={handleSubmit} className="pb-16">
       <header className="border-line sticky top-0 z-10 flex items-center gap-3 border-b bg-paper/95 px-4 py-3 backdrop-blur">
-        <button type="button" onClick={close} aria-label="Abbrechen">
+        <button type="button" onClick={close} aria-label={m.action_cancel()}>
           <X size={22} className="text-ink-3" />
         </button>
         <h1 className="font-serif text-xl font-semibold tracking-tight">
-          {existing ? 'Buch bearbeiten' : 'Buch ins Regal legen'}
+          {existing ? m.form_title_edit() : m.form_title_new()}
         </h1>
         <button
           type="submit"
           disabled={busy}
           className="text-accent ml-auto text-sm font-bold disabled:opacity-50"
         >
-          {busy ? 'Sichert…' : 'Sichern'}
+          {busy ? m.form_saving() : m.action_save()}
         </button>
       </header>
 
@@ -306,7 +307,7 @@ export function BookForm() {
         />
 
         <label className="mb-4 block">
-          <span className={labelClass}>Titel</span>
+          <span className={labelClass}>{m.label_title()}</span>
           <input
             value={draft.title}
             onChange={(event) => patch({ title: event.target.value })}
@@ -317,7 +318,8 @@ export function BookForm() {
 
         <label className="mb-4 block">
           <span className={labelClass}>
-            Untertitel <span className="text-ink-3 font-normal">(optional)</span>
+            {m.label_subtitle()}{' '}
+            <span className="text-ink-3 font-normal">{m.label_optional()}</span>
           </span>
           <input
             value={draft.subtitle ?? ''}
@@ -327,17 +329,17 @@ export function BookForm() {
         </label>
 
         <label className="mb-4 block">
-          <span className={labelClass}>Autorin oder Autor</span>
+          <span className={labelClass}>{m.label_author()}</span>
           <input
             value={authorText}
             onChange={(event) => setAuthorText(event.target.value)}
-            placeholder="Mehrere mit Komma trennen"
+            placeholder={m.form_authors_placeholder()}
             className={fieldClass}
           />
         </label>
 
         <div className="mb-4">
-          <span className={labelClass}>Stapel</span>
+          <span className={labelClass}>{m.label_stack()}</span>
           <div className="grid grid-cols-2 gap-2">
             {STATUS_ORDER.map((status) => (
               <button
@@ -360,7 +362,9 @@ export function BookForm() {
         {dates.started && (
           <div className={`mb-4 grid gap-3 ${dates.finished ? 'grid-cols-2' : ''}`}>
             <label className="block">
-              <span className={labelClass}>{dates.finished ? 'Gelesen von' : 'Angefangen am'}</span>
+              <span className={labelClass}>
+                {dates.finished ? m.form_date_from() : m.form_date_started()}
+              </span>
               <input
                 type="date"
                 value={draft.started_on ?? ''}
@@ -370,7 +374,7 @@ export function BookForm() {
             </label>
             {dates.finished && (
               <label className="block">
-                <span className={labelClass}>bis</span>
+                <span className={labelClass}>{m.form_date_to()}</span>
                 <input
                   type="date"
                   value={draft.finished_on ?? ''}
@@ -384,7 +388,7 @@ export function BookForm() {
 
         <div className="mb-4 grid grid-cols-2 gap-3">
           <label className="block">
-            <span className={labelClass}>Format</span>
+            <span className={labelClass}>{m.label_format()}</span>
             <Select
               value={draft.format ?? ''}
               onChange={(event) =>
@@ -402,7 +406,7 @@ export function BookForm() {
             </Select>
           </label>
           <label className="block">
-            <span className={labelClass}>Seiten</span>
+            <span className={labelClass}>{m.label_pages()}</span>
             <input
               inputMode="numeric"
               value={draft.page_count ?? ''}
@@ -414,7 +418,7 @@ export function BookForm() {
 
         <div className="mb-4 grid grid-cols-2 gap-3">
           <label className="block">
-            <span className={labelClass}>Herkunft</span>
+            <span className={labelClass}>{m.label_provenance()}</span>
             <Select
               value={draft.provenance ?? ''}
               onChange={(event) =>
@@ -432,7 +436,7 @@ export function BookForm() {
             </Select>
           </label>
           <label className="block">
-            <span className={labelClass}>Sprache</span>
+            <span className={labelClass}>{m.label_language()}</span>
             <Select
               value={draft.language ?? ''}
               onChange={(event) => patch({ language: textOrNull(event.target.value) })}
@@ -454,17 +458,17 @@ export function BookForm() {
 
         <div className="mb-4 grid grid-cols-[1fr_6rem] gap-3">
           <label className="block">
-            <span className={labelClass}>ISBN</span>
+            <span className={labelClass}>{m.label_isbn()}</span>
             <input
               inputMode="numeric"
               value={draft.isbn ?? ''}
               onChange={(event) => patch({ isbn: event.target.value })}
-              placeholder="978…"
+              placeholder={m.form_isbn_placeholder()}
               className={fieldClass}
             />
           </label>
           <label className="block">
-            <span className={labelClass}>Erschienen</span>
+            <span className={labelClass}>{m.label_published()}</span>
             <input
               inputMode="numeric"
               value={draft.published_year ?? ''}
@@ -476,7 +480,7 @@ export function BookForm() {
 
         <div className="mb-4 grid grid-cols-[1fr_5rem] gap-3">
           <label className="block">
-            <span className={labelClass}>Reihe</span>
+            <span className={labelClass}>{m.label_series()}</span>
             <input
               value={draft.series ?? ''}
               onChange={(event) => patch({ series: event.target.value })}
@@ -484,24 +488,24 @@ export function BookForm() {
             />
           </label>
           <label className="block">
-            <span className={labelClass}>Band</span>
+            <span className={labelClass}>{m.label_volume()}</span>
             <input
               inputMode="decimal"
               value={volumeText}
               onChange={(event) => setVolumeText(event.target.value)}
-              placeholder="5.6"
+              placeholder={m.form_volume_placeholder()}
               className={fieldClass}
             />
           </label>
         </div>
 
         <label className="mb-4 block">
-          <span className={labelClass}>Notiz</span>
+          <span className={labelClass}>{m.label_note()}</span>
           <textarea
             rows={3}
             value={draft.notes ?? ''}
             onChange={(event) => patch({ notes: event.target.value })}
-            placeholder="Ein Satz für später…"
+            placeholder={m.form_note_placeholder()}
             className={`${fieldClass} resize-none`}
           />
         </label>

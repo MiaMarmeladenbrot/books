@@ -1,6 +1,7 @@
 import { useState, type SyntheticEvent } from 'react'
 import { useAuth } from '../store/useAuth'
 import { hueFromTitle, spineGradient } from '../utils/spine'
+import { m } from '../paraglide/messages.js'
 
 const SPINE_SEEDS = [
   'Die Wut, die bleibt',
@@ -45,7 +46,7 @@ export function Login() {
     setError('')
     setBusy(true)
     const { error: signInError } = await signIn(email.trim(), password)
-    if (signInError) setError('E-Mail oder Passwort falsch')
+    if (signInError) setError(m.error_sign_in())
     setBusy(false)
   }
 
@@ -54,7 +55,7 @@ export function Login() {
     setError('')
     setBusy(true)
     const { error: refused } = await requestReset(email.trim())
-    if (refused) setError('Das hat gerade nicht geklappt. Versuch es in ein paar Minuten nochmal.')
+    if (refused) setError(m.error_reset_failed())
     else setSent(true)
     setBusy(false)
   }
@@ -89,23 +90,34 @@ export function Login() {
 
         <h1 className="font-serif mb-1 text-3xl font-semibold tracking-tight">Lesestapel</h1>
         <p className="text-ink-2 mb-7 text-sm">
-          {asking ? 'Wir schicken dir einen Link zum Zurücksetzen.' : 'Deine Bücher, an einem Ort.'}
+          {asking ? m.login_reset_tagline() : m.login_tagline()}
         </p>
 
         {sent ? (
           <>
             <p className="text-ink-2 text-sm leading-relaxed">
-              Wenn es ein Konto zu <b className="text-ink font-semibold">{email.trim()}</b> gibt,
-              liegt gleich eine Mail mit einem Link darin. Der Link gilt eine Stunde.
+              {m
+                .login_reset_sent({ email: '\u0000' })
+                .split('\u0000')
+                .flatMap((part, index) =>
+                  index === 0
+                    ? [part]
+                    : [
+                        <b key="email" className="text-ink font-semibold">
+                          {email.trim()}
+                        </b>,
+                        part,
+                      ],
+                )}
             </p>
             <button type="button" onClick={back} className="text-accent mt-6 text-sm font-semibold">
-              Zurück zur Anmeldung
+              {m.login_back()}
             </button>
           </>
         ) : (
           <form onSubmit={asking ? handleReset : handleSubmit}>
             <label className="mb-4 block">
-              <span className={labelClass}>E-Mail</span>
+              <span className={labelClass}>{m.label_email()}</span>
               <input
                 type="email"
                 autoComplete="username"
@@ -118,7 +130,7 @@ export function Login() {
 
             {!asking && (
               <label className="mb-4 block">
-                <span className={labelClass}>Passwort</span>
+                <span className={labelClass}>{m.label_password()}</span>
                 <input
                   type="password"
                   autoComplete="current-password"
@@ -137,7 +149,7 @@ export function Login() {
               disabled={busy}
               className="bg-accent mt-2 w-full rounded-xl py-4 text-base font-bold text-white disabled:opacity-60"
             >
-              {busy ? 'Moment…' : asking ? 'Link schicken' : 'Anmelden'}
+              {busy ? m.action_busy() : asking ? m.login_send_link() : m.login_submit()}
             </button>
 
             <button
@@ -145,7 +157,7 @@ export function Login() {
               onClick={asking ? back : ask}
               className="text-ink-3 mt-5 w-full text-center text-sm font-semibold"
             >
-              {asking ? 'Zurück zur Anmeldung' : 'Passwort vergessen?'}
+              {asking ? m.login_back() : m.login_forgot()}
             </button>
           </form>
         )}

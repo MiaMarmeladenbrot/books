@@ -203,6 +203,7 @@
   ],
 
   "scanner_close": "Cancel scanning",
+  "scanner_back_to_search": "Back to search",
   "scanner_starting": "Starting the camera …",
   "scanner_hint_aiming": "Hold the barcode on the back cover of the book inside the frame",
   "scanner_hint_sighted": "Barcode found, hold still for a moment",

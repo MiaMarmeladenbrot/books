@@ -10,6 +10,7 @@ import { TabBar } from './components/TabBar'
 import { InstallHint } from './components/InstallHint'
 import { StackLoader } from './components/StackLoader'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { m } from './paraglide/messages.js'
 import { Login } from './pages/Login'
 import { Shelf } from './pages/Shelf'
 import { BookDetail } from './pages/BookDetail'
@@ -65,7 +66,7 @@ function TabLayout() {
 }
 
 function Turning() {
-  return <p className="text-ink-3 px-4 py-20 text-center text-sm">Lädt…</p>
+  return <p className="text-ink-3 px-4 py-20 text-center text-sm">{m.app_loading()}</p>
 }
 
 function Shell() {
