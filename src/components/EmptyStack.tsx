@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react'
-import { BOOKS } from './stackBooks'
+import { Scribble, type Word } from './Scribble'
+import { BOOK_HEIGHT, BOOKS } from './stackBooks'
 
 const SCALE = 1.3
-const HEIGHT = 19.5 * SCALE
+const HEIGHT = BOOK_HEIGHT * SCALE
 const STEP = 24 * SCALE
 
 const OUTLINE: Record<(typeof BOOKS)[number]['tint'], string> = {
@@ -41,7 +42,12 @@ export function EmptyStack() {
         className={`first-book absolute left-1/2 rounded-[4px] ${first.tint}`}
         style={place(first, SLOTS.length - 1)}
       >
-        <span className="bg-paper/75 absolute inset-y-[4px] right-[4px] w-[12px] rounded-[2px]" />
+        <Scribble
+          width={first.width * SCALE}
+          height={HEIGHT}
+          words={first.words.map(([start, length]): Word => [start * SCALE, length * SCALE])}
+          seed={7}
+        />
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { m } from '../paraglide/messages.js'
-import { BOOKS } from './stackBooks'
+import { Scribble } from './Scribble'
+import { BOOK_HEIGHT, BOOKS } from './stackBooks'
 
 const CYCLE = 4.5
 
@@ -23,7 +24,12 @@ export function StackLoader() {
             } as CSSProperties
           }
         >
-          <span className="absolute inset-y-[3px] right-[3px] w-[9px] rounded-[1.5px] bg-paper/75" />
+          <Scribble
+            width={book.width}
+            height={BOOK_HEIGHT}
+            words={book.words}
+            seed={7 + index * 101}
+          />
         </div>
       ))}
     </div>
