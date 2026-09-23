@@ -52,8 +52,8 @@ export function RecommendationDetail() {
         </p>
       ) : (
         <main className="mx-auto max-w-xl px-4 pt-5">
-          <div className="flex gap-4">
-            <div className="w-29 shrink-0">
+          <div className="flex gap-4 sm:gap-6">
+            <div className="w-29 shrink-0 sm:w-44">
               <Cover title={entry.title} authors={entry.authors} src={coverSources(entry.isbn)} />
             </div>
             <div className="flex min-w-0 grow flex-col">
