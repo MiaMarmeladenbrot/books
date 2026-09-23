@@ -9,7 +9,7 @@ export default defineConfig({
         test: {
           name: 'pure',
           environment: 'node',
-          include: ['src/**/*.test.ts', 'api/**/*.test.ts'],
+          include: ['src/**/*.test.ts', 'api/**/*.test.ts', 'messages/*.test.ts'],
           exclude: [FLOW],
           env: { TZ: 'Europe/Berlin' },
         },
