@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, Gem } from 'lucide-react'
+import { ChevronLeft, Gem, Pencil, Trash2 } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { useRecommendations } from '../store/useRecommendations'
 import { Blurb } from '../components/Blurb'
@@ -195,6 +195,24 @@ export function BookDetail() {
             <span className="bg-accent-soft text-accent mt-2.5 w-fit rounded-full px-2.5 py-1 text-xs font-semibold">
               {STATUS_LABEL[book.status]}
             </span>
+
+            <div className="mt-auto flex justify-end gap-2 pt-3.5">
+              <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                aria-label="Löschen"
+                className="border-line text-ink-3 flex size-10 items-center justify-center rounded-xl border"
+              >
+                <Trash2 size={18} strokeWidth={2} />
+              </button>
+              <Link
+                to={`/buch/${book.id}/bearbeiten`}
+                aria-label="Bearbeiten"
+                className="border-accent text-accent flex size-10 items-center justify-center rounded-xl border"
+              >
+                <Pencil size={18} strokeWidth={2} />
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -232,22 +250,6 @@ export function BookDetail() {
         )}
 
         {withdrawFailed && <p className="text-danger mt-6 text-sm">{withdrawFailed}</p>}
-
-        <div className="mt-8 flex flex-col">
-          <Link
-            to={`/buch/${book.id}/bearbeiten`}
-            className="bg-accent w-full rounded-xl py-3.5 text-center text-sm font-bold text-white"
-          >
-            Bearbeiten
-          </Link>
-          <button
-            type="button"
-            onClick={() => setConfirming(true)}
-            className="text-ink-3 mt-2 self-center px-4 py-2 text-sm font-medium"
-          >
-            Löschen
-          </button>
-        </div>
       </main>
 
       {recommending && <RecommendDialog book={book} onClose={() => setRecommending(false)} />}
