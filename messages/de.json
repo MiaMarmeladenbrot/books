@@ -1,0 +1,310 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+
+  "action_cancel": "Abbrechen",
+  "action_save": "Sichern",
+  "action_busy": "Moment…",
+  "action_edit": "Bearbeiten",
+  "action_delete": "Löschen",
+  "action_back": "Zurück",
+  "app_loading": "Lädt…",
+  "loader_label": "Lädt",
+
+  "error_sign_in": "E-Mail oder Passwort falsch",
+  "error_reset_failed": "Das hat nicht geklappt. Versuch es in ein paar Minuten nochmal.",
+  "error_not_signed_in": "Kein angemeldetes Konto",
+  "error_password_too_short": "Mindestens {count} Zeichen",
+  "error_password_same": "Das ist schon dein Passwort. Such dir ein anderes.",
+  "error_password_weak": "Das Passwort ist zu leicht zu erraten.",
+  "error_password_wrong": "Das aktuelle Passwort stimmt nicht.",
+  "error_books_load_failed": "Deine Bücher konnten nicht geladen werden. Sie sind sicher, keine Sorge.",
+  "error_book_not_found": "Buch nicht gefunden.",
+  "error_no_title": "Ohne Titel geht es nicht.",
+  "error_save_failed": "Speichern fehlgeschlagen",
+  "error_cover_too_big": "Das Bild ist zu groß. Bis {megabytes} MB geht.",
+  "error_cover_unreadable": "Bild konnte nicht gelesen werden.",
+  "error_cover_only": "Das Buch ist gespeichert, nur das Bild nicht. Nochmal versuchen?",
+  "error_image_process": "Bild kann nicht verarbeitet werden.",
+  "error_image_convert": "Bild kann nicht umgewandelt werden.",
+  "error_search_failed": "Suche fehlgeschlagen.",
+  "error_catalogue_silent": "Der Katalog antwortet nicht. Nochmal versuchen oder selber eintragen.",
+
+  "nav_shelf": "Regal",
+  "nav_recommendations": "Empfehlungen",
+  "nav_stats": "Statistik",
+  "nav_profile": "Profil",
+
+  "label_title": "Titel",
+  "label_subtitle": "Untertitel",
+  "label_optional": "(optional)",
+  "label_author": "Autorin oder Autor",
+  "label_stack": "Stapel",
+  "label_format": "Format",
+  "label_pages": "Seiten",
+  "label_provenance": "Herkunft",
+  "label_language": "Sprache",
+  "label_isbn": "ISBN",
+  "label_published": "Erschienen",
+  "label_series": "Reihe",
+  "label_volume": "Band",
+  "label_note": "Notiz",
+  "label_year": "Jahr",
+  "label_email": "E-Mail",
+  "label_password": "Passwort",
+  "label_cover": "Cover",
+  "label_period": "Zeitraum",
+  "label_duration": "Dauer",
+
+  "status_want_to_read": "Wunsch",
+  "status_reading": "Mittendrin",
+  "status_read": "Fertig",
+  "status_abandoned": "Abgebrochen",
+
+  "format_paperback": "Taschenbuch",
+  "format_hardcover": "Hardcover",
+  "format_ebook": "E-Book",
+  "format_audiobook": "Hörbuch",
+
+  "provenance_bought": "Kauf",
+  "provenance_gift": "Geschenk",
+  "provenance_download": "Download",
+  "provenance_borrowed": "Leihe",
+
+  "avatar_cat": "Katze",
+  "avatar_mug": "Becher",
+  "avatar_owl": "Eule",
+  "avatar_glasses": "Lesebrille",
+  "avatar_hedgehog": "Igel",
+  "avatar_moon": "Mondlicht",
+
+  "login_tagline": "Alle deine Bücher an einem Ort.",
+  "login_reset_tagline": "Wir schicken dir einen Link zum Zurücksetzen.",
+  "login_submit": "Anmelden",
+  "login_forgot": "Passwort vergessen?",
+  "login_send_link": "Link schicken",
+  "login_back": "Zurück zur Anmeldung",
+  "login_reset_sent": "Wenn es ein Konto zu {email} gibt, liegt gleich eine Mail mit einem Link darin. Der Link gilt eine Stunde.",
+
+  "new_password_title": "Neues Passwort",
+  "new_password_intro": "Du bist angemeldet als {email}. Such dir eins aus, dann geht es weiter ins Regal.",
+
+  "password_show": "Passwort zeigen",
+  "password_hide": "Passwort verbergen",
+
+  "shelf_loading": "lädt …",
+  "shelf_count": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} Buch",
+        "countPlural=*": "{countFormatted} Bücher"
+      }
+    }
+  ],
+  "shelf_count_filtered": "{shown} von {total}",
+  "shelf_search_placeholder": "Titel oder Autor:in suchen …",
+  "shelf_search_label": "Regal nach Titel oder Autor:in durchstöbern",
+  "shelf_search_clear": "Suche zurücksetzen",
+  "shelf_filter_clear": "{label} entfernen",
+  "shelf_retry": "Nochmal versuchen",
+  "shelf_empty": "Noch keine Bücher",
+  "shelf_no_match": "Nichts gefunden",
+  "shelf_no_date": "Ohne Datum",
+  "shelf_reading_since": "seit {date}",
+  "shelf_add": "Buch erfassen",
+
+  "detail_heading": "Buch",
+  "detail_duration_same_day": "an einem Tag",
+  "detail_duration_days": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} Tag",
+        "countPlural=*": "{countFormatted} Tage"
+      }
+    }
+  ],
+  "detail_series_volume": "{series}, Band {volume}",
+  "detail_delete_title": "Buch löschen?",
+  "detail_delete_body": "»{title}« wird endgültig entfernt. Das lässt sich nicht rückgängig machen.",
+  "detail_delete_confirm": "Endgültig löschen",
+  "detail_delete_cancel": "Behalten",
+
+  "blurb_title": "Klappentext",
+  "blurb_more": "Weiterlesen",
+  "blurb_less": "Weniger",
+
+  "form_title_new": "Buch ins Regal legen",
+  "form_title_edit": "Buch bearbeiten",
+  "form_saving": "Sichert …",
+  "form_authors_placeholder": "Mehrere mit Komma trennen",
+  "form_date_started": "Angefangen am",
+  "form_date_from": "Gelesen von",
+  "form_date_to": "bis",
+  "form_isbn_placeholder": "978…",
+  "form_volume_placeholder": "5.6",
+  "form_note_placeholder": "Noch irgendetwas, was du dir zu diesem Buch merken willst?",
+
+  "cover_replace": "Ersetzen",
+  "cover_choose": "Bild wählen",
+  "cover_remove": "Entfernen",
+  "cover_pending": "Wird beim Sichern hochgeladen",
+
+  "search_title": "Bücher durchstöbern",
+  "search_placeholder": "ISBN oder Titel",
+  "search_input_label": "Kataloge nach ISBN oder Titel durchstöbern",
+  "search_clear": "Suche zurücksetzen",
+  "search_scan": "Barcode scannen",
+  "search_submit": "Suchen",
+  "search_searching": "Sucht …",
+  "search_manual_entry": "Selber eintragen",
+  "search_empty_title": "Dazu weiß der Katalog nichts",
+  "search_empty_body": "Neuerscheinungen und englische Ausgaben fehlen oft. Deine Angaben sind dann die besseren.",
+  "search_empty_one_quiet": "Ein Katalog war dabei still. Nochmal suchen kann also mehr ergeben.",
+  "search_load_more": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mehr laden ({countFormatted} weiteres)",
+        "countPlural=*": "Mehr laden ({countFormatted} weitere)"
+      }
+    }
+  ],
+  "search_more_available": "Der Katalog hat noch mehr Ausgaben. Verfeinere deine Suche, etwa mit dem Autor:innennamen.",
+  "search_none_fits": "Nichts davon passt?",
+  "search_or": "oder",
+  "search_pages": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} Seite",
+        "countPlural=*": "{countFormatted} Seiten"
+      }
+    }
+  ],
+
+  "scanner_close": "Scannen abbrechen",
+  "scanner_back_to_search": "Zurück zur Suche",
+  "scanner_starting": "Kamera startet …",
+  "scanner_hint_aiming": "Barcode auf der Rückseite in den Rahmen halten",
+  "scanner_hint_sighted": "Barcode erkannt, bitte kurz ruhig halten",
+  "scanner_hint_stalled": "Noch nichts gefunden. Etwas Abstand halten, bis das Bild scharf wird.",
+  "scanner_denied_title": "Kein Zugriff auf die Kamera",
+  "scanner_denied_body": "Die Kamera ist für diese Seite gesperrt. In den Browser-Einstellungen freigeben oder die ISBN eintippen.",
+  "scanner_unavailable_title": "Scannen geht hier nicht",
+  "scanner_unavailable_body": "Dieser Browser gibt keine Kamera her. Die ISBN steht in der Regel als Zahl unter dem Barcode.",
+  "scanner_unreadable_title": "Der Barcode-Leser fehlt.",
+  "scanner_unreadable_body": "Die Kamera läuft, aber das Lesemodul lädt gerade nicht. Die ISBN steht in der Regel als Zahl unter dem Barcode.",
+
+  "stats_title": "Statistik",
+  "stats_year_all": "Alle",
+  "stats_books": "Bücher",
+  "stats_books_total": "Bücher insgesamt",
+  "stats_pages": "Seiten",
+  "stats_pages_total": "Seiten insgesamt",
+  "stats_per_month": "Pro Monat",
+  "stats_at_a_glance": "Auf einen Blick",
+  "stats_average_pages": "⌀ Seiten pro Buch",
+  "stats_average_days": "⌀ Tage pro Buch",
+  "stats_thickest": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Dickstes Buch mit {countFormatted} Seite",
+        "countPlural=*": "Dickstes Buch mit {countFormatted} Seiten"
+      }
+    }
+  ],
+  "stats_top_authors": "Meistgelesene Autor:innen",
+  "stats_language_other": "Andere",
+
+  "profile_title": "Profil",
+  "profile_no_name": "Ohne Namen",
+  "profile_edit": "Profil bearbeiten",
+  "profile_edit_panel": "Bearbeiten",
+  "profile_avatar": "Bild",
+  "profile_display_name": "Anzeigename",
+  "profile_display_name_placeholder": "Wie du genannt wirst",
+  "profile_account": "Konto",
+  "profile_current_password": "Aktuelles Passwort",
+  "profile_new_password": "Neues Passwort",
+  "profile_change_password": "Passwort ändern",
+  "profile_change": "Ändern",
+  "profile_password_changed": "Das Passwort ist geändert.",
+  "profile_sign_out": "Abmelden",
+  "profile_sign_out_title": "Abmelden?",
+  "profile_sign_out_body": "Beim nächsten Mal brauchst du deine E-Mail und dein Passwort wieder.",
+
+  "export_title": "Sicherung",
+  "export_body": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} Buch herunterladen. Die JSON-Datei ist die vollständige Sicherung, die CSV-Datei zum Anschauen in Numbers oder Excel.",
+        "countPlural=*": "{countFormatted} Bücher herunterladen. Die JSON-Datei ist die vollständige Sicherung, die CSV-Datei zum Anschauen in Numbers oder Excel."
+      }
+    }
+  ],
+
+  "csv_title": "Titel",
+  "csv_subtitle": "Untertitel",
+  "csv_authors": "Autor:in(nen)",
+  "csv_series": "Reihe",
+  "csv_volume": "Band",
+  "csv_isbn": "ISBN",
+  "csv_published": "Erschienen",
+  "csv_pages": "Seiten",
+  "csv_format": "Format",
+  "csv_language": "Sprache",
+  "csv_provenance": "Herkunft",
+  "csv_status": "Stapel",
+  "csv_started": "Lesebeginn",
+  "csv_finished": "Leseende",
+  "csv_acquired": "Erhalten am",
+  "csv_rating": "Bewertung",
+  "csv_note": "Notiz",
+
+  "manifest_description": "Das eigene Bücherregal: scannen, einsortieren, nachschlagen.",
+
+  "install_body": "Dein Regal kann als Symbol auf dem Startbildschirm liegen, wie eine richtige App.",
+  "install_body_ios": "Dein Regal kann als Symbol auf dem Startbildschirm liegen: unten auf {share} tippen, dann „Zum Home-Bildschirm“.",
+  "install_share": "Teilen",
+  "install_action": "Zum Startbildschirm hinzufügen",
+  "install_dismiss": "Hinweis ausblenden",
+
+  "crash_title": "Da ist etwas steckengeblieben",
+  "crash_body": "Deine Bücher sind sicher, keine Sorge. Ein Neuladen hilft.",
+  "crash_reload": "Neu laden",
+
+  "date_since": "seit {date}"
+}

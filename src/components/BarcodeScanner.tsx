@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { loadDecoder, scanFrame } from '../lib/barcode'
 import { coverCrop } from '../lib/frame'
 import { keepFocusing, videoTrack } from '../lib/camera'
+import { m } from '../paraglide/messages.js'
 
 const SCAN_WIDTH = 1024
 const BOX_PADDING = 0.12
@@ -16,25 +17,16 @@ type Trouble = 'denied' | 'unavailable' | 'unreadable'
 type Phase = Running | Trouble
 type Hint = 'aiming' | 'sighted' | 'stalled'
 
-const TROUBLE: Record<Trouble, { title: string; body: string }> = {
-  denied: {
-    title: 'Kein Zugriff auf die Kamera',
-    body: 'Die Kamera ist für diese Seite gesperrt. In den Browser-Einstellungen freigeben oder die ISBN eintippen.',
-  },
-  unavailable: {
-    title: 'Scannen geht hier nicht',
-    body: 'Dieser Browser gibt keine Kamera her. Die ISBN steht als Zahl unter dem Barcode.',
-  },
-  unreadable: {
-    title: 'Der Barcode-Leser fehlt',
-    body: 'Die Kamera läuft, aber das Lesemodul lädt gerade nicht. Die ISBN steht als Zahl unter dem Barcode.',
-  },
+const TROUBLE: Record<Trouble, { title: () => string; body: () => string }> = {
+  denied: { title: m.scanner_denied_title, body: m.scanner_denied_body },
+  unavailable: { title: m.scanner_unavailable_title, body: m.scanner_unavailable_body },
+  unreadable: { title: m.scanner_unreadable_title, body: m.scanner_unreadable_body },
 }
 
-const HINTS: Record<Hint, string> = {
-  aiming: 'Barcode auf der Rückseite in den Rahmen halten',
-  sighted: 'Barcode erkannt — kurz ruhig halten',
-  stalled: 'Noch nichts gefunden. Etwas Abstand halten, bis das Bild scharf wird.',
+const HINTS: Record<Hint, () => string> = {
+  aiming: m.scanner_hint_aiming,
+  sighted: m.scanner_hint_sighted,
+  stalled: m.scanner_hint_stalled,
 }
 
 interface Props {
@@ -208,14 +200,14 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
   if (trouble) {
     return (
       <div className="bg-paper fixed inset-0 z-50 flex flex-col items-center justify-center px-8 text-center">
-        <p className="font-serif mb-2 text-base font-semibold">{trouble.title}</p>
-        <p className="text-ink-2 mb-6 max-w-[34ch] text-sm leading-relaxed">{trouble.body}</p>
+        <p className="font-serif mb-2 text-base font-semibold">{trouble.title()}</p>
+        <p className="text-ink-2 mb-6 max-w-[34ch] text-sm leading-relaxed">{trouble.body()}</p>
         <button
           type="button"
           onClick={onClose}
           className="bg-accent w-full max-w-xs rounded-xl py-3.5 text-sm font-bold text-white"
         >
-          Zurück zur Suche
+          {m.scanner_back_to_search()}
         </button>
       </div>
     )
@@ -233,7 +225,7 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Scannen abbrechen"
+            aria-label={m.scanner_close()}
             className="rounded-full bg-black/50 p-2.5 text-white backdrop-blur"
           >
             <X size={22} />
@@ -248,7 +240,7 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
             }`}
           />
           <p className="mt-6 max-w-[30ch] text-center text-sm leading-relaxed text-white/90">
-            {phase === 'starting' ? 'Kamera startet…' : HINTS[hint]}
+            {phase === 'starting' ? m.scanner_starting() : HINTS[hint]()}
           </p>
         </div>
       </div>

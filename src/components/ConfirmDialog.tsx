@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { m } from '../paraglide/messages.js'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -15,7 +16,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
-  cancelLabel = 'Abbrechen',
+  cancelLabel = m.action_cancel(),
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {

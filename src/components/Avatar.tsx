@@ -189,7 +189,7 @@ export function Avatar({ name, size = 40, className = '' }: AvatarProps) {
       width={size}
       height={size}
       role="img"
-      aria-label={AVATAR_LABEL[chosen]}
+      aria-label={AVATAR_LABEL[chosen]()}
       className={className}
     >
       <circle cx="48" cy="48" r="48" fill={disc} />

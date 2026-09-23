@@ -2,6 +2,7 @@ import { AuthClient } from '@supabase/auth-js'
 import { PostgrestClient } from '@supabase/postgrest-js'
 import { StorageClient } from '@supabase/storage-js'
 import { isbnThirteen } from './isbn'
+import { m } from '../paraglide/messages.js'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
@@ -69,7 +70,7 @@ export function isSharedCover(path: string) {
 async function currentUserId() {
   const { data } = await auth.getSession()
   const id = data.session?.user.id
-  if (!id) throw new Error('Kein angemeldetes Konto')
+  if (!id) throw new Error(m.error_not_signed_in())
   return id
 }
 

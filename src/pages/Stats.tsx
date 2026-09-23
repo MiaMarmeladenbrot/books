@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useBooks } from '../store/useBooks'
 import { Panel } from '../components/Panel'
 import { formatCompact, formatNumber, monthNarrow, readingDays } from '../utils/format'
+import { m } from '../paraglide/messages.js'
 import {
   BookStatus,
   FORMAT_LABEL,
@@ -21,9 +22,9 @@ const Metric = {
 
 type Metric = (typeof Metric)[keyof typeof Metric]
 
-const METRIC_LABEL: Record<Metric, string> = {
-  [Metric.Books]: 'Bücher',
-  [Metric.Pages]: 'Seiten',
+const METRIC_LABEL: Record<Metric, () => string> = {
+  [Metric.Books]: m.stats_books,
+  [Metric.Pages]: m.stats_pages,
 }
 
 type FinishedBook = Book & { finished_on: string }
@@ -69,7 +70,7 @@ function PerMonth({ books }: { books: FinishedBook[] }) {
 
   return (
     <Panel
-      title="Pro Monat"
+      title={m.stats_per_month()}
       extra={
         <span className="bg-shade flex gap-0.5 rounded-full p-0.5">
           {[Metric.Books, Metric.Pages].map((value) => (
@@ -82,7 +83,7 @@ function PerMonth({ books }: { books: FinishedBook[] }) {
                 metric === value ? 'bg-ink text-paper' : 'text-ink-2'
               }`}
             >
-              {METRIC_LABEL[value]}
+              {METRIC_LABEL[value]()}
             </button>
           ))}
         </span>
@@ -249,7 +250,7 @@ export function Stats() {
       if (color) slices.push({ label: languageLabel(code), value: count, color })
       else rest += count
     }
-    if (rest > 0) slices.push({ label: 'Andere', value: rest, color: REST_COLOR })
+    if (rest > 0) slices.push({ label: m.stats_language_other(), value: rest, color: REST_COLOR })
     return slices
   }, [scope, colorOfLanguage])
 
@@ -264,7 +265,7 @@ export function Stats() {
     <div className="pb-28">
       <header className="border-line sticky top-0 z-10 border-b bg-paper/95 px-4 pt-3 pb-3 backdrop-blur">
         <div className="mx-auto max-w-3xl">
-          <h1 className="font-serif text-2xl font-semibold tracking-tight">Statistik</h1>
+          <h1 className="font-serif text-2xl font-semibold tracking-tight">{m.stats_title()}</h1>
           <div className="no-scrollbar -mx-4 mt-2.5 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
             {[ALL_YEARS, ...years].map((value) => (
               <button
@@ -277,7 +278,7 @@ export function Stats() {
                     : 'border-line bg-card text-ink-2'
                 }`}
               >
-                {value === ALL_YEARS ? 'Alle' : value}
+                {value === ALL_YEARS ? m.stats_year_all() : value}
               </button>
             ))}
           </div>
@@ -291,7 +292,7 @@ export function Stats() {
               {formatNumber(scope.length)}
             </div>
             <div className="text-ink-2 mt-1.5 text-xs">
-              {year === ALL_YEARS ? 'Bücher insgesamt' : 'Bücher'}
+              {year === ALL_YEARS ? m.stats_books_total() : m.stats_books()}
             </div>
           </div>
           <div>
@@ -299,7 +300,7 @@ export function Stats() {
               {formatNumber(pages)}
             </div>
             <div className="text-ink-2 mt-1.5 text-xs">
-              {year === ALL_YEARS ? 'Seiten insgesamt' : 'Seiten'}
+              {year === ALL_YEARS ? m.stats_pages_total() : m.stats_pages()}
             </div>
           </div>
         </div>
@@ -307,33 +308,33 @@ export function Stats() {
         {year !== ALL_YEARS && <PerMonth books={scope} />}
 
         <div className="grid gap-x-3.5 md:grid-cols-2">
-          <Panel title="Auf einen Blick">
+          <Panel title={m.stats_at_a_glance()}>
             <div className="grid grid-cols-2 gap-x-3 gap-y-3.5">
               <div>
                 <div className="font-serif text-2xl font-semibold tracking-tight">
                   {averagePages}
                 </div>
-                <div className="text-ink-2 text-xs">⌀ Seiten pro Buch</div>
+                <div className="text-ink-2 text-xs">{m.stats_average_pages()}</div>
               </div>
               <div>
                 <div className="font-serif text-2xl font-semibold tracking-tight">
                   {averageDays}
                 </div>
-                <div className="text-ink-2 text-xs">⌀ Tage pro Buch</div>
+                <div className="text-ink-2 text-xs">{m.stats_average_days()}</div>
               </div>
             </div>
 
             {longest?.page_count ? (
               <div className="border-line mt-4 border-t pt-3.5">
                 <div className="text-ink-2 text-xs">
-                  Dickstes Buch mit {formatNumber(longest.page_count)} Seiten
+                  {m.stats_thickest({ count: longest.page_count })}
                 </div>
                 <div className="mt-1 text-sm leading-snug font-semibold">{longest.title}</div>
               </div>
             ) : null}
           </Panel>
 
-          <Panel title="Meistgelesene Autor:innen">
+          <Panel title={m.stats_top_authors()}>
             <ul>
               {topAuthors.map(([author, count], index) => (
                 <li key={author} className="flex items-center gap-2.5 py-1 text-sm">
@@ -349,20 +350,20 @@ export function Stats() {
         </div>
 
         <div className="grid gap-x-3.5 md:grid-cols-2">
-          <Panel title="Format">
+          <Panel title={m.label_format()}>
             <Pie
               rows={FORMAT_ORDER.map((format, index) => ({
-                label: FORMAT_LABEL[format],
+                label: FORMAT_LABEL[format](),
                 value: scope.filter((book) => book.format === format).length,
                 color: SLICE_COLORS[index],
               })).filter((row) => row.value > 0)}
             />
           </Panel>
 
-          <Panel title="Herkunft">
+          <Panel title={m.label_provenance()}>
             <Pie
               rows={PROVENANCE_ORDER.map((source, index) => ({
-                label: PROVENANCE_LABEL[source],
+                label: PROVENANCE_LABEL[source](),
                 value: scope.filter((book) => book.provenance === source).length,
                 color: SLICE_COLORS[index],
               })).filter((row) => row.value > 0)}
@@ -371,7 +372,7 @@ export function Stats() {
         </div>
 
         {languages.length > 0 && (
-          <Panel title="Sprache">
+          <Panel title={m.label_language()}>
             <Pie rows={languages} />
           </Panel>
         )}

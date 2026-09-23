@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { ImagePlus, Trash2 } from 'lucide-react'
 import { Cover } from './Cover'
 import { coverUrl } from '../lib/supabase'
+import { m } from '../paraglide/messages.js'
 
 interface CoverPickerProps {
   title: string
@@ -30,22 +31,22 @@ export function CoverPicker({
   return (
     <div className="mb-5 flex gap-4">
       <div className="w-24 shrink-0">
-        <Cover title={title || 'Buch ins Regal legen'} authors={authors} src={shown} />
+        <Cover title={title || m.form_title_new()} authors={authors} src={shown} />
       </div>
 
       <div className="flex flex-col items-start gap-2 pt-1">
-        <span className="text-ink-2 text-xs font-semibold">Cover</span>
+        <span className="text-ink-2 text-xs font-semibold">{m.label_cover()}</span>
         <button type="button" onClick={() => input.current?.click()} className={linkClass}>
           <ImagePlus size={15} className="mr-1.5 inline align-[-2px]" />
-          {shown ? 'Ersetzen' : 'Bild wählen'}
+          {shown ? m.cover_replace() : m.cover_choose()}
         </button>
         {shown && (
           <button type="button" onClick={onRemove} className="text-ink-3 text-sm font-medium">
             <Trash2 size={15} className="mr-1.5 inline align-[-2px]" />
-            Entfernen
+            {m.cover_remove()}
           </button>
         )}
-        {previewUrl && <span className="text-leaf text-xs">Wird beim Sichern hochgeladen</span>}
+        {previewUrl && <span className="text-leaf text-xs">{m.cover_pending()}</span>}
 
         <input
           ref={input}

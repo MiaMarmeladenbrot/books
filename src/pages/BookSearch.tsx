@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ScanBarcode, Search, X } from 'lucide-react'
 import { Cover } from '../components/Cover'
 import { looksLikeIsbn, lookupBooks, rememberedLookup, type Candidate } from '../lib/lookup'
-import { formatNumber } from '../utils/format'
+import { m } from '../paraglide/messages.js'
 import { FORMAT_LABEL } from '../types'
 
 const BarcodeScanner = lazy(() =>
@@ -20,14 +20,12 @@ type Outcome =
 
 const PAGE_SIZE = 8
 
-const MANUAL_ENTRY = 'Selber eintragen'
-
 function describe(candidate: Candidate) {
   return [
-    candidate.format ? FORMAT_LABEL[candidate.format] : null,
+    candidate.format ? FORMAT_LABEL[candidate.format]() : null,
     candidate.publisher,
     candidate.published_year,
-    candidate.page_count ? `${formatNumber(candidate.page_count)} Seiten` : null,
+    candidate.page_count ? m.search_pages({ count: candidate.page_count }) : null,
   ]
     .filter(Boolean)
     .join(' · ')
@@ -91,7 +89,7 @@ export function BookSearch() {
           silent === tried
             ? {
                 kind: 'failed',
-                message: 'Der Katalog antwortet nicht. Nochmal versuchen oder von Hand eintragen.',
+                message: m.error_catalogue_silent(),
               }
             : { kind: 'empty', oneSourceQuiet: silent > 0 },
         )
@@ -106,7 +104,7 @@ export function BookSearch() {
       if (run !== attempt.current) return
       setOutcome({
         kind: 'failed',
-        message: caught instanceof Error ? caught.message : 'Suche fehlgeschlagen.',
+        message: caught instanceof Error ? caught.message : m.error_search_failed(),
       })
     }
   }
@@ -150,10 +148,10 @@ export function BookSearch() {
   return (
     <div className="pb-16">
       <header className="border-line sticky top-0 z-10 flex items-center gap-3 border-b bg-paper/95 px-4 py-3 backdrop-blur">
-        <button type="button" onClick={leave} aria-label="Abbrechen">
+        <button type="button" onClick={leave} aria-label={m.action_cancel()}>
           <X size={22} className="text-ink-3" />
         </button>
-        <h1 className="font-serif text-xl font-semibold tracking-tight">Bücher durchstöbern</h1>
+        <h1 className="font-serif text-xl font-semibold tracking-tight">{m.search_title()}</h1>
         {asking && (
           <span
             aria-hidden
@@ -171,8 +169,8 @@ export function BookSearch() {
             <input
               value={term}
               onChange={(event) => setTerm(event.target.value)}
-              placeholder="ISBN oder Titel"
-              aria-label="Katalog nach ISBN oder Titel durchsuchen"
+              placeholder={m.search_placeholder()}
+              aria-label={m.search_input_label()}
               autoFocus
               inputMode="search"
               className="placeholder:text-ink-3 w-full bg-transparent text-base outline-none"
@@ -181,7 +179,7 @@ export function BookSearch() {
               <button
                 type="button"
                 onClick={clearTerm}
-                aria-label="Suche zurücksetzen"
+                aria-label={m.search_clear()}
                 className="text-ink-3 shrink-0 p-0.5"
               >
                 <X size={18} />
@@ -190,7 +188,7 @@ export function BookSearch() {
             <button
               type="button"
               onClick={() => setScanning(true)}
-              aria-label="Barcode scannen"
+              aria-label={m.search_scan()}
               className="text-ink-2 shrink-0 p-0.5"
             >
               <ScanBarcode size={20} />
@@ -201,7 +199,7 @@ export function BookSearch() {
             disabled={term.trim().length < 3 || asking}
             className="bg-accent mt-3 w-full rounded-xl py-3.5 text-sm font-bold text-white disabled:opacity-40"
           >
-            {asking ? 'Sucht…' : 'Suchen'}
+            {asking ? m.search_searching() : m.search_submit()}
           </button>
         </form>
 
@@ -210,15 +208,14 @@ export function BookSearch() {
         {outcome.kind === 'empty' && (
           <div className="mt-8 text-center">
             <p className="font-serif mb-1.5 text-base font-semibold">
-              Dazu weiß der Katalog nichts
+              {m.search_empty_title()}
             </p>
             <p className="text-ink-2 mx-auto mb-5 max-w-[34ch] text-sm leading-relaxed">
-              Neuerscheinungen und englische Ausgaben fehlen oft. Deine Angaben sind dann die
-              besseren.
+              {m.search_empty_body()}
             </p>
             {outcome.oneSourceQuiet && (
               <p className="text-ink-3 mx-auto mb-5 max-w-[34ch] text-xs leading-relaxed">
-                Ein Katalog war dabei still. Nochmal suchen kann also mehr ergeben.
+                {m.search_empty_one_quiet()}
               </p>
             )}
             <button
@@ -226,7 +223,7 @@ export function BookSearch() {
               onClick={() => openForm(undefined, term)}
               className="bg-accent w-full rounded-xl py-3.5 text-sm font-bold text-white"
             >
-              {MANUAL_ENTRY}
+              {m.search_manual_entry()}
             </button>
           </div>
         )}
@@ -274,7 +271,7 @@ export function BookSearch() {
                 onClick={() => setVisible((current) => current + PAGE_SIZE)}
                 className="border-line text-ink-2 mt-5 w-full rounded-xl border py-3 text-sm font-semibold"
               >
-                Mehr laden ({listed.results.length - visible} weitere)
+                {m.search_load_more({ count: listed.results.length - visible })}
               </button>
             )}
 
@@ -282,19 +279,18 @@ export function BookSearch() {
               visible >= listed.results.length &&
               listed.moreAvailable && (
                 <p className="text-ink-3 mt-5 text-center text-xs leading-relaxed">
-                  Der Katalog hat noch mehr Ausgaben. Verfeinere deine Suche, etwa mit dem
-                  Autor:innennamen.
+                  {m.search_more_available()}
                 </p>
               )}
 
             <div className="border-line mt-6 border-t pt-5 text-center">
-              <p className="text-ink-2 mb-3 text-sm">Nichts davon passt?</p>
+              <p className="text-ink-2 mb-3 text-sm">{m.search_none_fits()}</p>
               <button
                 type="button"
                 onClick={() => openForm(undefined, term)}
                 className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-sm font-semibold"
               >
-                {MANUAL_ENTRY}
+                {m.search_manual_entry()}
               </button>
             </div>
           </>
@@ -304,7 +300,7 @@ export function BookSearch() {
           <>
             <div className="text-ink-3 my-7 flex items-center gap-3 text-xs">
               <span className="bg-line h-px flex-1" />
-              oder
+              {m.search_or()}
               <span className="bg-line h-px flex-1" />
             </div>
             <button
@@ -312,7 +308,7 @@ export function BookSearch() {
               onClick={() => openForm(undefined, term)}
               className="border-line text-ink-2 w-full rounded-xl border py-3.5 text-sm font-semibold"
             >
-              {MANUAL_ENTRY}
+              {m.search_manual_entry()}
             </button>
           </>
         )}

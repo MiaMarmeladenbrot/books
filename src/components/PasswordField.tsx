@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
+import { m } from '../paraglide/messages.js'
 
 const fieldClass =
   'border-line bg-card focus:border-accent w-full rounded-xl border py-3 pr-12 pl-3.5 text-base outline-none'
@@ -35,7 +36,7 @@ export function PasswordField({ label, value, onChange, autoFocus }: PasswordFie
         <button
           type="button"
           onClick={() => setShown(!shown)}
-          aria-label={shown ? 'Passwort verbergen' : 'Passwort zeigen'}
+          aria-label={shown ? m.password_hide() : m.password_show()}
           aria-pressed={shown}
           className="text-ink-3 absolute inset-y-0 right-0 flex w-12 items-center justify-center"
         >

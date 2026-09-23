@@ -58,7 +58,7 @@ function shelf({ books = [], loading = false, error = null, reload, at = '/', mi
 }
 
 function search(text: string) {
-  fireEvent.change(screen.getByLabelText('Regal nach Titel oder Autorin durchsuchen'), {
+  fireEvent.change(screen.getByLabelText('Regal nach Titel oder Autor:in durchstöbern'), {
     target: { value: text },
   })
 }
@@ -173,7 +173,7 @@ describe('the shelf as it stands', () => {
   it('says when the shelf itself is empty', () => {
     shelf({ books: [] })
 
-    expect(screen.getByText('Noch keine Bücher.')).toBeInTheDocument()
+    expect(screen.getByText('Noch keine Bücher')).toBeInTheDocument()
   })
 
   it('says something else when only the search came up empty', () => {
@@ -181,8 +181,8 @@ describe('the shelf as it stands', () => {
 
     search('gibt es nicht')
 
-    expect(screen.getByText('Nichts gefunden.')).toBeInTheDocument()
-    expect(screen.queryByText('Noch keine Bücher.')).not.toBeInTheDocument()
+    expect(screen.getByText('Nichts gefunden')).toBeInTheDocument()
+    expect(screen.queryByText('Noch keine Bücher')).not.toBeInTheDocument()
   })
 
   it('says when a reading book was started', () => {
@@ -212,7 +212,9 @@ describe('the shelf as it stands', () => {
     const reload = vi.fn().mockResolvedValue(undefined)
     shelf({ books: [], error: 'Netzwerk weg', reload })
 
-    expect(screen.getByText('Deine Bücher konnten nicht geladen werden.')).toBeInTheDocument()
+    expect(
+      screen.getByText('Deine Bücher konnten nicht geladen werden. Sie sind sicher, keine Sorge.'),
+    ).toBeInTheDocument()
     expect(screen.getByText('Netzwerk weg')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Nochmal versuchen' }))
@@ -222,7 +224,7 @@ describe('the shelf as it stands', () => {
   it('says it is loading before the first books arrive', () => {
     shelf({ books: [], loading: true })
 
-    expect(screen.getByText('lädt…')).toBeInTheDocument()
-    expect(screen.queryByText('Noch keine Bücher.')).not.toBeInTheDocument()
+    expect(screen.getByText('lädt …')).toBeInTheDocument()
+    expect(screen.queryByText('Noch keine Bücher')).not.toBeInTheDocument()
   })
 })

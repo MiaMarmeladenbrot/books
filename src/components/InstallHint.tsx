@@ -8,6 +8,7 @@ import {
   subscribeToInstall,
   usesIosSafari,
 } from '../lib/install'
+import { m } from '../paraglide/messages.js'
 
 const PUT_AWAY = 'lesestapel:startbildschirm'
 
@@ -42,15 +43,24 @@ export function InstallHint() {
       <div className="mx-auto flex max-w-5xl items-start gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-ink text-sm leading-relaxed">
-            {steps ? (
-              <>
-                Dein Regal kann als Symbol auf dem Startbildschirm liegen: unten auf{' '}
-                <Share size={15} className="inline -translate-y-0.5" aria-label="Teilen" /> tippen,
-                dann „Zum Home-Bildschirm“.
-              </>
-            ) : (
-              'Dein Regal kann als Symbol auf dem Startbildschirm liegen, wie eine richtige App.'
-            )}
+            {steps
+              ? m
+                  .install_body_ios({ share: '\u0000' })
+                  .split('\u0000')
+                  .flatMap((part, index) =>
+                    index === 0
+                      ? [part]
+                      : [
+                          <Share
+                            key="share"
+                            size={15}
+                            className="inline -translate-y-0.5"
+                            aria-label={m.install_share()}
+                          />,
+                          part,
+                        ],
+                  )
+              : m.install_body()}
           </p>
           {offer ? (
             <button
@@ -58,7 +68,7 @@ export function InstallHint() {
               onClick={() => void askToInstall()}
               className="bg-ink text-paper mt-2.5 rounded-xl px-4 py-2 text-sm font-semibold"
             >
-              Zum Startbildschirm hinzufügen
+              {m.install_action()}
             </button>
           ) : null}
         </div>
@@ -68,7 +78,7 @@ export function InstallHint() {
             setPutAway(true)
             rememberPutAway()
           }}
-          aria-label="Hinweis ausblenden"
+          aria-label={m.install_dismiss()}
           className="text-ink-3 -mt-1 -mr-1.5 shrink-0 p-1.5"
         >
           <X size={16} />

@@ -1,3 +1,6 @@
+import { m } from './paraglide/messages.js'
+import { getLocale } from './paraglide/runtime.js'
+
 export const BookStatus = {
   WantToRead: 'want_to_read',
   Reading: 'reading',
@@ -38,59 +41,69 @@ export const FORMAT_ORDER = Object.values(BookFormat)
 export const PROVENANCE_ORDER = Object.values(BookProvenance)
 export const AVATAR_ORDER = Object.values(AvatarName)
 
-export const AVATAR_LABEL: Record<AvatarName, string> = {
-  [AvatarName.Cat]: 'Katze',
-  [AvatarName.Mug]: 'Becher',
-  [AvatarName.Owl]: 'Eule',
-  [AvatarName.Glasses]: 'Lesebrille',
-  [AvatarName.Hedgehog]: 'Igel',
-  [AvatarName.Moon]: 'Mondlicht',
+export const AVATAR_LABEL: Record<AvatarName, () => string> = {
+  [AvatarName.Cat]: m.avatar_cat,
+  [AvatarName.Mug]: m.avatar_mug,
+  [AvatarName.Owl]: m.avatar_owl,
+  [AvatarName.Glasses]: m.avatar_glasses,
+  [AvatarName.Hedgehog]: m.avatar_hedgehog,
+  [AvatarName.Moon]: m.avatar_moon,
 }
 
-export const STATUS_LABEL: Record<BookStatus, string> = {
-  [BookStatus.WantToRead]: 'Wunsch',
-  [BookStatus.Reading]: 'Mittendrin',
-  [BookStatus.Read]: 'Fertig',
-  [BookStatus.Abandoned]: 'Abgebrochen',
+export const STATUS_LABEL: Record<BookStatus, () => string> = {
+  [BookStatus.WantToRead]: m.status_want_to_read,
+  [BookStatus.Reading]: m.status_reading,
+  [BookStatus.Read]: m.status_read,
+  [BookStatus.Abandoned]: m.status_abandoned,
 }
 
-export const FORMAT_LABEL: Record<BookFormat, string> = {
-  [BookFormat.Paperback]: 'Taschenbuch',
-  [BookFormat.Hardcover]: 'Hardcover',
-  [BookFormat.Ebook]: 'E-Book',
-  [BookFormat.Audiobook]: 'Hörbuch',
+export const FORMAT_LABEL: Record<BookFormat, () => string> = {
+  [BookFormat.Paperback]: m.format_paperback,
+  [BookFormat.Hardcover]: m.format_hardcover,
+  [BookFormat.Ebook]: m.format_ebook,
+  [BookFormat.Audiobook]: m.format_audiobook,
 }
 
-export const PROVENANCE_LABEL: Record<BookProvenance, string> = {
-  [BookProvenance.Bought]: 'Kauf',
-  [BookProvenance.Gift]: 'Geschenk',
-  [BookProvenance.Download]: 'Download',
-  [BookProvenance.Borrowed]: 'Leihe',
+export const PROVENANCE_LABEL: Record<BookProvenance, () => string> = {
+  [BookProvenance.Bought]: m.provenance_bought,
+  [BookProvenance.Gift]: m.provenance_gift,
+  [BookProvenance.Download]: m.provenance_download,
+  [BookProvenance.Borrowed]: m.provenance_borrowed,
 }
 
-export const LANGUAGE_LABEL: Record<string, string> = {
-  de: 'Deutsch',
-  en: 'Englisch',
-  fr: 'Französisch',
-  es: 'Spanisch',
-  it: 'Italienisch',
-  nl: 'Niederländisch',
-  sv: 'Schwedisch',
-  da: 'Dänisch',
-  no: 'Norwegisch',
-  fi: 'Finnisch',
-  pl: 'Polnisch',
-  pt: 'Portugiesisch',
-  ru: 'Russisch',
-  tr: 'Türkisch',
-  ja: 'Japanisch',
-  la: 'Latein',
-}
+export const LANGUAGE_ORDER = [
+  'de',
+  'en',
+  'fr',
+  'es',
+  'it',
+  'nl',
+  'sv',
+  'da',
+  'no',
+  'fi',
+  'pl',
+  'pt',
+  'ru',
+  'tr',
+  'ja',
+  'la',
+]
 
-export const LANGUAGE_ORDER = Object.keys(LANGUAGE_LABEL)
+const languageNames = new Map<string, Intl.DisplayNames>()
 
 export function languageLabel(code: string) {
-  return LANGUAGE_LABEL[code] ?? code.toUpperCase()
+  const locale = getLocale()
+  let names = languageNames.get(locale)
+  if (!names) {
+    names = new Intl.DisplayNames([locale], { type: 'language', fallback: 'none' })
+    languageNames.set(locale, names)
+  }
+  try {
+    return names.of(code) ?? code.toUpperCase()
+  } catch {
+    return code.toUpperCase()
+  }
 }
 
 export interface Book {

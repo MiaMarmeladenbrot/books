@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { m } from '../paraglide/messages.js'
 
 interface Props {
   children: ReactNode
@@ -24,17 +25,14 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center px-8 text-center">
-        <p className="font-serif mb-2 text-base font-semibold">Da ist etwas steckengeblieben</p>
-        <p className="text-ink-2 mb-6 max-w-[34ch] text-sm leading-relaxed">
-          Deine Bücher sind sicher, die liegen bei Supabase, nicht hier. Ein Neuladen räumt die
-          Seite auf.
-        </p>
+        <p className="font-serif mb-2 text-base font-semibold">{m.crash_title()}</p>
+        <p className="text-ink-2 mb-6 max-w-[34ch] text-sm leading-relaxed">{m.crash_body()}</p>
         <button
           type="button"
           onClick={() => window.location.reload()}
           className="bg-accent w-full max-w-xs rounded-xl py-3.5 text-sm font-bold text-white"
         >
-          Neu laden
+          {m.crash_reload()}
         </button>
       </div>
     )

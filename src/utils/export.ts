@@ -1,29 +1,30 @@
+import { m } from '../paraglide/messages.js'
 import { FORMAT_LABEL, PROVENANCE_LABEL, STATUS_LABEL, languageLabel } from '../types'
 import type { Book } from '../types'
 
 const UTF8_BOM = String.fromCharCode(0xfeff)
 
-const CSV_COLUMNS: { header: string; value: (book: Book) => string }[] = [
-  { header: 'Titel', value: (book) => book.title },
-  { header: 'Untertitel', value: (book) => book.subtitle ?? '' },
-  { header: 'Autor(en)', value: (book) => book.authors.join('; ') },
-  { header: 'Reihe', value: (book) => book.series ?? '' },
-  { header: 'Band', value: (book) => book.series_volume?.toString() ?? '' },
-  { header: 'ISBN', value: (book) => book.isbn ?? '' },
-  { header: 'Erschienen', value: (book) => book.published_year?.toString() ?? '' },
-  { header: 'Seiten', value: (book) => book.page_count?.toString() ?? '' },
-  { header: 'Format', value: (book) => (book.format ? FORMAT_LABEL[book.format] : '') },
-  { header: 'Sprache', value: (book) => (book.language ? languageLabel(book.language) : '') },
+const CSV_COLUMNS: { header: () => string; value: (book: Book) => string }[] = [
+  { header: m.csv_title, value: (book) => book.title },
+  { header: m.csv_subtitle, value: (book) => book.subtitle ?? '' },
+  { header: m.csv_authors, value: (book) => book.authors.join('; ') },
+  { header: m.csv_series, value: (book) => book.series ?? '' },
+  { header: m.csv_volume, value: (book) => book.series_volume?.toString() ?? '' },
+  { header: m.csv_isbn, value: (book) => book.isbn ?? '' },
+  { header: m.csv_published, value: (book) => book.published_year?.toString() ?? '' },
+  { header: m.csv_pages, value: (book) => book.page_count?.toString() ?? '' },
+  { header: m.csv_format, value: (book) => (book.format ? FORMAT_LABEL[book.format]() : '') },
+  { header: m.csv_language, value: (book) => (book.language ? languageLabel(book.language) : '') },
   {
-    header: 'Herkunft',
-    value: (book) => (book.provenance ? PROVENANCE_LABEL[book.provenance] : ''),
+    header: m.csv_provenance,
+    value: (book) => (book.provenance ? PROVENANCE_LABEL[book.provenance]() : ''),
   },
-  { header: 'Stapel', value: (book) => STATUS_LABEL[book.status] },
-  { header: 'Lesebeginn', value: (book) => book.started_on ?? '' },
-  { header: 'Leseende', value: (book) => book.finished_on ?? '' },
-  { header: 'Erhalten am', value: (book) => book.acquired_on ?? '' },
-  { header: 'Bewertung', value: (book) => book.rating?.toString() ?? '' },
-  { header: 'Notiz', value: (book) => book.notes ?? '' },
+  { header: m.csv_status, value: (book) => STATUS_LABEL[book.status]() },
+  { header: m.csv_started, value: (book) => book.started_on ?? '' },
+  { header: m.csv_finished, value: (book) => book.finished_on ?? '' },
+  { header: m.csv_acquired, value: (book) => book.acquired_on ?? '' },
+  { header: m.csv_rating, value: (book) => book.rating?.toString() ?? '' },
+  { header: m.csv_note, value: (book) => book.notes ?? '' },
 ]
 
 function escapeCsv(value: string) {
@@ -31,7 +32,7 @@ function escapeCsv(value: string) {
 }
 
 export function booksToCsv(books: Book[]) {
-  const header = CSV_COLUMNS.map((column) => column.header).join(',')
+  const header = CSV_COLUMNS.map((column) => escapeCsv(column.header())).join(',')
   const rows = books.map((book) =>
     CSV_COLUMNS.map((column) => escapeCsv(column.value(book))).join(',')
   )

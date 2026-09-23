@@ -1,3 +1,5 @@
+import { m } from '../paraglide/messages.js'
+
 const MAX_WIDTH = 800
 const JPEG_QUALITY = 0.85
 
@@ -26,13 +28,13 @@ export async function toCoverJpeg(file: Blob) {
     canvas.height = Math.round(image.naturalHeight * scale)
 
     const context = canvas.getContext('2d')
-    if (!context) throw new Error('Bild kann nicht verarbeitet werden')
+    if (!context) throw new Error(m.error_image_process())
     context.drawImage(image, 0, 0, canvas.width, canvas.height)
 
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY)
     )
-    if (!blob) throw new Error('Bild kann nicht umgewandelt werden')
+    if (!blob) throw new Error(m.error_image_convert())
     return blob
   } finally {
     URL.revokeObjectURL(url)

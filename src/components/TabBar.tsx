@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { Library, Gem, BarChart3 } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { useProfile } from '../store/useProfile'
+import { m } from '../paraglide/messages.js'
 
 function scrollToTop() {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -13,12 +14,20 @@ export function TabBar() {
   const { profile } = useProfile()
 
   const tabs = [
-    { to: '/', label: 'Regal', icon: () => <Library size={21} strokeWidth={1.8} /> },
-    { to: '/empfehlungen', label: 'Empfehlungen', icon: () => <Gem size={21} strokeWidth={1.8} /> },
-    { to: '/statistik', label: 'Statistik', icon: () => <BarChart3 size={21} strokeWidth={1.8} /> },
+    { to: '/', label: m.nav_shelf(), icon: () => <Library size={21} strokeWidth={1.8} /> },
+    {
+      to: '/empfehlungen',
+      label: m.nav_recommendations(),
+      icon: () => <Gem size={21} strokeWidth={1.8} />,
+    },
+    {
+      to: '/statistik',
+      label: m.nav_stats(),
+      icon: () => <BarChart3 size={21} strokeWidth={1.8} />,
+    },
     {
       to: '/profil',
-      label: 'Profil',
+      label: m.nav_profile(),
       icon: (active: boolean) => (
         <Avatar
           name={profile?.avatar ?? null}
