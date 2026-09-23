@@ -1,13 +1,7 @@
 import type { CSSProperties } from 'react'
 import { m } from '../paraglide/messages.js'
-
-const BOOKS = [
-  { width: 156, tint: 'bg-accent', tilt: '-1.4deg', offset: -3 },
-  { width: 132, tint: 'bg-leaf', tilt: '1.2deg', offset: 4.5 },
-  { width: 147, tint: 'bg-ink-2', tilt: '-0.5deg', offset: -1.5 },
-  { width: 126, tint: 'bg-accent/65', tilt: '1.9deg', offset: 6 },
-  { width: 141, tint: 'bg-leaf/60', tilt: '-1.1deg', offset: -4.5 },
-]
+import { Scribble } from './Scribble'
+import { BOOK_HEIGHT, BOOKS } from './stackBooks'
 
 const CYCLE = 4.5
 
@@ -30,7 +24,12 @@ export function StackLoader() {
             } as CSSProperties
           }
         >
-          <span className="absolute inset-y-[3px] right-[3px] w-[9px] rounded-[1.5px] bg-paper/75" />
+          <Scribble
+            width={book.width}
+            height={BOOK_HEIGHT}
+            words={book.words}
+            seed={7 + index * 101}
+          />
         </div>
       ))}
     </div>

@@ -1,5 +1,5 @@
 import { useState, type ReactElement, type SyntheticEvent } from 'react'
-import { Pencil } from 'lucide-react'
+import { LogOut, Pencil } from 'lucide-react'
 import { useAuth } from '../store/useAuth'
 import { useBooks } from '../store/useBooks'
 import { useProfile } from '../store/useProfile'
@@ -146,16 +146,26 @@ export function Profile() {
               {profile?.display_name ?? m.profile_no_name()}
             </p>
           </div>
-          {!editing && (
+          <div className="flex shrink-0 gap-2">
             <button
               type="button"
-              onClick={startEditing}
-              aria-label={m.profile_edit()}
-              className="border-line text-ink-2 shrink-0 rounded-full border p-2.5"
+              onClick={() => setLeaving(true)}
+              aria-label={m.profile_sign_out()}
+              className="border-line text-ink-3 flex size-10 items-center justify-center rounded-xl border"
             >
-              <Pencil size={17} strokeWidth={1.9} />
+              <LogOut size={18} strokeWidth={2} />
             </button>
-          )}
+            {!editing && (
+              <button
+                type="button"
+                onClick={startEditing}
+                aria-label={m.profile_edit()}
+                className="border-accent text-accent flex size-10 items-center justify-center rounded-xl border"
+              >
+                <Pencil size={18} strokeWidth={2} />
+              </button>
+            )}
+          </div>
         </div>
 
         {editing && (
@@ -282,14 +292,6 @@ export function Profile() {
         </Panel>
 
         <ExportPanel books={books} />
-
-        <button
-          type="button"
-          onClick={() => setLeaving(true)}
-          className="border-danger text-danger mt-6 w-full rounded-xl border py-3.5 text-sm font-semibold"
-        >
-          {m.profile_sign_out()}
-        </button>
       </main>
 
       <ConfirmDialog
