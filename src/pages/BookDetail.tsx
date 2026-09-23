@@ -158,46 +158,43 @@ export function BookDetail() {
       </header>
 
       <main className="mx-auto max-w-xl px-4 pt-5">
-        <div className="mb-5 flex gap-4">
-          <div className="w-29 shrink-0">
+        <div className="mb-7 flex gap-4">
+          <div className="relative w-29 shrink-0">
             <Cover
               title={book.title}
               authors={book.authors}
               src={coverSources(book.isbn, book.cover_path)}
             />
+            {canRecommend &&
+              (recommended ? (
+                <button
+                  type="button"
+                  onClick={() => setWithdrawing(true)}
+                  aria-label="Empfohlen — zurücknehmen"
+                  className="border-line bg-paper absolute -right-2.5 -bottom-2.5 flex size-10 items-center justify-center rounded-full border shadow-[0_4px_10px_-4px_rgb(30_26_21/0.5)]"
+                >
+                  <Gem size={20} strokeWidth={2} className="text-gold" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setRecommending(true)}
+                  aria-label="Empfehlen"
+                  className="border-gold/60 bg-paper absolute -right-2.5 -bottom-2.5 flex size-10 items-center justify-center rounded-full border border-dashed shadow-[0_4px_10px_-4px_rgb(30_26_21/0.5)]"
+                >
+                  <Gem size={20} strokeWidth={2} className="text-gold/60" />
+                </button>
+              ))}
           </div>
-          <div className="min-w-0 grow">
+          <div className="flex min-w-0 grow flex-col">
             <h2 className="font-serif text-xl leading-tight font-semibold tracking-tight">
               {book.title}
             </h2>
             {book.subtitle && <p className="text-ink-2 mt-1 text-sm">{book.subtitle}</p>}
             <p className="text-ink-2 mt-1 text-sm">{book.authors.join(', ')}</p>
-            <div className="mt-2.5 flex items-center justify-between gap-3">
-              <span className="bg-accent-soft text-accent rounded-full px-2.5 py-1 text-xs font-semibold">
-                {STATUS_LABEL[book.status]}
-              </span>
-
-              {canRecommend &&
-                (recommended ? (
-                  <button
-                    type="button"
-                    onClick={() => setWithdrawing(true)}
-                    aria-label="Empfohlen — zurücknehmen"
-                    className="bg-gold border-gold flex size-11 shrink-0 items-center justify-center rounded-xl border"
-                  >
-                    <Gem size={22} strokeWidth={2} className="text-paper" />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setRecommending(true)}
-                    aria-label="Empfehlen"
-                    className="border-gold flex size-11 shrink-0 items-center justify-center rounded-xl border"
-                  >
-                    <Gem size={22} strokeWidth={2} className="text-gold" />
-                  </button>
-                ))}
-            </div>
+            <span className="bg-accent-soft text-accent mt-2.5 w-fit rounded-full px-2.5 py-1 text-xs font-semibold">
+              {STATUS_LABEL[book.status]}
+            </span>
           </div>
         </div>
 
