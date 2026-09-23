@@ -1,4 +1,4 @@
-import { useState, type SyntheticEvent } from 'react'
+import { useState, type ReactElement, type SyntheticEvent } from 'react'
 import { Pencil } from 'lucide-react'
 import { useAuth } from '../store/useAuth'
 import { useBooks } from '../store/useBooks'
@@ -22,6 +22,39 @@ const quietButtonClass =
   'border-line bg-paper text-ink flex-1 rounded-xl border py-3 text-sm font-semibold'
 const strongButtonClass =
   'bg-accent flex-1 rounded-xl py-3 text-sm font-bold text-white disabled:opacity-60'
+
+const FLAGS: Record<string, ReactElement> = {
+  de: (
+    <>
+      <rect width="20" height="14" fill="#000" />
+      <rect y="4.67" width="20" height="4.66" fill="#dd0000" />
+      <rect y="9.33" width="20" height="4.67" fill="#ffce00" />
+    </>
+  ),
+  'en-GB': (
+    <>
+      <rect width="20" height="14" fill="#012169" />
+      <path d="M0 0 L20 14 M20 0 L0 14" stroke="#fff" strokeWidth="3.4" />
+      <path d="M0 0 L20 14 M20 0 L0 14" stroke="#c8102e" strokeWidth="1.7" />
+      <path d="M10 0 V14 M0 7 H20" stroke="#fff" strokeWidth="5.4" />
+      <path d="M10 0 V14 M0 7 H20" stroke="#c8102e" strokeWidth="3.2" />
+    </>
+  ),
+}
+
+function Flag({ locale }: { locale: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 14"
+      width={20}
+      height={14}
+      aria-hidden
+      className="border-ink/15 shrink-0 rounded-xs border"
+    >
+      {FLAGS[locale]}
+    </svg>
+  )
+}
 
 export function Profile() {
   const { user, signOut } = useAuth()
@@ -235,13 +268,14 @@ export function Profile() {
                 type="button"
                 aria-pressed={option === getLocale()}
                 onClick={() => void setLocale(option)}
-                className={`rounded-xl border px-4 py-2.5 text-sm font-semibold ${
+                className={`flex items-center gap-2.5 rounded-xl border px-4 py-2.5 text-sm font-semibold ${
                   option === getLocale()
                     ? 'border-ink bg-ink text-paper'
                     : 'border-line bg-paper text-ink-2'
                 }`}
               >
-                {languageLabel(option)}
+                <Flag locale={option} />
+                {languageLabel(new Intl.Locale(option).language)}
               </button>
             ))}
           </div>
