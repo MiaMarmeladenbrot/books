@@ -65,7 +65,7 @@ export function BookDetail() {
             {book.subtitle && <p className="text-ink-2 mt-1 text-sm">{book.subtitle}</p>}
             <p className="text-ink-2 mt-1 text-sm">{book.authors.join(', ')}</p>
             <span className="bg-accent-soft text-accent mt-2.5 w-fit rounded-full px-2.5 py-1 text-xs font-semibold">
-              {STATUS_LABEL[book.status]}
+              {STATUS_LABEL[book.status]()}
             </span>
 
             <div className="mt-auto flex justify-end gap-2 pt-3.5">
@@ -104,9 +104,9 @@ export function BookDetail() {
               : null
           }
         />
-        <Row label="Format" value={book.format ? FORMAT_LABEL[book.format] : null} />
+        <Row label="Format" value={book.format ? FORMAT_LABEL[book.format]() : null} />
         <Row label="Sprache" value={book.language ? languageLabel(book.language) : null} />
-        <Row label="Herkunft" value={book.provenance ? PROVENANCE_LABEL[book.provenance] : null} />
+        <Row label="Herkunft" value={book.provenance ? PROVENANCE_LABEL[book.provenance]() : null} />
         <Row label="Erschienen" value={book.published_year ? String(book.published_year) : null} />
         <Row label="ISBN" value={book.isbn} />
 

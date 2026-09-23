@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# inlang downloads its plugins here at compile time
+project.inlang/cache
+
 .env
 
 # Editor directories and files

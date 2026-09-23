@@ -91,14 +91,20 @@
   "password_hide": "Passwort verbergen",
 
   "shelf_loading": "lädt …",
-  "shelf_count": {
-    "declarations": ["input count", "local countPlural = count: plural"],
-    "selectors": ["countPlural"],
-    "match": {
-      "countPlural=one": "{count} Buch",
-      "countPlural=*": "{count} Bücher"
+  "shelf_count": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} Buch",
+        "countPlural=*": "{countFormatted} Bücher"
+      }
     }
-  },
+  ],
   "shelf_count_filtered": "{shown} von {total}",
   "shelf_search_placeholder": "Titel oder Autor:in suchen …",
   "shelf_search_label": "Regal nach Titel oder Autor:in durchstöbern",
@@ -113,14 +119,20 @@
 
   "detail_heading": "Buch",
   "detail_duration_same_day": "an einem Tag",
-  "detail_duration_days": {
-    "declarations": ["input count", "local countPlural = count: plural"],
-    "selectors": ["countPlural"],
-    "match": {
-      "countPlural=one": "{count} Tag",
-      "countPlural=*": "{count} Tage"
+  "detail_duration_days": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} Tag",
+        "countPlural=*": "{countFormatted} Tage"
+      }
     }
-  },
+  ],
   "detail_series_volume": "{series}, Band {volume}",
   "detail_delete_title": "Buch löschen?",
   "detail_delete_body": "»{title}« wird endgültig entfernt. Das lässt sich nicht rückgängig machen.",
@@ -158,25 +170,37 @@
   "search_empty_title": "Dazu weiß der Katalog nichts",
   "search_empty_body": "Neuerscheinungen und englische Ausgaben fehlen oft. Deine Angaben sind dann die besseren.",
   "search_empty_one_quiet": "Ein Katalog war dabei still. Nochmal suchen kann also mehr ergeben.",
-  "search_load_more": {
-    "declarations": ["input count", "local countPlural = count: plural"],
-    "selectors": ["countPlural"],
-    "match": {
-      "countPlural=one": "Mehr laden ({count} weiteres)",
-      "countPlural=*": "Mehr laden ({count} weitere)"
+  "search_load_more": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Mehr laden ({countFormatted} weiteres)",
+        "countPlural=*": "Mehr laden ({countFormatted} weitere)"
+      }
     }
-  },
+  ],
   "search_more_available": "Der Katalog hat noch mehr Ausgaben. Verfeinere deine Suche, etwa mit dem Autor:innennamen.",
   "search_none_fits": "Nichts davon passt?",
   "search_or": "oder",
-  "search_pages": {
-    "declarations": ["input count", "local countPlural = count: plural"],
-    "selectors": ["countPlural"],
-    "match": {
-      "countPlural=one": "{count} Seite",
-      "countPlural=*": "{count} Seiten"
+  "search_pages": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} Seite",
+        "countPlural=*": "{countFormatted} Seiten"
+      }
     }
-  },
+  ],
 
   "scanner_close": "Scannen abbrechen",
   "scanner_starting": "Kamera startet …",
@@ -200,14 +224,20 @@
   "stats_at_a_glance": "Auf einen Blick",
   "stats_average_pages": "⌀ Seiten pro Buch",
   "stats_average_days": "⌀ Tage pro Buch",
-  "stats_thickest": {
-    "declarations": ["input count", "local countPlural = count: plural"],
-    "selectors": ["countPlural"],
-    "match": {
-      "countPlural=one": "Dickstes Buch mit {count} Seite",
-      "countPlural=*": "Dickstes Buch mit {count} Seiten"
+  "stats_thickest": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Dickstes Buch mit {countFormatted} Seite",
+        "countPlural=*": "Dickstes Buch mit {countFormatted} Seiten"
+      }
     }
-  },
+  ],
   "stats_top_authors": "Meistgelesene Autor:innen",
   "stats_language_other": "Andere",
 
@@ -229,14 +259,20 @@
   "profile_sign_out_body": "Beim nächsten Mal brauchst du deine E-Mail und dein Passwort wieder.",
 
   "export_title": "Sicherung",
-  "export_body": {
-    "declarations": ["input count", "local countPlural = count: plural"],
-    "selectors": ["countPlural"],
-    "match": {
-      "countPlural=one": "{count} Buch herunterladen. Die JSON-Datei ist die vollständige Sicherung, die CSV-Datei zum Anschauen in Numbers oder Excel.",
-      "countPlural=*": "{count} Bücher herunterladen. Die JSON-Datei ist die vollständige Sicherung, die CSV-Datei zum Anschauen in Numbers oder Excel."
+  "export_body": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} Buch herunterladen. Die JSON-Datei ist die vollständige Sicherung, die CSV-Datei zum Anschauen in Numbers oder Excel.",
+        "countPlural=*": "{countFormatted} Bücher herunterladen. Die JSON-Datei ist die vollständige Sicherung, die CSV-Datei zum Anschauen in Numbers oder Excel."
+      }
     }
-  },
+  ],
 
   "csv_title": "Titel",
   "csv_subtitle": "Untertitel",

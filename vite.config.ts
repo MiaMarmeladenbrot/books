@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { paraglideVitePlugin } from '@inlang/paraglide-js'
 
 const API_ROUTES = ['cover', 'books', 'catalogue']
 
@@ -31,5 +32,10 @@ function serveApiRoutesInDevelopment(mode: string) {
 
 export default defineConfig(({ mode }) => ({
   server: { port: 5180, strictPort: true },
-  plugins: [react(), tailwindcss(), serveApiRoutesInDevelopment(mode)],
+  plugins: [
+    react(),
+    tailwindcss(),
+    paraglideVitePlugin({ project: './project.inlang' }),
+    serveApiRoutesInDevelopment(mode),
+  ],
 }))

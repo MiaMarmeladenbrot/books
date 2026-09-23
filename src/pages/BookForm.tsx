@@ -12,7 +12,6 @@ import {
   BookStatus,
   FORMAT_LABEL,
   FORMAT_ORDER,
-  LANGUAGE_LABEL,
   LANGUAGE_ORDER,
   PROVENANCE_LABEL,
   PROVENANCE_ORDER,
@@ -352,7 +351,7 @@ export function BookForm() {
                     : 'border-line bg-card text-ink-2'
                 }`}
               >
-                {STATUS_LABEL[status]}
+                {STATUS_LABEL[status]()}
               </button>
             ))}
           </div>
@@ -397,7 +396,7 @@ export function BookForm() {
               <option value="">—</option>
               {FORMAT_ORDER.map((format) => (
                 <option key={format} value={format}>
-                  {FORMAT_LABEL[format]}
+                  {FORMAT_LABEL[format]()}
                 </option>
               ))}
             </Select>
@@ -427,7 +426,7 @@ export function BookForm() {
               <option value="">—</option>
               {PROVENANCE_ORDER.map((source) => (
                 <option key={source} value={source}>
-                  {PROVENANCE_LABEL[source]}
+                  {PROVENANCE_LABEL[source]()}
                 </option>
               ))}
             </Select>
@@ -443,7 +442,7 @@ export function BookForm() {
               <option value="">—</option>
               {LANGUAGE_ORDER.map((code) => (
                 <option key={code} value={code}>
-                  {LANGUAGE_LABEL[code]}
+                  {languageLabel(code)}
                 </option>
               ))}
               {draft.language && !LANGUAGE_ORDER.includes(draft.language) && (

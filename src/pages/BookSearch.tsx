@@ -24,7 +24,7 @@ const MANUAL_ENTRY = 'Selber eintragen'
 
 function describe(candidate: Candidate) {
   return [
-    candidate.format ? FORMAT_LABEL[candidate.format] : null,
+    candidate.format ? FORMAT_LABEL[candidate.format]() : null,
     candidate.publisher,
     candidate.published_year,
     candidate.page_count ? `${formatNumber(candidate.page_count)} Seiten` : null,

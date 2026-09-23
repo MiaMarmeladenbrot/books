@@ -10,7 +10,9 @@ import { Panel } from '../components/Panel'
 import { PasswordField } from '../components/PasswordField'
 import { auth } from '../lib/supabase'
 import { refusalText, tooShort } from '../lib/password'
-import { AVATAR_LABEL, AVATAR_ORDER } from '../types'
+import { m } from '../paraglide/messages.js'
+import { getLocale, locales, setLocale } from '../paraglide/runtime.js'
+import { AVATAR_LABEL, AVATAR_ORDER, languageLabel } from '../types'
 import type { AvatarName } from '../types'
 
 const fieldClass =
@@ -133,7 +135,7 @@ export function Profile() {
                     key={name}
                     type="button"
                     onClick={() => setAvatar(name)}
-                    aria-label={AVATAR_LABEL[name]}
+                    aria-label={AVATAR_LABEL[name]()}
                     aria-pressed={avatar === name}
                     className={`rounded-full p-1 ${avatar === name ? 'ring-accent ring-2' : ''}`}
                   >
@@ -223,6 +225,26 @@ export function Profile() {
           )}
 
           {passwordDone && <p className="text-leaf mt-3 text-sm">Das Passwort ist geändert.</p>}
+        </Panel>
+
+        <Panel title={m.label_language()}>
+          <div className="flex flex-wrap gap-2">
+            {locales.map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={option === getLocale()}
+                onClick={() => void setLocale(option)}
+                className={`rounded-xl border px-4 py-2.5 text-sm font-semibold ${
+                  option === getLocale()
+                    ? 'border-ink bg-ink text-paper'
+                    : 'border-line bg-paper text-ink-2'
+                }`}
+              >
+                {languageLabel(option)}
+              </button>
+            ))}
+          </div>
         </Panel>
 
         <ExportPanel books={books} />

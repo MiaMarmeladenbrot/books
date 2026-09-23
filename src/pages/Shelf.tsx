@@ -6,6 +6,7 @@ import { Cover } from '../components/Cover'
 import { Select } from '../components/Select'
 import { coverSources } from '../lib/cover'
 import { formatDay, formatNumber, monthKey, monthLabel } from '../utils/format'
+import { m } from '../paraglide/messages.js'
 import {
   BookStatus,
   FORMAT_LABEL,
@@ -32,16 +33,16 @@ function buildDimensions(books: Book[]): Dimension[] {
   const dimensions: Dimension[] = [
     {
       param: 'status',
-      all: 'Stapel',
+      all: m.label_stack(),
       choices: STATUS_ORDER.map((status) => ({
         value: status,
-        label: STATUS_LABEL[status],
+        label: STATUS_LABEL[status](),
         matches: (book: Book) => book.status === status,
       })),
     },
     {
       param: 'year',
-      all: 'Jahr',
+      all: m.label_year(),
       choices: years.map((year) => ({
         value: year,
         label: year,
@@ -50,23 +51,23 @@ function buildDimensions(books: Book[]): Dimension[] {
     },
     {
       param: 'format',
-      all: 'Format',
+      all: m.label_format(),
       choices: FORMAT_ORDER.filter((format) => books.some((book) => book.format === format)).map(
         (format) => ({
           value: format,
-          label: FORMAT_LABEL[format],
+          label: FORMAT_LABEL[format](),
           matches: (book: Book) => book.format === format,
         }),
       ),
     },
     {
       param: 'provenance',
-      all: 'Herkunft',
+      all: m.label_provenance(),
       choices: PROVENANCE_ORDER.filter((source) =>
         books.some((book) => book.provenance === source),
       ).map((source) => ({
         value: source,
-        label: PROVENANCE_LABEL[source],
+        label: PROVENANCE_LABEL[source](),
         matches: (book: Book) => book.provenance === source,
       })),
     },
@@ -80,7 +81,7 @@ function MetaLine({ book }: { book: Book }) {
     const since = formatDay(book.started_on)
     return (
       <p className="text-leaf text-xs font-medium">
-        {since ? `seit ${since}` : STATUS_LABEL[book.status]}
+        {since ? m.shelf_reading_since({ date: since }) : STATUS_LABEL[book.status]()}
       </p>
     )
   }
@@ -88,7 +89,7 @@ function MetaLine({ book }: { book: Book }) {
   const text =
     book.status === BookStatus.Read
       ? (formatDay(book.finished_on ?? book.started_on) ?? '—')
-      : [STATUS_LABEL[book.status], formatDay(book.finished_on)].filter(Boolean).join(', ')
+      : [STATUS_LABEL[book.status](), formatDay(book.finished_on)].filter(Boolean).join(', ')
 
   return <p className="text-ink-3 text-xs">{text}</p>
 }
@@ -156,10 +157,13 @@ export function Shelf() {
           <h1 className="font-serif text-2xl font-semibold tracking-tight">Lesestapel</h1>
           <span className="text-ink-3 ml-auto text-xs font-medium">
             {loading
-              ? 'lädt…'
+              ? m.shelf_loading()
               : visible.length === books.length
-                ? `${formatNumber(books.length)} Bücher`
-                : `${formatNumber(visible.length)} von ${formatNumber(books.length)}`}
+                ? m.shelf_count({ count: books.length })
+                : m.shelf_count_filtered({
+                    shown: formatNumber(visible.length),
+                    total: formatNumber(books.length),
+                  })}
           </span>
         </div>
 
@@ -169,15 +173,15 @@ export function Shelf() {
             <input
               value={query}
               onChange={(event) => updateParams({ q: event.target.value })}
-              placeholder="Titel oder Autorin suchen…"
-              aria-label="Regal nach Titel oder Autorin durchsuchen"
+              placeholder={m.shelf_search_placeholder()}
+              aria-label={m.shelf_search_label()}
               className="placeholder:text-ink-2 w-full bg-transparent text-sm outline-none"
             />
             {query && (
               <button
                 type="button"
                 onClick={() => updateParams({ q: '' })}
-                aria-label="Suche zurücksetzen"
+                aria-label={m.shelf_search_clear()}
                 className="text-ink-3 -mr-1 shrink-0 p-1"
               >
                 <X size={17} />
@@ -198,7 +202,7 @@ export function Shelf() {
                   wrapper="shrink-0"
                   chevron={value ? 'text-paper' : 'text-ink-3'}
                   onClear={active ? () => updateParams({ [dimension.param]: '' }) : undefined}
-                  clearLabel={active ? `${active.label} entfernen` : undefined}
+                  clearLabel={active ? m.shelf_filter_clear({ label: active.label }) : undefined}
                   className={`rounded-full border py-1.5 pr-8 pl-3.5 text-sm font-medium ${
                     value ? 'border-ink bg-ink text-paper' : 'border-line bg-card text-ink-2'
                   }`}
@@ -221,7 +225,7 @@ export function Shelf() {
       <main className="mx-auto max-w-5xl px-4 pt-4">
         {error && (
           <div className="py-8 text-center">
-            <p className="text-danger mb-1 text-sm">Deine Bücher konnten nicht geladen werden.</p>
+            <p className="text-danger mb-1 text-sm">{m.error_books_load_failed()}</p>
             <p className="text-ink-3 mb-4 text-xs">{error}</p>
             <button
               type="button"
@@ -229,21 +233,21 @@ export function Shelf() {
               disabled={retrying}
               className="border-line text-ink-2 rounded-xl border px-5 py-2.5 text-sm font-semibold disabled:opacity-50"
             >
-              {retrying ? 'Lädt…' : 'Nochmal versuchen'}
+              {retrying ? m.app_loading() : m.shelf_retry()}
             </button>
           </div>
         )}
 
         {!loading && visible.length === 0 && (
           <p className="text-ink-2 py-16 text-center text-sm">
-            {books.length === 0 ? 'Noch keine Bücher.' : 'Nichts gefunden.'}
+            {books.length === 0 ? m.shelf_empty() : m.shelf_no_match()}
           </p>
         )}
 
         {groups.map((group) => (
           <section key={group.key} className="mt-9 first:mt-0">
             <h2 className="font-serif mb-2.5 flex items-baseline gap-2.5 text-sm font-semibold">
-              <span>{group.key === NO_DATE_KEY ? 'Ohne Datum' : monthLabel(group.key)}</span>
+              <span>{group.key === NO_DATE_KEY ? m.shelf_no_date() : monthLabel(group.key)}</span>
               <span className="text-ink-3 font-sans text-xs font-medium">{group.books.length}</span>
               <span className="bg-line h-px flex-1" />
             </h2>
@@ -280,7 +284,7 @@ export function Shelf() {
           <button
             type="button"
             onClick={() => navigate('/buch/suchen')}
-            aria-label="Buch erfassen"
+            aria-label={m.shelf_add()}
             className="bg-accent pointer-events-auto flex size-14 items-center justify-center rounded-full text-white shadow-[0_8px_20px_-6px_rgb(180_85_47/0.7)]"
           >
             <Plus size={26} />

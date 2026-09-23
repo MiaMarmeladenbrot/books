@@ -352,7 +352,7 @@ export function Stats() {
           <Panel title="Format">
             <Pie
               rows={FORMAT_ORDER.map((format, index) => ({
-                label: FORMAT_LABEL[format],
+                label: FORMAT_LABEL[format](),
                 value: scope.filter((book) => book.format === format).length,
                 color: SLICE_COLORS[index],
               })).filter((row) => row.value > 0)}
@@ -362,7 +362,7 @@ export function Stats() {
           <Panel title="Herkunft">
             <Pie
               rows={PROVENANCE_ORDER.map((source, index) => ({
-                label: PROVENANCE_LABEL[source],
+                label: PROVENANCE_LABEL[source](),
                 value: scope.filter((book) => book.provenance === source).length,
                 color: SLICE_COLORS[index],
               })).filter((row) => row.value > 0)}
