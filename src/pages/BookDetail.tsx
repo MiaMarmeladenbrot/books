@@ -159,8 +159,8 @@ export function BookDetail() {
       </header>
 
       <main className="mx-auto max-w-xl px-4 pt-5">
-        <div className="mb-7 flex gap-4">
-          <div className="relative w-29 shrink-0">
+        <div className="mb-7 flex gap-4 sm:gap-6">
+          <div className="relative w-29 shrink-0 sm:w-44">
             <Cover
               title={book.title}
               authors={book.authors}
