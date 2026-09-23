@@ -32,7 +32,7 @@ afterEach(() => {
 
 describe('an English reader', () => {
   it('gets the shelf in English', () => {
-    speaking('en', () => {
+    speaking('en-GB', () => {
       render(
         <MemoryRouter>
           <BooksContext.Provider
@@ -61,37 +61,44 @@ describe('an English reader', () => {
 describe('the formatters, which cache one set per locale', () => {
   it('does not serve the locale that asked first to the one that asks second', () => {
     expect(formatNumber(1234)).toBe('1.234')
-    expect(speaking('en', () => formatNumber(1234))).toBe('1,234')
+    expect(speaking('en-GB', () => formatNumber(1234))).toBe('1,234')
     expect(formatNumber(1234)).toBe('1.234')
   })
 
   it('names the months and the days in the language that is reading', () => {
     expect(monthLabel('2026-09')).toBe('September 2026')
-    expect(speaking('en', () => monthLabel('2026-03'))).toBe('March 2026')
+    expect(speaking('en-GB', () => monthLabel('2026-03'))).toBe('March 2026')
     expect(formatDay('2026-03-14')).toBe('14. März 2026')
-    expect(speaking('en', () => formatDay('2026-03-14'))).toBe('Mar 14, 2026')
+    expect(speaking('en-GB', () => formatDay('2026-03-14'))).toBe('14 Mar 2026')
   })
 
-  it('says since in the language that is reading', () => {
+  it('says since in the language that is reading, and puts the day first', () => {
     expect(formatRange('2026-03-14', null)).toBe('seit 14. März 2026')
-    expect(speaking('en', () => formatRange('2026-03-14', null))).toBe('since March 14, 2026')
+    expect(speaking('en-GB', () => formatRange('2026-03-14', null))).toBe('since 14 March 2026')
   })
 })
 
 describe('the labels, which cache language names per locale', () => {
   it('turns a code into a name the reader knows', () => {
     expect(languageLabel('sv')).toBe('Schwedisch')
-    expect(speaking('en', () => languageLabel('sv'))).toBe('Swedish')
+    expect(speaking('en-GB', () => languageLabel('sv'))).toBe('Swedish')
     expect(languageLabel('sv')).toBe('Schwedisch')
+  })
+
+  it('names the language on the switch without dragging its region along', () => {
+    const onTheButton = (option: Locale) => languageLabel(new Intl.Locale(option).language)
+    expect(onTheButton('en-GB')).toBe('Englisch')
+    expect(speaking('en-GB', () => onTheButton('en-GB'))).toBe('English')
+    expect(speaking('en-GB', () => languageLabel('en-GB'))).toBe('British English')
   })
 
   it('still falls back to capitals in either language', () => {
     expect(languageLabel('xx')).toBe('XX')
-    expect(speaking('en', () => languageLabel('xx'))).toBe('XX')
+    expect(speaking('en-GB', () => languageLabel('xx'))).toBe('XX')
   })
 
   it('reads a status out of the catalogue, not out of a frozen map', () => {
     expect(STATUS_LABEL[BookStatus.Abandoned]()).toBe('Abgebrochen')
-    expect(speaking('en', () => STATUS_LABEL[BookStatus.Abandoned]())).toBe('Gave up')
+    expect(speaking('en-GB', () => STATUS_LABEL[BookStatus.Abandoned]())).toBe('Gave up')
   })
 })
