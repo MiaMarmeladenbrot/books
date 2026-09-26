@@ -9,6 +9,7 @@ import type { Candidate } from '../lib/lookup'
 import { MAX_UPLOAD_BYTES, fetchGatedCoverJpeg, toCoverJpeg } from '../utils/image'
 import { todayIso } from '../utils/format'
 import { m } from '../paraglide/messages.js'
+import { getLocale } from '../paraglide/runtime.js'
 import {
   BookStatus,
   FORMAT_LABEL,
@@ -72,7 +73,12 @@ function priceOrNull(value: string) {
 }
 
 function priceToText(price: number | null) {
-  return price === null ? '' : Number(price).toFixed(2)
+  if (price === null) return ''
+  return new Intl.NumberFormat(getLocale(), {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false,
+  }).format(price)
 }
 
 const DATES_FOR_STATUS: Record<BookStatus, { started: boolean; finished: boolean }> = {
