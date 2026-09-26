@@ -1,15 +1,16 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { Stats } from './Stats'
 import { BooksContext } from '../store/booksContextValue'
 import { aBook } from '../test-books'
 import { BookFormat, BookProvenance, BookStatus } from '../types'
 import type { Book } from '../types'
 
-function statistics(books: Book[]) {
+function statistics(books: Book[], { loading = false } = {}) {
   const value = {
     books,
-    loading: false,
+    loading,
     error: null,
     addBook: vi.fn(),
     updateBook: vi.fn(),
@@ -18,9 +19,11 @@ function statistics(books: Book[]) {
   }
 
   render(
-    <BooksContext.Provider value={value}>
-      <Stats />
-    </BooksContext.Provider>,
+    <MemoryRouter>
+      <BooksContext.Provider value={value}>
+        <Stats />
+      </BooksContext.Provider>
+    </MemoryRouter>,
   )
 }
 
@@ -40,6 +43,17 @@ function chip(label: string) {
 function panel(title: string) {
   return screen.getByText(title).closest('section') as HTMLElement
 }
+
+function legendOf(title: string) {
+  return within(panel(title))
+    .getAllByRole('listitem')
+    .map((entry) => ({
+      label: entry.children[1].textContent,
+      color: (entry.children[0] as HTMLElement).style.backgroundColor,
+    }))
+}
+
+const GREY = 'rgb(160, 149, 133)'
 
 const TSCHICK = aBook({
   title: 'Tschick',
@@ -194,6 +208,72 @@ describe('the statistics page', () => {
     expect(within(panel('Sprache')).getByText('Andere')).toBeInTheDocument()
   })
 
+  it('counts the books without a value as Unbekannt, grey and at the end', () => {
+    statistics([
+      aBook({ format: BookFormat.Hardcover }),
+      aBook({ format: null }),
+      aBook({ format: null }),
+      aBook({ format: null }),
+    ])
+
+    const legend = legendOf('Format')
+    expect(legend.map((entry) => entry.label)).toEqual(['Hardcover', 'Unbekannt'])
+    expect(legend[1].color).toBe(GREY)
+  })
+
+  it('shows an unknown provenance as Unbekannt', () => {
+    statistics([aBook({ provenance: BookProvenance.Gift }), aBook({ provenance: null })])
+
+    expect(legendOf('Herkunft').map((entry) => entry.label)).toEqual(['Geschenk', 'Unbekannt'])
+  })
+
+  it('keeps an unknown language apart from the ones under Andere', () => {
+    statistics([
+      aBook({ language: 'de' }),
+      aBook({ language: 'en' }),
+      aBook({ language: 'fr' }),
+      aBook({ language: 'sv' }),
+      aBook({ language: 'pl' }),
+      aBook({ language: null }),
+    ])
+
+    const legend = legendOf('Sprache')
+    expect(legend.map((entry) => entry.label)).toContain('Andere')
+    expect(legend.at(-1)).toEqual({ label: 'Unbekannt', color: GREY })
+  })
+
+  it('leaves Unbekannt out while every book has a value', () => {
+    statistics(SHELF)
+
+    expect(screen.queryByText('Unbekannt')).not.toBeInTheDocument()
+  })
+
+  describe('with nothing finished yet', () => {
+    it('invites to add the first book when the shelf is empty', () => {
+      statistics([])
+
+      expect(screen.getByText('Noch nichts fertig gelesen')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Erstes Buch erfassen' })).toHaveAttribute(
+        'href',
+        '/buch/suchen',
+      )
+      expect(screen.queryByRole('button', { name: 'Alle' })).not.toBeInTheDocument()
+    })
+
+    it('offers no new book while some are still being read', () => {
+      statistics([READING])
+
+      expect(screen.getByText('Noch nichts fertig gelesen')).toBeInTheDocument()
+      expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    })
+
+    it('waits for the books before it calls the shelf empty', () => {
+      statistics([], { loading: true })
+
+      expect(screen.queryByText('Noch nichts fertig gelesen')).not.toBeInTheDocument()
+    })
+  })
+
   it('shows the months of a year, and not of all years at once', () => {
     statistics(SHELF)
 
@@ -256,10 +336,13 @@ describe('the statistics page', () => {
       expect(within(panel('Preis')).getByText('Letztes Jahr')).toBeInTheDocument()
     })
 
-    it('stays away while no book of the year has a price', () => {
+    it('asks for prices while no book of the year has one', () => {
       statistics(SHELF)
 
-      expect(screen.queryByText('Preis')).not.toBeInTheDocument()
+      const prices = within(panel('Preis'))
+      expect(prices.getByText(/^Trag beim Buch ein, was es gekostet hat/)).toBeInTheDocument()
+      expect(prices.queryByText('ausgegeben')).not.toBeInTheDocument()
+      expect(prices.queryByText(/^für \d+ von/)).not.toBeInTheDocument()
     })
   })
 
