@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useBooks } from '../store/useBooks'
 import { Panel } from '../components/Panel'
-import { formatCompact, formatNumber, monthNarrow, readingDays } from '../utils/format'
+import { formatCompact, formatNumber, formatPrice, monthNarrow, readingDays } from '../utils/format'
 import { m } from '../paraglide/messages.js'
 import {
   BookStatus,
@@ -240,6 +240,15 @@ export function Stats() {
     null,
   )
 
+  const priced = scope.filter(
+    (book): book is FinishedBook & { price: number } => book.price !== null,
+  )
+  const spent = priced.reduce((sum, book) => sum + book.price, 0)
+  const priciest = priced.reduce<(typeof priced)[number] | null>(
+    (best, book) => (book.price > (best?.price ?? -1) ? book : best),
+    null,
+  )
+
   const colorOfLanguage = useMemo(() => languageColors(finished), [finished])
 
   const languages = useMemo(() => {
@@ -371,11 +380,46 @@ export function Stats() {
           </Panel>
         </div>
 
-        {languages.length > 0 && (
-          <Panel title={m.label_language()}>
-            <Pie rows={languages} />
-          </Panel>
-        )}
+        <div className="grid gap-x-3.5 md:grid-cols-2">
+          {languages.length > 0 && (
+            <Panel title={m.label_language()}>
+              <Pie rows={languages} />
+            </Panel>
+          )}
+
+          {priciest && (
+            <Panel
+              title={m.label_price()}
+              extra={
+                <span className="text-ink-3 font-medium tracking-normal normal-case">
+                  {m.stats_priced_share({ priced: priced.length, count: scope.length })}
+                </span>
+              }
+            >
+              <div className="grid grid-cols-2 gap-x-3 gap-y-3.5">
+                <div>
+                  <div className="font-serif text-2xl font-semibold tracking-tight">
+                    {formatPrice(spent)}
+                  </div>
+                  <div className="text-ink-2 text-xs">{m.stats_spent()}</div>
+                </div>
+                <div>
+                  <div className="font-serif text-2xl font-semibold tracking-tight">
+                    {formatPrice(spent / priced.length)}
+                  </div>
+                  <div className="text-ink-2 text-xs">{m.stats_average_price()}</div>
+                </div>
+              </div>
+
+              <div className="border-line mt-4 border-t pt-3.5">
+                <div className="text-ink-2 text-xs">
+                  {m.stats_priciest({ price: formatPrice(priciest.price) })}
+                </div>
+                <div className="mt-1 text-sm leading-snug font-semibold">{priciest.title}</div>
+              </div>
+            </Panel>
+          )}
+        </div>
       </main>
     </div>
   )

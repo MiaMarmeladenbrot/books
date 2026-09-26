@@ -245,6 +245,25 @@
   ],
   "stats_top_authors": "Meistgelesene Autor:innen",
   "stats_language_other": "Andere",
+  "stats_spent": "ausgegeben",
+  "stats_average_price": "⌀ pro Buch",
+  "stats_priciest": "Teuerstes Buch für {price}",
+  "stats_priced_share": [
+    {
+      "declarations": [
+        "input priced",
+        "input count",
+        "local countPlural = count: plural",
+        "local pricedFormatted = priced: number",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "für {pricedFormatted} von {countFormatted} Buch",
+        "countPlural=*": "für {pricedFormatted} von {countFormatted} Büchern"
+      }
+    }
+  ],
 
   "profile_title": "Profil",
   "profile_no_name": "Ohne Namen",
