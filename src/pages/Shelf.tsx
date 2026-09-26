@@ -286,7 +286,9 @@ export function Shelf() {
                       className={
                         book.status === BookStatus.Reading
                           ? 'outline-leaf outline-2 outline-offset-3'
-                          : ''
+                          : book.status === BookStatus.Abandoned
+                            ? 'outline-danger outline-2 outline-offset-3'
+                            : ''
                       }
                     />
                     <h3 className="mt-2.5 line-clamp-2 text-sm leading-snug font-semibold">
