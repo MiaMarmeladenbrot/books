@@ -214,6 +214,55 @@ describe('the statistics page', () => {
     expect(months.getByRole('button', { name: 'Seiten' })).toHaveAttribute('aria-pressed', 'true')
   })
 
+  describe('the price tile', () => {
+    const PRICED = [
+      aBook({ title: 'Kairos', price: 24.5, finished_on: '2026-07-30' }),
+      aBook({ title: 'Tschick', price: 12, finished_on: '2026-05-14' }),
+      aBook({ title: 'Geschenkt', price: 0, finished_on: '2026-03-02' }),
+      aBook({ title: 'Ohne Preis', price: null, finished_on: '2026-02-01' }),
+      aBook({ title: 'Letztes Jahr', price: 30, finished_on: '2025-11-11' }),
+    ]
+
+    it('adds up the prices and averages them over the priced books', () => {
+      statistics(PRICED)
+
+      expect(bigNumberFor('ausgegeben')).toBe('36,50 €')
+      expect(bigNumberFor('⌀ pro Buch')).toBe('12,17 €')
+    })
+
+    it('names the priciest book of the year', () => {
+      statistics(PRICED)
+
+      const prices = within(panel('Preis'))
+      expect(prices.getByText('Teuerstes Buch für 24,50 €')).toBeInTheDocument()
+      expect(prices.getByText('Kairos')).toBeInTheDocument()
+    })
+
+    it('says how many books the numbers rest on', () => {
+      statistics(PRICED)
+
+      expect(within(panel('Preis')).getByText('für 3 von 4 Büchern')).toBeInTheDocument()
+
+      fireEvent.click(chip('2025'))
+      expect(within(panel('Preis')).getByText('für 1 von 1 Buch')).toBeInTheDocument()
+    })
+
+    it('follows the chosen year', () => {
+      statistics(PRICED)
+
+      fireEvent.click(chip('Alle'))
+
+      expect(bigNumberFor('ausgegeben')).toBe('66,50 €')
+      expect(within(panel('Preis')).getByText('Letztes Jahr')).toBeInTheDocument()
+    })
+
+    it('stays away while no book of the year has a price', () => {
+      statistics(SHELF)
+
+      expect(screen.queryByText('Preis')).not.toBeInTheDocument()
+    })
+  })
+
   it('leaves the download to the profile', () => {
     statistics(SHELF)
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi, type Mock } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { InitialEntry } from 'react-router-dom'
 import { BookForm } from './BookForm'
@@ -145,6 +145,37 @@ describe('filling the form in', () => {
     expect(await screen.findByText('Buchseite')).toBeInTheDocument()
   })
 
+  it('reads a price with a comma, a point or a euro sign', async () => {
+    for (const typed of ['12,50', '12.50', '12,50 €']) {
+      const { addBook } = form()
+
+      fill('Titel', 'Tschick')
+      fill('Preis', typed)
+      save()
+
+      await waitFor(() => expect(addBook).toHaveBeenCalledOnce())
+      expect(addBook.mock.calls[0][0].price).toBe(12.5)
+      cleanup()
+    }
+  })
+
+  it('keeps a price of nothing apart from no price at all', async () => {
+    const { addBook } = form()
+
+    fill('Titel', 'Geschenkt')
+    fill('Preis', '0')
+    save()
+    await waitFor(() => expect(addBook).toHaveBeenCalledOnce())
+    expect(addBook.mock.calls[0][0].price).toBe(0)
+    cleanup()
+
+    const second = form()
+    fill('Titel', 'Unbekannt')
+    save()
+    await waitFor(() => expect(second.addBook).toHaveBeenCalledOnce())
+    expect(second.addBook.mock.calls[0][0].price).toBeNull()
+  })
+
   it('dates a book the moment it is called started', () => {
     pretendToday()
     form()
@@ -224,6 +255,19 @@ describe('editing a book that is already on the shelf', () => {
       notes: 'dreimal gelesen',
       series_volume: 3,
     })
+  })
+
+  it('shows the saved price with a decimal comma and keeps it on saving', async () => {
+    const priced = aBook({ id: 'b-preis', title: 'Geek Love', price: 3.99 })
+    const updateBook = vi.fn(async () => priced) as UpdateBook
+    form({ books: [priced], at: '/buch/b-preis/bearbeiten', updateBook })
+
+    expect(screen.getByLabelText('Preis')).toHaveValue('3,99')
+
+    save()
+
+    await waitFor(() => expect(updateBook).toHaveBeenCalled())
+    expect(updateBook.mock.calls[0][1]).toMatchObject({ price: 3.99 })
   })
 
   it('says so when the book behind the address is gone', () => {
