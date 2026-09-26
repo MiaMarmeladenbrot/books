@@ -94,7 +94,11 @@ function marcFields(xml: string, tag: string) {
     for (const [, code, value] of field.matchAll(
       /<[^>]*subfield[^>]*code="([^"]+)"[^>]*>([\s\S]*?)<\/[^>]*subfield>/g
     )) {
-      if (codes[code] === undefined) codes[code] = decode(value).replace(/\s+/g, ' ').trim()
+      if (codes[code] === undefined)
+        codes[code] = decode(value)
+          .replace(/[\u0098\u009c]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
     }
     out.push(codes)
   }
