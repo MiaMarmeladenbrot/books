@@ -245,6 +245,7 @@
   ],
   "stats_top_authors": "Meistgelesene Autor:innen",
   "stats_language_other": "Andere",
+  "stats_unknown": "Unbekannt",
   "stats_spent": "ausgegeben",
   "stats_average_price": "⌀ pro Buch",
   "stats_priciest": "Teuerstes Buch für {price}",

@@ -245,6 +245,7 @@
   ],
   "stats_top_authors": "Most-read authors",
   "stats_language_other": "Other",
+  "stats_unknown": "Unknown",
   "stats_spent": "spent",
   "stats_average_price": "⌀ per book",
   "stats_priciest": "Priciest book, {price}",

@@ -48,6 +48,13 @@ const SMALLEST_LABELLED_SHARE = 0.07
 type Slice = { label: string; value: number; color: (typeof SLICE_COLORS)[number] }
 
 const REST_COLOR = SLICE_COLORS[SLICE_COLORS.length - 1]
+const UNKNOWN_COLOR = { fill: '#a09585', text: '#1e1a15' }
+
+function withUnknown(rows: Slice[], unknown: number): Slice[] {
+  const known = rows.filter((row) => row.value > 0)
+  if (unknown === 0) return known
+  return [...known, { label: m.stats_unknown(), value: unknown, color: UNKNOWN_COLOR }]
+}
 
 function PerMonth({ books }: { books: FinishedBook[] }) {
   const [metric, setMetric] = useState<Metric>(Metric.Books)
@@ -140,7 +147,10 @@ function Pie({ rows }: { rows: Slice[] }) {
   const total = rows.reduce((sum, row) => sum + row.value, 0)
   if (total === 0) return null
 
-  const ordered = [...rows].sort((a, b) => b.value - a.value)
+  const ordered = [...rows].sort(
+    (a, b) =>
+      Number(a.color === UNKNOWN_COLOR) - Number(b.color === UNKNOWN_COLOR) || b.value - a.value,
+  )
   const slices = ordered.map((row, index) => {
     const before = ordered.slice(0, index).reduce((sum, previous) => sum + previous.value, 0)
     return { ...row, from: before / total, to: (before + row.value) / total }
@@ -260,7 +270,7 @@ export function Stats() {
       else rest += count
     }
     if (rest > 0) slices.push({ label: m.stats_language_other(), value: rest, color: REST_COLOR })
-    return slices
+    return withUnknown(slices, scope.filter((book) => !book.language).length)
   }, [scope, colorOfLanguage])
 
   const topAuthors = useMemo(() => {
@@ -361,21 +371,27 @@ export function Stats() {
         <div className="grid gap-x-3.5 md:grid-cols-2">
           <Panel title={m.label_format()}>
             <Pie
-              rows={FORMAT_ORDER.map((format, index) => ({
-                label: FORMAT_LABEL[format](),
-                value: scope.filter((book) => book.format === format).length,
-                color: SLICE_COLORS[index],
-              })).filter((row) => row.value > 0)}
+              rows={withUnknown(
+                FORMAT_ORDER.map((format, index) => ({
+                  label: FORMAT_LABEL[format](),
+                  value: scope.filter((book) => book.format === format).length,
+                  color: SLICE_COLORS[index],
+                })),
+                scope.filter((book) => book.format === null).length,
+              )}
             />
           </Panel>
 
           <Panel title={m.label_provenance()}>
             <Pie
-              rows={PROVENANCE_ORDER.map((source, index) => ({
-                label: PROVENANCE_LABEL[source](),
-                value: scope.filter((book) => book.provenance === source).length,
-                color: SLICE_COLORS[index],
-              })).filter((row) => row.value > 0)}
+              rows={withUnknown(
+                PROVENANCE_ORDER.map((source, index) => ({
+                  label: PROVENANCE_LABEL[source](),
+                  value: scope.filter((book) => book.provenance === source).length,
+                  color: SLICE_COLORS[index],
+                })),
+                scope.filter((book) => book.provenance === null).length,
+              )}
             />
           </Panel>
         </div>
