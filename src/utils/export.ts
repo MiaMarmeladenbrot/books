@@ -19,6 +19,7 @@ const CSV_COLUMNS: { header: () => string; value: (book: Book) => string }[] = [
     header: m.csv_provenance,
     value: (book) => (book.provenance ? PROVENANCE_LABEL[book.provenance]() : ''),
   },
+  { header: m.csv_price, value: (book) => book.price?.toFixed(2) ?? '' },
   { header: m.csv_status, value: (book) => STATUS_LABEL[book.status]() },
   { header: m.csv_started, value: (book) => book.started_on ?? '' },
   { header: m.csv_finished, value: (book) => book.finished_on ?? '' },

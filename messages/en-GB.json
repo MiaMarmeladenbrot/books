@@ -41,6 +41,7 @@
   "label_format": "Format",
   "label_pages": "Pages",
   "label_provenance": "Source",
+  "label_price": "Price",
   "label_language": "Language",
   "label_isbn": "ISBN",
   "label_published": "Published",
@@ -154,6 +155,7 @@
   "form_date_to": "to",
   "form_isbn_placeholder": "978…",
   "form_volume_placeholder": "5.6",
+  "form_price_placeholder": "€12.00",
   "form_note_placeholder": "Anything else you want to remember about this book?",
 
   "cover_replace": "Replace",
@@ -288,6 +290,7 @@
   "csv_format": "Format",
   "csv_language": "Language",
   "csv_provenance": "Source",
+  "csv_price": "Price (EUR)",
   "csv_status": "Pile",
   "csv_started": "Started",
   "csv_finished": "Finished",

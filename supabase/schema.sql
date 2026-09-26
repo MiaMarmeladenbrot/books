@@ -15,6 +15,7 @@ create table public.books (
   page_count integer check (page_count > 0),
   format book_format,
   provenance book_provenance,
+  price numeric(8, 2) check (price >= 0),
   language text,
   status book_status not null default 'read',
   started_on date,

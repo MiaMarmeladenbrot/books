@@ -6,7 +6,7 @@ import type { Book } from '../types'
 const BOM = '﻿'
 
 const HEADER =
-  'Titel,Untertitel,Autor:in(nen),Reihe,Band,ISBN,Erschienen,Seiten,Format,Sprache,Herkunft,Stapel,Lesebeginn,Leseende,Erhalten am,Bewertung,Notiz'
+  'Titel,Untertitel,Autor:in(nen),Reihe,Band,ISBN,Erschienen,Seiten,Format,Sprache,Herkunft,Preis (EUR),Stapel,Lesebeginn,Leseende,Erhalten am,Bewertung,Notiz'
 
 function book(changes: Partial<Book> = {}): Book {
   return {
@@ -22,6 +22,7 @@ function book(changes: Partial<Book> = {}): Book {
     page_count: 398,
     format: BookFormat.Paperback,
     provenance: BookProvenance.Bought,
+    price: 14,
     language: 'de',
     status: BookStatus.Read,
     started_on: '2026-09-01',
@@ -61,7 +62,7 @@ describe('booksToCsv', () => {
     const csv = booksToCsv([book()])
 
     expect(rows(csv)[1]).toBe(
-      'Across the Universe,,Beth Revis,,,9783161484100,2011,398,Taschenbuch,Deutsch,Kauf,Fertig,2026-09-01,2026-09-13,2026-08-20,4,'
+      'Across the Universe,,Beth Revis,,,9783161484100,2011,398,Taschenbuch,Deutsch,Kauf,14.00,Fertig,2026-09-01,2026-09-13,2026-08-20,4,'
     )
   })
 
@@ -101,6 +102,7 @@ describe('booksToCsv', () => {
         page_count: null,
         format: null,
         provenance: null,
+        price: null,
         language: null,
         started_on: null,
         finished_on: null,
@@ -110,7 +112,7 @@ describe('booksToCsv', () => {
       }),
     ])
 
-    expect(rows(csv)[1]).toBe('Across the Universe,,Beth Revis,,,,,,,,,Fertig,,,,,')
+    expect(rows(csv)[1]).toBe('Across the Universe,,Beth Revis,,,,,,,,,,Fertig,,,,,')
   })
 
   it('writes an unknown language as its code in capitals', () => {

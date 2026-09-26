@@ -43,6 +43,10 @@ export function formatNumber(value: number) {
   return formatters().numbers.format(value)
 }
 
+export function formatPrice(value: number) {
+  return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR' }).format(value)
+}
+
 export function formatCompact(value: number) {
   if (value < 1000) return String(value)
   const thousands = value / 1000

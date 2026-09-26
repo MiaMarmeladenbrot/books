@@ -119,6 +119,7 @@ export interface Book {
   page_count: number | null
   format: BookFormat | null
   provenance: BookProvenance | null
+  price: number | null
   language: string | null
   status: BookStatus
   started_on: string | null
