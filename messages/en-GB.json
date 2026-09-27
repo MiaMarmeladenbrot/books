@@ -153,7 +153,8 @@
   "feed_empty_body": "Be the first! There are bound to be a few treasures in your shelf.",
   "feed_empty_action": "Go to the shelf",
   "feed_card_open": "{title} — open the recommendation",
-  "feed_you": "You",
+  "feed_recommended_by": "Recommended by {name}",
+  "feed_recommended_by_you": "Recommended by you",
 
   "recommendation_heading": "Recommendation",
   "recommendation_gone": "This recommendation is gone.",

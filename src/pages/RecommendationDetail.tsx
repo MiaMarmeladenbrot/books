@@ -1,15 +1,13 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, Gem } from 'lucide-react'
-import { Avatar } from '../components/Avatar'
 import { Blurb } from '../components/Blurb'
 import { Cover } from '../components/Cover'
+import { Recommender } from '../components/Recommender'
 import { TakeButton } from '../components/TakeButton'
 import { useCatalogue, type Catalogue } from '../lib/catalogue'
 import { coverSources } from '../lib/cover'
-import { useAuth } from '../store/useAuth'
 import { useRecommendations } from '../store/useRecommendations'
-import { formatDay } from '../utils/format'
 import { m } from '../paraglide/messages.js'
 
 function factsLine(entry: Catalogue | null) {
@@ -29,7 +27,6 @@ function seriesLine(entry: Catalogue | null) {
 export function RecommendationDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const userId = useAuth().user?.id ?? null
   const { feed, loadingFeed, loadFeed } = useRecommendations()
 
   useEffect(() => {
@@ -94,17 +91,7 @@ export function RecommendationDetail() {
             <p className="font-serif mt-3.5 text-base leading-relaxed whitespace-pre-line italic">
               {entry.note}
             </p>
-            <div className="text-ink-2 mt-4 flex items-center justify-center gap-2 text-sm">
-              <Avatar name={entry.profiles?.avatar ?? null} size={22} className="shrink-0" />
-              <b className="text-ink font-semibold">
-                {entry.user_id === userId
-                  ? m.feed_you()
-                  : (entry.profiles?.display_name ?? m.profile_no_name())}
-              </b>
-              <span className="text-ink-3 text-xs">
-                · {formatDay(entry.created_at.slice(0, 10))}
-              </span>
-            </div>
+            <Recommender entry={entry} className="mt-4 justify-center" />
           </div>
 
           <div className="border-line mt-6 border-t" />

@@ -1,56 +1,46 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Library } from 'lucide-react'
-import { Avatar } from '../components/Avatar'
 import { Cover } from '../components/Cover'
 import { CoverSeal } from '../components/CoverSeal'
+import { Recommender } from '../components/Recommender'
 import { Scribble, type Word } from '../components/Scribble'
 import { TakeButton } from '../components/TakeButton'
 import { coverSources } from '../lib/cover'
-import { useAuth } from '../store/useAuth'
 import { useRecommendations } from '../store/useRecommendations'
-import { formatDay } from '../utils/format'
 import { m } from '../paraglide/messages.js'
 import type { FeedEntry } from '../types'
 
 function Card({ entry }: { entry: FeedEntry }) {
-  const userId = useAuth().user?.id ?? null
-
-  const isMine = entry.user_id === userId
-  const cover = coverSources(entry.isbn)
-
   return (
-    <li className="border-line bg-card relative rounded-2xl border px-4 py-4">
+    <li className="border-line bg-card relative rounded-2xl border p-3.5 sm:p-4">
       <Link
         to={`/empfehlung/${entry.id}`}
         aria-label={m.feed_card_open({ title: entry.title })}
         className="absolute inset-0 rounded-2xl"
       />
 
-      <div className="flex items-center gap-2.5">
-        <Avatar name={entry.profiles?.avatar ?? null} size={28} className="shrink-0" />
-        <span className="truncate text-sm font-semibold">
-          {isMine ? m.feed_you() : (entry.profiles?.display_name ?? m.profile_no_name())}
-        </span>
-        <span className="text-ink-3 shrink-0 text-xs">
-          {formatDay(entry.created_at.slice(0, 10))}
-        </span>
-      </div>
-
-      <div className="mt-3.5 flex gap-4">
-        <div className="w-16 shrink-0">
-          <Cover title={entry.title} authors={entry.authors} src={cover} showText={false} />
+      <div className="flex gap-3.5 sm:gap-4">
+        <div className="w-20 shrink-0 sm:w-24">
+          <Cover title={entry.title} authors={entry.authors} src={coverSources(entry.isbn)} />
         </div>
+
         <div className="min-w-0 grow">
-          <h3 className="font-serif leading-tight font-semibold tracking-tight text-balance">
-            {entry.title}
-          </h3>
-          {entry.authors.length > 0 && (
-            <p className="text-ink-2 mt-1 text-sm">{entry.authors.join(', ')}</p>
-          )}
-          <p className="font-serif mt-2.5 text-sm leading-relaxed whitespace-pre-line italic">
-            {entry.note}
+          <Recommender entry={entry} />
+
+          <p className="font-serif text-ink mt-2.5 line-clamp-4 text-[0.9375rem] leading-snug whitespace-pre-line italic sm:mt-3 sm:line-clamp-none sm:text-base">
+            »{entry.note}«
           </p>
+
+          <div className="text-ink-2 mt-2.5 text-xs sm:mt-3">
+            <h3 className="text-ink block truncate font-semibold sm:inline">{entry.title}</h3>
+            {entry.authors.length > 0 && (
+              <span className="block truncate sm:inline">
+                <span className="hidden sm:inline"> · </span>
+                {entry.authors.join(', ')}
+              </span>
+            )}
+          </div>
 
           <div className="relative">
             <TakeButton entry={entry} />

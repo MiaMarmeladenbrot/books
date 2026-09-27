@@ -153,7 +153,8 @@
   "feed_empty_body": "Sei die erste! In deinem Regal liegen garantiert ein paar Schätze.",
   "feed_empty_action": "Zum Regal",
   "feed_card_open": "{title} — Empfehlung öffnen",
-  "feed_you": "Du",
+  "feed_recommended_by": "Von {name} empfohlen",
+  "feed_recommended_by_you": "Von dir empfohlen",
 
   "recommendation_heading": "Empfehlung",
   "recommendation_gone": "Diese Empfehlung gibt es nicht mehr.",
