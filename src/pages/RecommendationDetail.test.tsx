@@ -95,7 +95,7 @@ describe('RecommendationDetail', () => {
 
     expect(screen.getByRole('heading', { name: 'Mr. Saitos reisendes Kino' })).toBeInTheDocument()
     expect(screen.getAllByText('Annette Bjergfeldt').length).toBeGreaterThan(0)
-    expect(screen.getByText('Sinja')).toBeInTheDocument()
+    expect(screen.getByText('Von Sinja empfohlen')).toBeInTheDocument()
     expect(screen.getByText('Empfehlung', { selector: 'span' })).toBeInTheDocument()
     expect(screen.getByText('witzig. traurig. schön nordisch.')).toBeInTheDocument()
   })

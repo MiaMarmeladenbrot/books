@@ -88,22 +88,22 @@ describe('Feed', () => {
       ],
     })
 
-    expect(screen.getByText('Mr. Saitos reisendes Kino')).toBeInTheDocument()
-    expect(screen.getByText('Annette Bjergfeldt')).toBeInTheDocument()
-    expect(screen.getByText('Sinja')).toBeInTheDocument()
-    expect(screen.getByText('witzig. traurig. schön nordisch.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Mr. Saitos reisendes Kino' })).toBeInTheDocument()
+    expect(screen.getAllByText('Annette Bjergfeldt').length).toBeGreaterThan(0)
+    expect(screen.getByText('Von Sinja empfohlen')).toBeInTheDocument()
+    expect(screen.getByText('»witzig. traurig. schön nordisch.«')).toBeInTheDocument()
   })
 
-  it('says Du on your own card instead of your name', () => {
+  it('says Von dir empfohlen on your own card instead of your name', () => {
     open({ feed: [aFeedEntry({ user_id: 'u1' })] })
 
-    expect(screen.getByText('Du')).toBeInTheDocument()
+    expect(screen.getByText('Von dir empfohlen')).toBeInTheDocument()
   })
 
   it('falls back to a placeholder for a reader without a name', () => {
     open({ feed: [aFeedEntry({ user_id: 'u2', profiles: { display_name: null, avatar: null } })] })
 
-    expect(screen.getByText('Ohne Namen')).toBeInTheDocument()
+    expect(screen.getByText('Von Ohne Namen empfohlen')).toBeInTheDocument()
   })
 
   it('lets the whole card lead to the recommendation, not just its title', () => {
