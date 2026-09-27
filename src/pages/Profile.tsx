@@ -40,6 +40,13 @@ const FLAGS: Record<string, ReactElement> = {
       <path d="M10 0 V14 M0 7 H20" stroke="#c8102e" strokeWidth="3.2" />
     </>
   ),
+  it: (
+    <>
+      <rect width="6.67" height="14" fill="#009246" />
+      <rect x="6.67" width="6.66" height="14" fill="#fff" />
+      <rect x="13.33" width="6.67" height="14" fill="#ce2b37" />
+    </>
+  ),
 }
 
 function Flag({ locale }: { locale: string }) {

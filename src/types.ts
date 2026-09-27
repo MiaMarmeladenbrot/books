@@ -119,6 +119,7 @@ export interface Book {
   page_count: number | null
   format: BookFormat | null
   provenance: BookProvenance | null
+  price: number | null
   language: string | null
   status: BookStatus
   started_on: string | null
@@ -148,6 +149,7 @@ export const EMPTY_DRAFT: BookDraft = {
   page_count: null,
   format: null,
   provenance: null,
+  price: null,
   language: null,
   status: BookStatus.WantToRead,
   started_on: null,

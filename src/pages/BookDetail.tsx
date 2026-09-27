@@ -9,7 +9,7 @@ import { CoverSeal } from '../components/CoverSeal'
 import { useCatalogue } from '../lib/catalogue'
 import { coverSources } from '../lib/cover'
 import { ConfirmDialog } from '../components/ConfirmDialog'
-import { formatNumber, formatRange, readingDays } from '../utils/format'
+import { formatNumber, formatPrice, formatRange, readingDays } from '../utils/format'
 import { m } from '../paraglide/messages.js'
 import {
   BookStatus,
@@ -242,6 +242,7 @@ export function BookDetail() {
           label={m.label_provenance()}
           value={book.provenance ? PROVENANCE_LABEL[book.provenance]() : null}
         />
+        <Row label={m.label_price()} value={book.price === null ? null : formatPrice(book.price)} />
         <Row
           label={m.label_published()}
           value={book.published_year ? String(book.published_year) : null}

@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Plus } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
+import { EmptyStack } from '../components/EmptyStack'
 import { Panel } from '../components/Panel'
-import { formatCompact, formatNumber, monthNarrow, readingDays } from '../utils/format'
+import { Scribble, type Word } from '../components/Scribble'
+import { formatCompact, formatNumber, formatPrice, monthNarrow, readingDays } from '../utils/format'
 import { m } from '../paraglide/messages.js'
 import {
   BookStatus,
@@ -48,6 +52,87 @@ const SMALLEST_LABELLED_SHARE = 0.07
 type Slice = { label: string; value: number; color: (typeof SLICE_COLORS)[number] }
 
 const REST_COLOR = SLICE_COLORS[SLICE_COLORS.length - 1]
+const UNKNOWN_COLOR = { fill: '#a09585', text: '#1e1a15' }
+
+function withUnknown(rows: Slice[], unknown: number): Slice[] {
+  const known = rows.filter((row) => row.value > 0)
+  if (unknown === 0) return known
+  return [...known, { label: m.stats_unknown(), value: unknown, color: UNKNOWN_COLOR }]
+}
+
+const UNPRICED_SPINES: {
+  left: number
+  width: number
+  height: number
+  tint: string
+  words: Word[]
+}[] = [
+  {
+    left: 8,
+    width: 22,
+    height: 70,
+    tint: 'bg-leaf/60',
+    words: [
+      [12, 26],
+      [44, 14],
+    ],
+  },
+  {
+    left: 32,
+    width: 24,
+    height: 86,
+    tint: 'bg-accent',
+    words: [
+      [12, 34],
+      [52, 20],
+    ],
+  },
+]
+
+function UnpricedShelf() {
+  return (
+    <div aria-hidden className="relative h-24 w-26 shrink-0">
+      <div className="bg-line absolute inset-x-0 bottom-0 h-0.5 rounded-full" />
+      {UNPRICED_SPINES.map((spine, index) => (
+        <div
+          key={spine.left}
+          className={`absolute bottom-0.5 rounded-[3.5px] ${spine.tint}`}
+          style={{ left: spine.left, width: spine.width, height: spine.height }}
+        >
+          <Scribble
+            width={spine.width}
+            height={spine.height}
+            words={spine.words}
+            upright
+            seed={31 + index * 97}
+          />
+        </div>
+      ))}
+      <svg viewBox="0 0 104 96" className="absolute inset-0 overflow-visible">
+        <path d="M 50 9 Q 64 10 70.2 34.9" fill="none" className="stroke-ink-3" strokeWidth="1" />
+        <g transform="translate(66 22) rotate(18)">
+          <path
+            d="M 0 11 L 8 0 H 38 V 22 H 8 Z"
+            strokeDasharray="3 2.5"
+            strokeLinejoin="round"
+            strokeWidth="1.5"
+            className="fill-card stroke-ink-3"
+          />
+          <circle cx="8" cy="11" r="1.8" className="fill-ink-3" />
+          <text
+            x="24"
+            y="11.5"
+            textAnchor="middle"
+            dominantBaseline="central"
+            className="fill-ink-3 font-serif text-[13px] font-semibold"
+          >
+            €
+          </text>
+        </g>
+      </svg>
+    </div>
+  )
+}
 
 function PerMonth({ books }: { books: FinishedBook[] }) {
   const [metric, setMetric] = useState<Metric>(Metric.Books)
@@ -140,7 +225,10 @@ function Pie({ rows }: { rows: Slice[] }) {
   const total = rows.reduce((sum, row) => sum + row.value, 0)
   if (total === 0) return null
 
-  const ordered = [...rows].sort((a, b) => b.value - a.value)
+  const ordered = [...rows].sort(
+    (a, b) =>
+      Number(a.color === UNKNOWN_COLOR) - Number(b.color === UNKNOWN_COLOR) || b.value - a.value,
+  )
   const slices = ordered.map((row, index) => {
     const before = ordered.slice(0, index).reduce((sum, previous) => sum + previous.value, 0)
     return { ...row, from: before / total, to: (before + row.value) / total }
@@ -200,10 +288,11 @@ function Pie({ rows }: { rows: Slice[] }) {
 }
 
 export function Stats() {
-  const { books } = useBooks()
+  const { books, loading, error } = useBooks()
   const [year, setYear] = useState<string>('')
 
   const finished = useMemo(() => books.filter(isFinished), [books])
+  const empty = !loading && !error && finished.length === 0
 
   const years = useMemo(
     () =>
@@ -240,6 +329,15 @@ export function Stats() {
     null,
   )
 
+  const priced = scope.filter(
+    (book): book is FinishedBook & { price: number } => book.price !== null,
+  )
+  const spent = priced.reduce((sum, book) => sum + book.price, 0)
+  const priciest = priced.reduce<(typeof priced)[number] | null>(
+    (best, book) => (book.price > (best?.price ?? -1) ? book : best),
+    null,
+  )
+
   const colorOfLanguage = useMemo(() => languageColors(finished), [finished])
 
   const languages = useMemo(() => {
@@ -251,7 +349,7 @@ export function Stats() {
       else rest += count
     }
     if (rest > 0) slices.push({ label: m.stats_language_other(), value: rest, color: REST_COLOR })
-    return slices
+    return withUnknown(slices, scope.filter((book) => !book.language).length)
   }, [scope, colorOfLanguage])
 
   const topAuthors = useMemo(() => {
@@ -260,6 +358,34 @@ export function Stats() {
       for (const author of book.authors) counts.set(author, (counts.get(author) ?? 0) + 1)
     return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5)
   }, [scope])
+
+  if (empty)
+    return (
+      <div className="pb-28">
+        <header className="border-line sticky top-0 z-10 border-b bg-paper/95 px-4 pt-3 pb-3 backdrop-blur">
+          <div className="mx-auto max-w-3xl">
+            <h1 className="font-serif text-2xl font-semibold tracking-tight">{m.stats_title()}</h1>
+          </div>
+        </header>
+
+        <main className="mx-auto flex max-w-xs flex-col items-center px-4 py-14 text-center">
+          <EmptyStack />
+          <p className="font-serif mt-7 mb-2 text-xl font-semibold tracking-tight">
+            {m.stats_empty()}
+          </p>
+          <p className="text-ink-2 mb-6 text-sm leading-relaxed">{m.stats_empty_body()}</p>
+          {books.length === 0 && (
+            <Link
+              to="/buch/suchen"
+              className="bg-accent flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white"
+            >
+              <Plus size={18} strokeWidth={2.4} />
+              {m.shelf_empty_action()}
+            </Link>
+          )}
+        </main>
+      </div>
+    )
 
   return (
     <div className="pb-28">
@@ -352,30 +478,82 @@ export function Stats() {
         <div className="grid gap-x-3.5 md:grid-cols-2">
           <Panel title={m.label_format()}>
             <Pie
-              rows={FORMAT_ORDER.map((format, index) => ({
-                label: FORMAT_LABEL[format](),
-                value: scope.filter((book) => book.format === format).length,
-                color: SLICE_COLORS[index],
-              })).filter((row) => row.value > 0)}
+              rows={withUnknown(
+                FORMAT_ORDER.map((format, index) => ({
+                  label: FORMAT_LABEL[format](),
+                  value: scope.filter((book) => book.format === format).length,
+                  color: SLICE_COLORS[index],
+                })),
+                scope.filter((book) => book.format === null).length,
+              )}
             />
           </Panel>
 
           <Panel title={m.label_provenance()}>
             <Pie
-              rows={PROVENANCE_ORDER.map((source, index) => ({
-                label: PROVENANCE_LABEL[source](),
-                value: scope.filter((book) => book.provenance === source).length,
-                color: SLICE_COLORS[index],
-              })).filter((row) => row.value > 0)}
+              rows={withUnknown(
+                PROVENANCE_ORDER.map((source, index) => ({
+                  label: PROVENANCE_LABEL[source](),
+                  value: scope.filter((book) => book.provenance === source).length,
+                  color: SLICE_COLORS[index],
+                })),
+                scope.filter((book) => book.provenance === null).length,
+              )}
             />
           </Panel>
         </div>
 
-        {languages.length > 0 && (
-          <Panel title={m.label_language()}>
-            <Pie rows={languages} />
+        <div className="grid gap-x-3.5 md:grid-cols-2">
+          {languages.length > 0 && (
+            <Panel title={m.label_language()}>
+              <Pie rows={languages} />
+            </Panel>
+          )}
+
+          <Panel
+            title={m.label_price()}
+            extra={
+              priciest && (
+                <span className="text-ink-3 font-medium tracking-normal normal-case">
+                  {m.stats_priced_share({ priced: priced.length, count: scope.length })}
+                </span>
+              )
+            }
+          >
+            {priciest ? (
+              <>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-3.5">
+                  <div>
+                    <div className="font-serif text-2xl font-semibold tracking-tight">
+                      {formatPrice(spent)}
+                    </div>
+                    <div className="text-ink-2 text-xs">{m.stats_spent()}</div>
+                  </div>
+                  <div>
+                    <div className="font-serif text-2xl font-semibold tracking-tight">
+                      {formatPrice(spent / priced.length)}
+                    </div>
+                    <div className="text-ink-2 text-xs">{m.stats_average_price()}</div>
+                  </div>
+                </div>
+
+                <div className="border-line mt-4 border-t pt-3.5">
+                  <div className="text-ink-2 text-xs">
+                    {m.stats_priciest({ price: formatPrice(priciest.price) })}
+                  </div>
+                  <div className="mt-1 text-sm leading-snug font-semibold">{priciest.title}</div>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-4">
+                <UnpricedShelf />
+                <p className="text-ink-2 min-w-0 flex-1 text-sm leading-relaxed">
+                  {m.stats_price_empty()}
+                </p>
+              </div>
+            )}
           </Panel>
-        )}
+        </div>
       </main>
     </div>
   )

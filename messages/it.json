@@ -1,0 +1,360 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+
+  "action_cancel": "Annulla",
+  "action_save": "Salva",
+  "action_busy": "Un momento …",
+  "action_edit": "Modifica",
+  "action_delete": "Elimina",
+  "action_back": "Indietro",
+  "app_loading": "Caricamento …",
+  "loader_label": "Caricamento",
+
+  "error_sign_in": "E-mail o password sbagliata",
+  "error_reset_failed": "Non ha funzionato. Riprova tra qualche minuto.",
+  "error_not_signed_in": "Nessun account connesso",
+  "error_password_too_short": "Almeno {count} caratteri",
+  "error_password_same": "Questa è già la tua password. Scegline un'altra.",
+  "error_password_weak": "Questa password è troppo facile da indovinare.",
+  "error_password_wrong": "La password attuale non è giusta.",
+  "error_books_load_failed": "Non è stato possibile caricare i tuoi libri. Sono al sicuro, non preoccuparti.",
+  "error_book_not_found": "Libro non trovato.",
+  "error_no_title": "Serve un titolo.",
+  "error_save_failed": "Salvataggio non riuscito",
+  "error_cover_too_big": "L'immagine è troppo grande. Si arriva fino a {megabytes} MB.",
+  "error_cover_unreadable": "Non è stato possibile leggere l'immagine.",
+  "error_cover_only": "Il libro è salvato, l'immagine no. Riprovare?",
+  "error_image_process": "L'immagine non può essere elaborata.",
+  "error_image_convert": "L'immagine non può essere convertita.",
+  "error_search_failed": "Ricerca non riuscita.",
+  "error_catalogue_silent": "Il catalogo non risponde. Riprova o inseriscilo tu.",
+  "error_did_not_work": "Non ha funzionato.",
+
+  "nav_shelf": "Scaffale",
+  "nav_recommendations": "Consigli",
+  "nav_stats": "Statistiche",
+  "nav_profile": "Profilo",
+
+  "label_title": "Titolo",
+  "label_subtitle": "Sottotitolo",
+  "label_optional": "(facoltativo)",
+  "label_author": "Autrice o autore",
+  "label_stack": "Pila",
+  "label_format": "Formato",
+  "label_pages": "Pagine",
+  "label_provenance": "Provenienza",
+  "label_price": "Prezzo",
+  "label_language": "Lingua",
+  "label_isbn": "ISBN",
+  "label_published": "Pubblicato",
+  "label_series": "Serie",
+  "label_volume": "Volume",
+  "label_note": "Nota",
+  "label_year": "Anno",
+  "label_email": "E-mail",
+  "label_password": "Password",
+  "label_cover": "Copertina",
+  "label_period": "Periodo",
+  "label_duration": "Durata",
+
+  "status_want_to_read": "Desideri",
+  "status_reading": "In lettura",
+  "status_read": "Letto",
+  "status_abandoned": "Abbandonato",
+
+  "format_paperback": "Tascabile",
+  "format_hardcover": "Copertina rigida",
+  "format_ebook": "E-book",
+  "format_audiobook": "Audiolibro",
+
+  "provenance_bought": "Acquisto",
+  "provenance_gift": "Regalo",
+  "provenance_download": "Download",
+  "provenance_borrowed": "Prestito",
+
+  "avatar_cat": "Gatto",
+  "avatar_mug": "Tazza",
+  "avatar_owl": "Gufo",
+  "avatar_glasses": "Occhiali da lettura",
+  "avatar_hedgehog": "Riccio",
+  "avatar_moon": "Chiaro di luna",
+
+  "login_tagline": "Tutti i tuoi libri in un unico posto.",
+  "login_reset_tagline": "Ti mandiamo un link per reimpostarla.",
+  "login_submit": "Accedi",
+  "login_forgot": "Password dimenticata?",
+  "login_send_link": "Invia link",
+  "login_back": "Torna all'accesso",
+  "login_reset_sent": "Se esiste un account per {email}, a breve arriverà una mail con un link. Il link vale un'ora.",
+
+  "new_password_title": "Nuova password",
+  "new_password_intro": "Hai effettuato l'accesso come {email}. Scegline una nuova e torni al tuo scaffale.",
+
+  "password_show": "Mostra password",
+  "password_hide": "Nascondi password",
+
+  "shelf_loading": "caricamento …",
+  "shelf_count": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} libro",
+        "countPlural=*": "{countFormatted} libri"
+      }
+    }
+  ],
+  "shelf_count_filtered": "{shown} di {total}",
+  "shelf_search_placeholder": "Cerca per titolo o autore …",
+  "shelf_search_label": "Cerca nello scaffale per titolo o autore",
+  "shelf_search_clear": "Cancella ricerca",
+  "shelf_filter_clear": "Rimuovi {label}",
+  "shelf_retry": "Riprova",
+  "shelf_empty": "La tua pila è ancora vuota",
+  "shelf_empty_body": "Scansiona il codice a barre sul retro del libro o cerca il titolo. Il tuo primo libro finirà proprio qui.",
+  "shelf_empty_action": "Aggiungi il primo libro",
+  "shelf_no_match": "Nessun risultato",
+  "shelf_no_date": "Senza data",
+  "shelf_reading_since": "dal {date}",
+  "shelf_add": "Aggiungi un libro",
+
+  "detail_heading": "Libro",
+  "detail_duration_same_day": "in un solo giorno",
+  "detail_duration_days": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} giorno",
+        "countPlural=*": "{countFormatted} giorni"
+      }
+    }
+  ],
+  "detail_series_volume": "{series}, volume {volume}",
+  "detail_delete_title": "Eliminare il libro?",
+  "detail_delete_body": "«{title}» verrà rimosso per sempre. Non si può annullare.",
+  "detail_delete_confirm": "Elimina per sempre",
+  "detail_delete_cancel": "Tienilo",
+
+  "blurb_title": "Quarta di copertina",
+  "blurb_more": "Continua a leggere",
+  "blurb_less": "Meno",
+
+  "feed_title": "Consigli",
+  "feed_empty": "Nessuno ha ancora consigliato niente.",
+  "feed_empty_body": "Comincia tu! Nel tuo scaffale ci sono di sicuro dei tesori.",
+  "feed_empty_action": "Vai allo scaffale",
+  "feed_card_open": "{title} — apri il consiglio",
+  "feed_you": "Tu",
+  "recommendation_heading": "Consiglio",
+  "recommendation_gone": "Questo consiglio non c'è più.",
+  "recommendation_series": "Volume {volume} di «{series}»",
+  "take_show_mine": "Mostra la mia copia",
+  "take_onto_pile": "Mettilo sulla mia pila",
+  "recommend_action": "Consiglia",
+  "recommend_intro": "«{title}» ti è piaciuto? Allora consiglialo ad altri lettori.",
+  "recommend_placeholder": "Perché ti è piaciuto questo libro? A chi altro potrebbe piacere?",
+  "recommend_note_label": "Una frase per il consiglio",
+  "recommend_sending": "Invio …",
+  "recommend_withdraw": "Ritira il consiglio",
+  "recommend_withdraw_title": "Ritirare il consiglio?",
+  "recommend_withdraw_body": "«{title}» sparisce dai consigli degli altri.",
+  "recommend_withdraw_confirm": "Ritira",
+
+  "form_title_new": "Metti un libro sullo scaffale",
+  "form_title_edit": "Modifica libro",
+  "form_saving": "Salvataggio …",
+  "form_authors_placeholder": "Separa più nomi con una virgola",
+  "form_date_started": "Iniziato il",
+  "form_date_from": "Letto dal",
+  "form_date_to": "al",
+  "form_isbn_placeholder": "978…",
+  "form_volume_placeholder": "5.6",
+  "form_price_placeholder": "12,00 €",
+  "form_note_placeholder": "C'è altro che vuoi ricordare di questo libro?",
+
+  "cover_replace": "Sostituisci",
+  "cover_choose": "Scegli un'immagine",
+  "cover_remove": "Rimuovi",
+  "cover_pending": "Viene caricata al salvataggio",
+
+  "search_title": "Cerca libri",
+  "search_placeholder": "ISBN o titolo",
+  "search_input_label": "Cerca nei cataloghi per ISBN o titolo",
+  "search_clear": "Cancella ricerca",
+  "search_scan": "Scansiona codice a barre",
+  "search_submit": "Cerca",
+  "search_searching": "Ricerca …",
+  "search_manual_entry": "Inseriscilo tu",
+  "search_empty_title": "Il catalogo non conosce questo libro",
+  "search_empty_body": "Spesso mancano le novità e le edizioni straniere. I tuoi dati saranno allora i migliori.",
+  "search_empty_one_quiet": "Un catalogo non ha risposto. Cercare di nuovo potrebbe dare altri risultati.",
+  "search_load_more": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Carica altri ({countFormatted} ancora)",
+        "countPlural=*": "Carica altri ({countFormatted} ancora)"
+      }
+    }
+  ],
+  "search_more_available": "Il catalogo ha altre edizioni. Affina la ricerca, per esempio con il nome dell'autore.",
+  "search_none_fits": "Nessuno va bene?",
+  "search_or": "oppure",
+  "search_pages": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} pagina",
+        "countPlural=*": "{countFormatted} pagine"
+      }
+    }
+  ],
+
+  "scanner_close": "Annulla scansione",
+  "scanner_back_to_search": "Torna alla ricerca",
+  "scanner_starting": "Avvio della fotocamera …",
+  "scanner_hint_aiming": "Tieni il codice a barre sul retro del libro dentro la cornice",
+  "scanner_hint_sighted": "Codice a barre trovato, resta fermo un attimo",
+  "scanner_hint_stalled": "Ancora niente. Allontanati un po' finché l'immagine non è nitida.",
+  "scanner_denied_title": "Nessun accesso alla fotocamera",
+  "scanner_denied_body": "La fotocamera è bloccata per questo sito. Consentila nelle impostazioni del browser o digita l'ISBN.",
+  "scanner_unavailable_title": "Qui la scansione non funziona",
+  "scanner_unavailable_body": "Questo browser non mette a disposizione una fotocamera. Di solito l'ISBN è stampato come numero sotto il codice a barre.",
+  "scanner_unreadable_title": "Manca il lettore di codici a barre.",
+  "scanner_unreadable_body": "La fotocamera funziona, ma il modulo di lettura non si carica. Di solito l'ISBN è stampato come numero sotto il codice a barre.",
+
+  "stats_title": "Statistiche",
+  "stats_year_all": "Tutti",
+  "stats_books": "Libri",
+  "stats_books_total": "Libri in totale",
+  "stats_pages": "Pagine",
+  "stats_pages_total": "Pagine in totale",
+  "stats_per_month": "Al mese",
+  "stats_at_a_glance": "In sintesi",
+  "stats_average_pages": "⌀ pagine per libro",
+  "stats_average_days": "⌀ giorni per libro",
+  "stats_thickest": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Il libro più spesso, {countFormatted} pagina",
+        "countPlural=*": "Il libro più spesso, {countFormatted} pagine"
+      }
+    }
+  ],
+  "stats_top_authors": "Autrici e autori più letti",
+  "stats_language_other": "Altre",
+  "stats_unknown": "Sconosciuto",
+  "stats_empty": "Ancora nessun libro finito",
+  "stats_empty_body": "Appena segni un libro come letto, conta qui: pagine, mesi, autori e altro ancora.",
+  "stats_price_empty": "Inserisci nel libro quanto è costato. Così vedrai qui quanto spendi per leggere.",
+  "stats_spent": "spesi",
+  "stats_average_price": "⌀ per libro",
+  "stats_priciest": "Il libro più caro, {price}",
+  "stats_priced_share": [
+    {
+      "declarations": [
+        "input priced",
+        "input count",
+        "local countPlural = count: plural",
+        "local pricedFormatted = priced: number",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "per {pricedFormatted} libro su {countFormatted}",
+        "countPlural=*": "per {pricedFormatted} libri su {countFormatted}"
+      }
+    }
+  ],
+
+  "profile_title": "Profilo",
+  "profile_no_name": "Ancora senza nome",
+  "profile_edit": "Modifica profilo",
+  "profile_edit_panel": "Modifica",
+  "profile_avatar": "Immagine",
+  "profile_display_name": "Nome visualizzato",
+  "profile_display_name_placeholder": "Come vuoi essere chiamato",
+  "profile_account": "Account",
+  "profile_current_password": "Password attuale",
+  "profile_new_password": "Nuova password",
+  "profile_change_password": "Cambia password",
+  "profile_change": "Cambia",
+  "profile_password_changed": "La password è stata cambiata.",
+  "profile_sign_out": "Esci",
+  "profile_sign_out_title": "Uscire?",
+  "profile_sign_out_body": "La prossima volta ti serviranno di nuovo la tua e-mail e la tua password.",
+
+  "export_title": "Backup",
+  "export_body": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Scarica {countFormatted} libro. Il file JSON è il backup completo, il CSV serve per consultarlo in Numbers o Excel.",
+        "countPlural=*": "Scarica {countFormatted} libri. Il file JSON è il backup completo, il CSV serve per consultarli in Numbers o Excel."
+      }
+    }
+  ],
+
+  "csv_title": "Titolo",
+  "csv_subtitle": "Sottotitolo",
+  "csv_authors": "Autrici/autori",
+  "csv_series": "Serie",
+  "csv_volume": "Volume",
+  "csv_isbn": "ISBN",
+  "csv_published": "Pubblicato",
+  "csv_pages": "Pagine",
+  "csv_format": "Formato",
+  "csv_language": "Lingua",
+  "csv_provenance": "Provenienza",
+  "csv_price": "Prezzo (EUR)",
+  "csv_status": "Pila",
+  "csv_started": "Inizio lettura",
+  "csv_finished": "Fine lettura",
+  "csv_acquired": "Ricevuto il",
+  "csv_rating": "Valutazione",
+  "csv_note": "Nota",
+
+  "manifest_description": "La tua libreria personale: scansiona, sistema, consulta.",
+
+  "install_body": "Il tuo scaffale può stare come icona sulla schermata Home, come una vera app.",
+  "install_body_ios": "Il tuo scaffale può stare come icona sulla schermata Home: tocca {share} in basso, poi «Aggiungi alla schermata Home».",
+  "install_share": "Condividi",
+  "install_action": "Aggiungi alla schermata Home",
+  "install_dismiss": "Nascondi suggerimento",
+
+  "crash_title": "Qualcosa si è inceppato",
+  "crash_body": "I tuoi libri sono al sicuro, non preoccuparti. Basta ricaricare.",
+  "crash_reload": "Ricarica",
+
+  "date_since": "dal {date}"
+}

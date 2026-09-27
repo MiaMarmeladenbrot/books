@@ -7,6 +7,7 @@ const OPENLIBRARY_SEARCH = 'https://openlibrary.org/search.json'
 const OPENLIBRARY_EDITION = 'https://openlibrary.org/isbn'
 const GOOGLE_BOOKS = '/api/books'
 const MARC_NAMESPACE = 'http://www.loc.gov/MARC21/slim'
+const NON_SORTING_MARKS = /[\u0098\u009c]/g
 
 const FETCH_LIMIT = 20
 const EXACT_LIMIT = 10
@@ -161,7 +162,7 @@ function subfield(field: Element, code: string) {
   const match = [...field.getElementsByTagNameNS('*', 'subfield')].find(
     (entry) => entry.getAttribute('code') === code
   )
-  return (match?.textContent ?? '').trim().normalize('NFC')
+  return (match?.textContent ?? '').replace(NON_SORTING_MARKS, '').trim().normalize('NFC')
 }
 
 const PRODUCT_FORM = '(Produktform)'

@@ -43,6 +43,7 @@
   "label_format": "Format",
   "label_pages": "Seiten",
   "label_provenance": "Herkunft",
+  "label_price": "Preis",
   "label_language": "Sprache",
   "label_isbn": "ISBN",
   "label_published": "Erschienen",
@@ -180,6 +181,7 @@
   "form_date_to": "bis",
   "form_isbn_placeholder": "978…",
   "form_volume_placeholder": "5.6",
+  "form_price_placeholder": "12,00 €",
   "form_note_placeholder": "Noch irgendetwas, was du dir zu diesem Buch merken willst?",
 
   "cover_replace": "Ersetzen",
@@ -269,6 +271,29 @@
   ],
   "stats_top_authors": "Meistgelesene Autor:innen",
   "stats_language_other": "Andere",
+  "stats_unknown": "Unbekannt",
+  "stats_empty": "Noch nichts fertig gelesen",
+  "stats_empty_body": "Sobald du ein Buch als gelesen markierst, zählt es hier mit: Seiten, Monate, Autor:innen und mehr.",
+  "stats_price_empty": "Trag beim Buch ein, was es gekostet hat. Dann siehst du hier, wie viel du fürs Lesen ausgibst.",
+  "stats_spent": "ausgegeben",
+  "stats_average_price": "⌀ pro Buch",
+  "stats_priciest": "Teuerstes Buch für {price}",
+  "stats_priced_share": [
+    {
+      "declarations": [
+        "input priced",
+        "input count",
+        "local countPlural = count: plural",
+        "local pricedFormatted = priced: number",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "für {pricedFormatted} von {countFormatted} Buch",
+        "countPlural=*": "für {pricedFormatted} von {countFormatted} Büchern"
+      }
+    }
+  ],
 
   "profile_title": "Profil",
   "profile_no_name": "Ohne Namen",
@@ -314,6 +339,7 @@
   "csv_format": "Format",
   "csv_language": "Sprache",
   "csv_provenance": "Herkunft",
+  "csv_price": "Preis (EUR)",
   "csv_status": "Stapel",
   "csv_started": "Lesebeginn",
   "csv_finished": "Leseende",

@@ -9,6 +9,7 @@ import type { Candidate } from '../lib/lookup'
 import { MAX_UPLOAD_BYTES, fetchGatedCoverJpeg, toCoverJpeg } from '../utils/image'
 import { todayIso } from '../utils/format'
 import { m } from '../paraglide/messages.js'
+import { getLocale } from '../paraglide/runtime.js'
 import {
   BookStatus,
   EMPTY_DRAFT,
@@ -41,6 +42,21 @@ function volumeOrNull(value: string) {
 
 function volumeToText(volume: number | null) {
   return volume === null ? '' : String(Number(volume))
+}
+
+function priceOrNull(value: string) {
+  const parsed = Number.parseFloat(value.replace(/[^\d,.]/g, '').replace(',', '.'))
+  if (!Number.isFinite(parsed) || parsed < 0) return null
+  return Math.round(parsed * 100) / 100
+}
+
+function priceToText(price: number | null) {
+  if (price === null) return ''
+  return new Intl.NumberFormat(getLocale(), {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false,
+  }).format(price)
 }
 
 const DATES_FOR_STATUS: Record<BookStatus, { started: boolean; finished: boolean }> = {
@@ -119,6 +135,7 @@ export function BookForm() {
   const [volumeText, setVolumeText] = useState(() =>
     volumeToText(existing?.series_volume ?? prefill?.series_volume ?? null),
   )
+  const [priceText, setPriceText] = useState(() => priceToText(existing?.price ?? null))
   const [finishedPicked, setFinishedPicked] = useState(() => Boolean(existing?.finished_on))
   const [candidateCover, setCandidateCover] = useState<string | null>(prefill?.cover_url ?? null)
   const [error, setError] = useState('')
@@ -214,6 +231,7 @@ export function BookForm() {
         isbn: textOrNull(draft.isbn ?? ''),
         series: textOrNull(draft.series ?? ''),
         series_volume: volumeOrNull(volumeText),
+        price: priceOrNull(priceText),
         notes: textOrNull(draft.notes ?? ''),
       }
       const known = existing?.id ?? savedId
@@ -415,6 +433,19 @@ export function BookForm() {
             </Select>
           </label>
           <label className="block">
+            <span className={labelClass}>{m.label_price()}</span>
+            <input
+              inputMode="decimal"
+              value={priceText}
+              onChange={(event) => setPriceText(event.target.value)}
+              placeholder={m.form_price_placeholder()}
+              className={fieldClass}
+            />
+          </label>
+        </div>
+
+        <div className="mb-4 grid grid-cols-[1fr_6rem] gap-3">
+          <label className="block">
             <span className={labelClass}>{m.label_language()}</span>
             <Select
               value={draft.language ?? ''}
@@ -433,19 +464,6 @@ export function BookForm() {
               )}
             </Select>
           </label>
-        </div>
-
-        <div className="mb-4 grid grid-cols-[1fr_6rem] gap-3">
-          <label className="block">
-            <span className={labelClass}>{m.label_isbn()}</span>
-            <input
-              inputMode="numeric"
-              value={draft.isbn ?? ''}
-              onChange={(event) => patch({ isbn: event.target.value })}
-              placeholder={m.form_isbn_placeholder()}
-              className={fieldClass}
-            />
-          </label>
           <label className="block">
             <span className={labelClass}>{m.label_published()}</span>
             <input
@@ -456,6 +474,17 @@ export function BookForm() {
             />
           </label>
         </div>
+
+        <label className="mb-4 block">
+          <span className={labelClass}>{m.label_isbn()}</span>
+          <input
+            inputMode="numeric"
+            value={draft.isbn ?? ''}
+            onChange={(event) => patch({ isbn: event.target.value })}
+            placeholder={m.form_isbn_placeholder()}
+            className={fieldClass}
+          />
+        </label>
 
         <div className="mb-4 grid grid-cols-[1fr_5rem] gap-3">
           <label className="block">

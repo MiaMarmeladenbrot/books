@@ -18,6 +18,7 @@ export function aBook(changes: Partial<Book> = {}): Book {
     page_count: 300,
     format: BookFormat.Paperback,
     provenance: BookProvenance.Bought,
+    price: null,
     language: 'de',
     status: BookStatus.Read,
     started_on: '2026-09-01',
