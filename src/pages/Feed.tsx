@@ -21,7 +21,7 @@ function Card({ entry }: { entry: FeedEntry }) {
       />
 
       <div className="flex gap-3.5 sm:gap-4">
-        <div className="w-20 shrink-0 sm:w-24">
+        <div className="pointer-events-none w-20 shrink-0 sm:w-24">
           <Cover title={entry.title} authors={entry.authors} src={coverSources(entry.isbn)} />
         </div>
 
