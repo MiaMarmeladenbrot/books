@@ -16,6 +16,11 @@ describe('pickIsbn', () => {
     expect(pickIsbn(['9783161484100', '9781234567897'], 'en')).toBe('9781234567897')
   })
 
+  it('takes an Italian group when the book is Italian', () => {
+    expect(pickIsbn(['9783161484100', '9788804817185'], 'it')).toBe('9788804817185')
+    expect(pickIsbn(['9780306406157', '9791259856265'], 'it')).toBe('9791259856265')
+  })
+
   it('prefers 9780 over 9781, because the groups stand in that order', () => {
     expect(pickIsbn(['9781234567897', '9780306406157'], 'en')).toBe('9780306406157')
   })
