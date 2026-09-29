@@ -140,6 +140,7 @@ function firstNumber(value: string, pattern: RegExp) {
 const ISBN_GROUPS: Record<string, string[]> = {
   de: ['9783'],
   en: ['9780', '9781'],
+  it: ['97888', '97912'],
 }
 
 export function pickIsbn(candidates: string[], language: string | null) {
