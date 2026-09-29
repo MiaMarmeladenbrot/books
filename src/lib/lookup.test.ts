@@ -1,5 +1,67 @@
 import { describe, expect, it } from 'vitest'
-import { looksLikeIsbn, pickIsbn } from './lookup'
+import { BookFormat } from '../types'
+import { looksLikeIsbn, pickIsbn, rankCandidates, type Candidate } from './lookup'
+
+function book(title: string, authors: string[], details: Partial<Candidate> = {}): Candidate {
+  return {
+    title,
+    subtitle: null,
+    authors,
+    series: null,
+    series_volume: null,
+    isbn: null,
+    published_year: null,
+    page_count: null,
+    publisher: null,
+    language: null,
+    format: null,
+    cover_url: null,
+    source: 'OpenLibrary',
+    ...details,
+  }
+}
+
+describe('rankCandidates', () => {
+  const avalon = book('Grand Hotel Avalon', ['Maggie Stiefvater'], {
+    isbn: '9783401606897',
+    page_count: 480,
+    format: BookFormat.Paperback,
+    source: 'DNB',
+  })
+  const listeners = book('Listeners', ['Maggie Stiefvater'], {
+    isbn: '9781338188332',
+    page_count: 416,
+  })
+  const spanish = book('Voz del agua / The Listeners', ['Maggie Stiefvater'], {
+    isbn: '9788419266262',
+  })
+  const titles = (input: string) =>
+    rankCandidates([avalon, spanish, listeners], input).map((candidate) => candidate.title)
+
+  it('puts the book first whatever the article and the author do to the query', () => {
+    expect(titles('The Listeners Stiefvater')[0]).toBe('Listeners')
+    expect(titles('The Listeners')[0]).toBe('Listeners')
+    expect(titles('Listeners Stiefvater')[0]).toBe('Listeners')
+  })
+
+  it('still ranks a book that only shares the author below one that shares the title', () => {
+    expect(titles('The Listeners Stiefvater').indexOf('Grand Hotel Avalon')).toBe(2)
+  })
+
+  it('does not let the author word push out the title it belongs to', () => {
+    const magicMountain = book('Der Zauberberg', ['Thomas Mann'], { source: 'DNB' })
+    const musil = book('Der Mann ohne Eigenschaften', ['Robert Musil'], { source: 'DNB' })
+    const ranked = rankCandidates([musil, magicMountain], 'Der Zauberberg Mann')
+
+    expect(ranked[0].title).toBe('Der Zauberberg')
+  })
+
+  it('gives no title points for a query that is only the author', () => {
+    const ranked = rankCandidates([listeners, avalon], 'Stiefvater')
+
+    expect(ranked[0].title).toBe('Grand Hotel Avalon')
+  })
+})
 
 describe('pickIsbn', () => {
   it('stays empty when no thirteen-digit number is there', () => {
