@@ -14,8 +14,8 @@ const BarcodeScanner = lazy(() =>
 type Outcome =
   | { kind: 'idle' }
   | { kind: 'searching' }
-  | { kind: 'partial'; results: Candidate[]; moreAvailable: boolean }
-  | { kind: 'results'; results: Candidate[]; moreAvailable: boolean }
+  | { kind: 'partial'; results: Candidate[]; later: Candidate[]; moreAvailable: boolean }
+  | { kind: 'results'; results: Candidate[]; later: Candidate[]; moreAvailable: boolean }
   | { kind: 'empty'; oneSourceQuiet: boolean }
   | { kind: 'failed'; message: string }
 
@@ -41,7 +41,12 @@ export function BookSearch() {
   const [outcome, setOutcome] = useState<Outcome>(() => {
     const known = asked ? rememberedLookup(asked) : null
     return known
-      ? { kind: 'results', results: known.results, moreAvailable: known.moreAvailable }
+      ? {
+          kind: 'results',
+          results: known.results,
+          later: known.later,
+          moreAvailable: known.moreAvailable,
+        }
       : { kind: 'idle' }
   })
   const [visible, setVisible] = useState(PAGE_SIZE)
@@ -71,16 +76,18 @@ export function BookSearch() {
     try {
       const {
         results,
+        later,
         asked: tried,
         silent,
         moreAvailable,
-      } = await lookupBooks(trimmed, (first) => {
-        if (run !== attempt.current || first.results.length === 0) return
+      } = await lookupBooks(trimmed, (sofar) => {
+        if (run !== attempt.current || sofar.results.length === 0) return
         shown = true
         setOutcome({
           kind: 'partial',
-          results: first.results,
-          moreAvailable: first.moreAvailable,
+          results: sofar.results,
+          later: sofar.later,
+          moreAvailable: sofar.moreAvailable,
         })
       })
       if (run !== attempt.current) return
@@ -96,11 +103,11 @@ export function BookSearch() {
         )
         return
       }
-      if (results.length === 1 && !shown) {
+      if (results.length === 1 && later.length === 0 && !shown) {
         openForm(results[0])
         return
       }
-      setOutcome({ kind: 'results', results, moreAvailable })
+      setOutcome({ kind: 'results', results, later, moreAvailable })
     } catch (caught) {
       if (run !== attempt.current) return
       setOutcome({
@@ -144,6 +151,7 @@ export function BookSearch() {
 
   const asking = outcome.kind === 'searching' || outcome.kind === 'partial'
   const listed = outcome.kind === 'partial' || outcome.kind === 'results' ? outcome : null
+  const everyResult = listed ? [...listed.results, ...listed.later] : []
   const offersManualEntry = outcome.kind === 'idle' || outcome.kind === 'failed'
 
   return (
@@ -233,11 +241,16 @@ export function BookSearch() {
         {listed && (
           <>
             <ul className="mt-6">
-              {listed.results.slice(0, visible).map((candidate, index) => (
+              {everyResult.slice(0, visible).map((candidate, index) => (
                 <li
                   key={`${candidate.title}-${index}`}
                   className="border-line border-b last:border-b-0"
                 >
+                  {index === listed.results.length && (
+                    <p className="text-ink-3 pt-6 pb-1 text-xs font-bold tracking-widest uppercase">
+                      {m.search_later_heading()}
+                    </p>
+                  )}
                   <button
                     type="button"
                     onClick={() => openForm(candidate)}
@@ -267,18 +280,18 @@ export function BookSearch() {
               ))}
             </ul>
 
-            {visible < listed.results.length && (
+            {visible < everyResult.length && (
               <button
                 type="button"
                 onClick={() => setVisible((current) => current + PAGE_SIZE)}
                 className="border-line text-ink-2 mt-5 w-full rounded-xl border py-3 text-sm font-semibold"
               >
-                {m.search_load_more({ count: listed.results.length - visible })}
+                {m.search_load_more({ count: everyResult.length - visible })}
               </button>
             )}
 
             {outcome.kind === 'results' &&
-              visible >= listed.results.length &&
+              visible >= everyResult.length &&
               listed.moreAvailable && (
                 <p className="text-ink-3 mt-5 text-center text-xs leading-relaxed">
                   {m.search_more_available()}
