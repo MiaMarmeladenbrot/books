@@ -137,6 +137,21 @@
     }
   ],
   "detail_series_volume": "{series}, Volume {volume}",
+  "detail_rating": "Rating",
+  "detail_rating_cups": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} cup of tea",
+        "countPlural=*": "{countFormatted} cups of tea"
+      }
+    }
+  ],
   "detail_delete_title": "Delete this book?",
   "detail_delete_body": "“{title}” will be gone for good. This can't be undone.",
   "detail_delete_confirm": "Delete for good",

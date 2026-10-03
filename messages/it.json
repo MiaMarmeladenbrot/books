@@ -137,6 +137,21 @@
     }
   ],
   "detail_series_volume": "{series}, volume {volume}",
+  "detail_rating": "Valutazione",
+  "detail_rating_cups": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} tazza di tè",
+        "countPlural=*": "{countFormatted} tazze di tè"
+      }
+    }
+  ],
   "detail_delete_title": "Eliminare il libro?",
   "detail_delete_body": "«{title}» verrà rimosso per sempre. Non si può annullare.",
   "detail_delete_confirm": "Elimina per sempre",

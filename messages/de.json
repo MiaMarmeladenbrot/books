@@ -137,6 +137,21 @@
     }
   ],
   "detail_series_volume": "{series}, Band {volume}",
+  "detail_rating": "Bewertung",
+  "detail_rating_cups": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural",
+        "local countFormatted = count: number"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{countFormatted} Tasse Tee",
+        "countPlural=*": "{countFormatted} Tassen Tee"
+      }
+    }
+  ],
   "detail_delete_title": "Buch löschen?",
   "detail_delete_body": "»{title}« wird endgültig entfernt. Das lässt sich nicht rückgängig machen.",
   "detail_delete_confirm": "Endgültig löschen",

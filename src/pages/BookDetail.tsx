@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, Pencil, Trash2 } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
@@ -9,7 +9,99 @@ import { coverSources } from '../lib/cover'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { formatNumber, formatPrice, formatRange, readingDays } from '../utils/format'
 import { m } from '../paraglide/messages.js'
-import { FORMAT_LABEL, PROVENANCE_LABEL, STATUS_LABEL, languageLabel } from '../types'
+import { BookStatus, FORMAT_LABEL, PROVENANCE_LABEL, STATUS_LABEL, languageLabel } from '../types'
+
+const CUPS = [1, 2, 3, 4, 5]
+const CUP_BODY = 'M6 7L20 7L19.1 23C18.9 24.6 18 25.5 16.6 25.5L9.4 25.5C8 25.5 7.1 24.6 6.9 23Z'
+
+function TeaCup({ full, last }: { full: boolean; last: boolean }) {
+  const clip = useId()
+  const outline = full ? 'stroke-ink-2' : 'stroke-ink-3'
+
+  return (
+    <svg width={32} height={38} viewBox="0 -5 28 33" fill="none" strokeLinecap="round" aria-hidden>
+      <defs>
+        <clipPath id={clip}>
+          <path d={CUP_BODY} />
+        </clipPath>
+      </defs>
+      {last && (
+        <>
+          <path d="M11 5.5q-1.5-2 0-4q1.5-2 0-4" className="stroke-ink-3" strokeWidth={1.2} />
+          <path d="M15.5 5.5q-1.5-2 0-4q1.5-2 0-4" className="stroke-ink-3" strokeWidth={1.2} />
+        </>
+      )}
+      {full ? (
+        <rect x={5} y={9.9} width={17} height={20} className="fill-accent" clipPath={`url(#${clip})`} />
+      ) : (
+        <path d="M7.6 9.9H18.4" className="stroke-accent" strokeWidth={1.3} opacity={0.75} />
+      )}
+      {last && (
+        <>
+          <path d="M11.5 10.8Q10.5 3.5 7.4 4Q4 4.5 3.9 14" className={outline} strokeWidth={1.1} />
+          <rect
+            x={2.1}
+            y={14}
+            width={3.6}
+            height={4.4}
+            rx={0.6}
+            className={`fill-paper ${outline}`}
+            strokeWidth={1.1}
+          />
+        </>
+      )}
+      <path d={CUP_BODY} className={outline} strokeWidth={1.6} strokeLinejoin="round" />
+      <path d="M19.9 10.3q4.9 .4 4.9 3.6q0 3.3 -4.6 3.7" className={outline} strokeWidth={1.6} />
+    </svg>
+  )
+}
+
+function Rating({ bookId, rating }: { bookId: string; rating: number | null }) {
+  const label = useId()
+  const { updateBook } = useBooks()
+  const [pending, setPending] = useState<number | null | undefined>(undefined)
+  const [failed, setFailed] = useState(false)
+  const latest = useRef(0)
+
+  const shown = pending === undefined ? rating : pending
+
+  const rate = async (next: number | null) => {
+    const ticket = ++latest.current
+    setPending(next)
+    setFailed(false)
+    try {
+      await updateBook(bookId, { rating: next })
+    } catch {
+      if (ticket === latest.current) setFailed(true)
+    } finally {
+      if (ticket === latest.current) setPending(undefined)
+    }
+  }
+
+  return (
+    <div className="mt-6">
+      <p id={label} className="text-ink-3 mb-1 text-xs font-bold tracking-widest uppercase">
+        {m.detail_rating()}
+      </p>
+      <div role="radiogroup" aria-labelledby={label} className="-ml-1 flex">
+        {CUPS.map((count) => (
+          <button
+            key={count}
+            type="button"
+            role="radio"
+            aria-checked={shown === count}
+            aria-label={m.detail_rating_cups({ count })}
+            onClick={() => rate(shown === count ? null : count)}
+            className="p-1"
+          >
+            <TeaCup full={shown !== null && count <= shown} last={count === CUPS.length} />
+          </button>
+        ))}
+      </div>
+      {failed && <p className="text-danger mt-1 text-xs">{m.error_save_failed()}</p>}
+    </div>
+  )
+}
 
 function Row({ label, value }: { label: string; value: string | null }) {
   if (!value) return null
@@ -129,6 +221,10 @@ export function BookDetail() {
           value={book.published_year ? String(book.published_year) : null}
         />
         <Row label={m.label_isbn()} value={book.isbn} />
+
+        {book.status !== BookStatus.WantToRead && (
+          <Rating bookId={book.id} rating={book.rating} />
+        )}
 
         {book.notes && (
           <div className="border-accent/35 mt-6 border-l-2 pl-4">
