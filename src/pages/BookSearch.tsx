@@ -16,7 +16,7 @@ type Outcome =
   | { kind: 'searching' }
   | { kind: 'partial'; results: Candidate[]; later: Candidate[]; moreAvailable: boolean }
   | { kind: 'results'; results: Candidate[]; later: Candidate[]; moreAvailable: boolean }
-  | { kind: 'empty'; oneSourceQuiet: boolean }
+  | { kind: 'empty'; oneSourceQuiet: boolean; byIsbn: boolean }
   | { kind: 'failed'; message: string }
 
 const PAGE_SIZE = 8
@@ -51,6 +51,7 @@ export function BookSearch() {
   })
   const [visible, setVisible] = useState(PAGE_SIZE)
   const attempt = useRef(0)
+  const input = useRef<HTMLInputElement>(null)
   const [scanning, setScanning] = useState(false)
 
   const openForm = (prefill?: Candidate, typed?: string) => {
@@ -99,7 +100,7 @@ export function BookSearch() {
                 kind: 'failed',
                 message: m.error_catalogue_silent(),
               }
-            : { kind: 'empty', oneSourceQuiet: silent > 0 },
+            : { kind: 'empty', oneSourceQuiet: silent > 0, byIsbn: looksLikeIsbn(trimmed) },
         )
         return
       }
@@ -128,6 +129,11 @@ export function BookSearch() {
     setVisible(PAGE_SIZE)
     setOutcome({ kind: 'idle' })
     setParams({}, { replace: true })
+  }
+
+  const searchByTitle = () => {
+    clearTerm()
+    input.current?.focus()
   }
 
   const acceptScan = (isbn: string) => {
@@ -176,6 +182,7 @@ export function BookSearch() {
           <div className="border-line bg-card flex items-center gap-2.5 rounded-xl border px-3.5 py-3">
             <Search size={17} className="text-ink-3 shrink-0" />
             <input
+              ref={input}
               value={term}
               onChange={(event) => setTerm(event.target.value)}
               placeholder={m.search_placeholder()}
@@ -221,17 +228,30 @@ export function BookSearch() {
               {m.search_empty_title()}
             </p>
             <p className="text-ink-2 mx-auto mb-5 max-w-[34ch] text-sm leading-relaxed">
-              {m.search_empty_body()}
+              {outcome.byIsbn ? m.search_empty_isbn_body() : m.search_empty_body()}
             </p>
             {outcome.oneSourceQuiet && (
               <p className="text-ink-3 mx-auto mb-5 max-w-[34ch] text-xs leading-relaxed">
                 {m.search_empty_one_quiet()}
               </p>
             )}
+            {outcome.byIsbn && (
+              <button
+                type="button"
+                onClick={searchByTitle}
+                className="bg-accent mb-3 w-full rounded-xl py-3.5 text-sm font-bold text-white"
+              >
+                {m.search_by_title()}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => openForm(undefined, term)}
-              className="bg-accent w-full rounded-xl py-3.5 text-sm font-bold text-white"
+              className={
+                outcome.byIsbn
+                  ? 'border-line text-ink-2 w-full rounded-xl border py-3.5 text-sm font-semibold'
+                  : 'bg-accent w-full rounded-xl py-3.5 text-sm font-bold text-white'
+              }
             >
               {m.search_manual_entry()}
             </button>

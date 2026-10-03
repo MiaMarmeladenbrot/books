@@ -172,8 +172,10 @@
   "search_searching": "Sucht …",
   "search_manual_entry": "Selber eintragen",
   "search_empty_title": "Dazu weiß der Katalog nichts",
-  "search_empty_body": "Neuerscheinungen und englische Ausgaben fehlen oft. Deine Angaben sind dann die besseren.",
+  "search_empty_body": "Neuerscheinungen und englische Ausgaben fehlen manchmal noch. Deine Angaben sind dann die besseren.",
   "search_empty_one_quiet": "Ein Katalog war dabei still. Nochmal suchen kann also mehr ergeben.",
+  "search_empty_isbn_body": "Diese Ausgabe wurde leider nicht gefunden. Probier es noch mal mit dem Titel, vielleicht gibt es eine andere Ausgabe.",
+  "search_by_title": "Nach Titel suchen",
   "search_load_more": [
     {
       "declarations": [
