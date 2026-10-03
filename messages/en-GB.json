@@ -199,8 +199,10 @@
   "search_searching": "Searching …",
   "search_manual_entry": "Enter it yourself",
   "search_empty_title": "The catalogue doesn't know this one.",
-  "search_empty_body": "New releases and English editions are often missing. What you type in will be the better record.",
+  "search_empty_body": "New releases and English editions are sometimes still missing. Your entry will be the better record.",
   "search_empty_one_quiet": "One catalogue stayed quiet. Searching again may turn up more.",
+  "search_empty_isbn_body": "No catalogue knows this edition. Try searching by title, maybe there's another edition.",
+  "search_by_title": "Search by title",
   "search_load_more": [
     {
       "declarations": [
@@ -216,6 +218,7 @@
     }
   ],
   "search_more_available": "The catalogue has more editions. Narrow your search, for example with the author's name.",
+  "search_later_heading": "From further catalogues",
   "search_none_fits": "None of these?",
   "search_or": "or",
   "search_pages": [

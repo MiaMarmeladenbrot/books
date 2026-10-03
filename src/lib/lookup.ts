@@ -15,7 +15,8 @@ const REQUEST_TIMEOUT = 8000
 const OPENLIBRARY_TIMEOUT = 4000
 const EDITION_TIMEOUT = 2500
 const GOOGLE_TIMEOUT = 4000
-const LATE_ANSWER_TIMEOUT = 10000
+const LATE_ANSWER_TIMEOUT = 5000
+const COLLECT_WINDOW = 1500
 
 class CatalogueUnavailable extends Error {}
 
@@ -140,6 +141,7 @@ function firstNumber(value: string, pattern: RegExp) {
 const ISBN_GROUPS: Record<string, string[]> = {
   de: ['9783'],
   en: ['9780', '9781'],
+  it: ['97888', '97912'],
 }
 
 export function pickIsbn(candidates: string[], language: string | null) {
@@ -455,6 +457,33 @@ async function searchGoogleIsbn(isbn: string): Promise<Candidate[]> {
     .filter((candidate) => candidate.title.length > 0)
 }
 
+function isbnFromGoogle(volume: GoogleVolume) {
+  const identifiers = volume.industryIdentifiers ?? []
+  const thirteen = identifiers.find((entry) => entry.type === 'ISBN_13')
+  const ten = identifiers.find((entry) => entry.type === 'ISBN_10')
+  return thirteen?.identifier ?? ten?.identifier ?? null
+}
+
+const WORD_WORTH_MATCHING = 2
+
+async function searchGoogleText(text: string, limit: number): Promise<Candidate[]> {
+  const asked = new URLSearchParams({ q: text, limit: String(limit) })
+  const volumes = await askGoogle(asked, LATE_ANSWER_TIMEOUT)
+  const words = normalizeText(text)
+    .split(' ')
+    .filter((word) => word.length > WORD_WORTH_MATCHING)
+
+  return volumes
+    .map((volume) => googleCandidate(volume, isbnFromGoogle(volume)))
+    .filter((candidate) => candidate.title.length > 0)
+    .filter((candidate) => !looksLikeStudyGuide(`${candidate.title} ${candidate.subtitle ?? ''}`))
+    .filter((candidate) => {
+      if (words.length === 0) return true
+      const mentioned = normalizeText(`${candidate.title} ${candidate.authors.join(' ')}`)
+      return words.some((word) => mentioned.includes(word))
+    })
+}
+
 function normalizeText(text: string) {
   return text
     .normalize('NFC')
@@ -471,15 +500,35 @@ const HAS_EXTENT = 6
 const HAS_ISBN = 4
 const HAS_FORMAT = 3
 
-function scoreCandidate(candidate: Candidate, query: string, words: string[]) {
-  const title = normalizeText(candidate.title)
+const ARTICLES = new Set([
+  'der', 'die', 'das', 'ein', 'eine',
+  'the', 'a', 'an',
+  'il', 'lo', 'la', 'l', 'i', 'gli', 'le', 'un', 'una', 'uno',
+  'les', 'el', 'los', 'las',
+])
+
+function contentWords(text: string) {
+  return normalizeText(text)
+    .split(' ')
+    .filter((word) => word && !ARTICLES.has(word))
+}
+
+function scoreCandidate(candidate: Candidate, words: string[]) {
+  const titleWords = contentWords(candidate.title)
+  const title = titleWords.join(' ')
+  const authors = normalizeText(candidate.authors.join(' '))
+  const onlyTheAuthor = (word: string) =>
+    word.length > 2 && authors.includes(word) && !titleWords.includes(word)
+  const asked = words.filter((word) => !ARTICLES.has(word) && !onlyTheAuthor(word))
+  const query = asked.join(' ')
   let points = 0
 
-  if (title === query) points += TITLE_EXACT
-  else if (title.startsWith(query) || query.startsWith(title)) points += TITLE_EDGE
-  else if (words.every((word) => title.includes(word))) points += TITLE_WORDS
+  if (query && title) {
+    if (title === query) points += TITLE_EXACT
+    else if (title.startsWith(query) || query.startsWith(title)) points += TITLE_EDGE
+    else if (asked.every((word) => title.includes(word))) points += TITLE_WORDS
+  }
 
-  const authors = normalizeText(candidate.authors.join(' '))
   if (authors && words.some((word) => word.length > 2 && authors.includes(word))) {
     points += AUTHOR_MATCH
   }
@@ -492,10 +541,9 @@ function scoreCandidate(candidate: Candidate, query: string, words: string[]) {
 }
 
 export function rankCandidates(candidates: Candidate[], input: string) {
-  const query = normalizeText(input)
-  const words = query.split(' ').filter(Boolean)
+  const words = normalizeText(input).split(' ').filter(Boolean)
   return candidates
-    .map((candidate) => ({ candidate, points: scoreCandidate(candidate, query, words) }))
+    .map((candidate) => ({ candidate, points: scoreCandidate(candidate, words) }))
     .sort((left, right) => right.points - left.points)
     .map((entry) => entry.candidate)
 }
@@ -536,6 +584,7 @@ function dedupe(candidates: Candidate[]) {
 export interface Lookup {
   query: 'isbn' | 'text'
   results: Candidate[]
+  later: Candidate[]
   asked: number
   silent: number
   moreAvailable: boolean
@@ -560,9 +609,82 @@ function remember(key: string, lookup: Lookup) {
   return lookup
 }
 
+async function lookupText(
+  trimmed: string,
+  key: string,
+  onUpdate?: (lookup: Lookup) => void
+): Promise<Lookup> {
+  const { exact, broad } = dnbQueries(trimmed)
+  let reported = 0
+  let received = 0
+  const fromDnb = async (query: string, limit: number) => {
+    const { candidates, total } = await searchDnb(query, limit)
+    reported += total
+    received += candidates.length
+    return candidates
+  }
+  const sources = [
+    fromDnb(exact, EXACT_LIMIT),
+    fromDnb(broad, FETCH_LIMIT),
+    searchOpenLibraryText(trimmed, FETCH_LIMIT),
+    searchGoogleText(trimmed, EXACT_LIMIT),
+  ]
+
+  let silent = 0
+  let windowOver = false
+  const waiting: Candidate[] = []
+  let shown: Candidate[] | null = null
+  let later: Candidate[] = []
+
+  const snapshot = (): Lookup => ({
+    query: 'text',
+    results: shown ?? [],
+    later,
+    asked: sources.length,
+    silent,
+    moreAvailable: reported > received,
+  })
+
+  const reveal = () => {
+    if (waiting.length === 0) return
+    shown = dedupe(rankCandidates(waiting, trimmed))
+    onUpdate?.(snapshot())
+  }
+
+  const take = (found: Candidate[]) => {
+    if (!shown) {
+      waiting.push(...found)
+      if (windowOver) reveal()
+      return
+    }
+    const listed = [...shown, ...later]
+    const added = dedupe([...listed, ...rankCandidates(found, trimmed)]).slice(listed.length)
+    if (added.length === 0) return
+    later = [...later, ...added]
+    onUpdate?.(snapshot())
+  }
+
+  const window = setTimeout(() => {
+    windowOver = true
+    reveal()
+  }, COLLECT_WINDOW)
+
+  await Promise.all(
+    sources.map((source) =>
+      source.then(take, () => {
+        silent += 1
+      })
+    )
+  )
+  clearTimeout(window)
+
+  shown ??= dedupe(rankCandidates(waiting, trimmed))
+  return remember(key, snapshot())
+}
+
 export async function lookupBooks(
   input: string,
-  onFirstAnswer?: (lookup: Lookup) => void
+  onUpdate?: (lookup: Lookup) => void
 ): Promise<Lookup> {
   const trimmed = input.trim()
   const key = cacheKey(input)
@@ -584,48 +706,21 @@ export async function lookupBooks(
         const found = await search()
         if (found.length > 0) {
           const results = found.map((candidate) => ({ ...candidate, isbn }))
-          return remember(key, { query: 'isbn', results, asked, silent, moreAvailable: false })
+          return remember(key, {
+            query: 'isbn',
+            results,
+            later: [],
+            asked,
+            silent,
+            moreAvailable: false,
+          })
         }
       } catch {
         silent += 1
       }
     }
-    return { query: 'isbn', results: [], asked, silent, moreAvailable: false }
+    return { query: 'isbn', results: [], later: [], asked, silent, moreAvailable: false }
   }
 
-  const { exact, broad } = dnbQueries(trimmed)
-  const empty = { candidates: [], total: 0 }
-  const slowly = searchOpenLibraryText(trimmed, FETCH_LIMIT).catch(() => null)
-  const promptly = await Promise.allSettled([
-    searchDnb(exact, EXACT_LIMIT),
-    searchDnb(broad, FETCH_LIMIT),
-  ])
-
-  const byTitle = promptly[0].status === 'fulfilled' ? promptly[0].value : empty
-  const byWords = promptly[1].status === 'fulfilled' ? promptly[1].value : empty
-  const fromDnb = [...byTitle.candidates, ...byWords.candidates]
-  const moreAvailable = byTitle.total + byWords.total > fromDnb.length
-  const silent = promptly.filter((outcome) => outcome.status === 'rejected').length
-
-  const asked = promptly.length + 1
-
-  if (onFirstAnswer && fromDnb.length > 0) {
-    onFirstAnswer({
-      query: 'text',
-      results: dedupe(rankCandidates(fromDnb, trimmed)),
-      asked,
-      silent,
-      moreAvailable,
-    })
-  }
-
-  const fromOpenLibrary = await slowly
-
-  return remember(key, {
-    query: 'text',
-    results: dedupe(rankCandidates([...fromDnb, ...(fromOpenLibrary ?? [])], trimmed)),
-    asked,
-    silent: silent + (fromOpenLibrary === null ? 1 : 0),
-    moreAvailable,
-  })
+  return lookupText(trimmed, key, onUpdate)
 }

@@ -198,6 +198,8 @@
   "search_empty_title": "Il catalogo non conosce questo libro",
   "search_empty_body": "Spesso mancano le novità e le edizioni straniere. I tuoi dati saranno allora i migliori.",
   "search_empty_one_quiet": "Un catalogo non ha risposto. Cercare di nuovo potrebbe dare altri risultati.",
+  "search_empty_isbn_body": "Nessun catalogo conosce questa edizione. Prova a cercare per titolo, magari c'è un'altra edizione.",
+  "search_by_title": "Cerca per titolo",
   "search_load_more": [
     {
       "declarations": [
@@ -213,6 +215,7 @@
     }
   ],
   "search_more_available": "Il catalogo ha altre edizioni. Affina la ricerca, per esempio con il nome dell'autore.",
+  "search_later_heading": "Da altri cataloghi",
   "search_none_fits": "Nessuno va bene?",
   "search_or": "oppure",
   "search_pages": [

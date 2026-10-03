@@ -11,7 +11,7 @@ const MIN_RATIO = 0.5
 const MAX_RATIO = 0.85
 const UPSTREAM_TIMEOUT = 8000
 const GOOGLE_BUDGET = 2500
-const GOOGLE_ZOOMS = [0, 4]
+const GOOGLE_ZOOMS = [0, 4, 1]
 
 function jpegSize(bytes: Uint8Array) {
   let position = 2
