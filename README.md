@@ -266,12 +266,13 @@ paragraphs and English ones cannot.
 
 - Ratings. The column is decided: `smallint` between 1 and 5, so half stars
   would be a migration rather than a design choice.
-- A price, and who recommended a book. A column each, a field each.
 - A progress indicator, which needs somewhere to keep the page somebody is on.
 - A panel for audiobooks: hours rather than pages. They carry no length at all —
   `page_count` counts pages, and the import refused figures counting CDs.
 - A calendar of when each book was started and finished.
-- A feed of recommendations, shareable lists and shareable statistics, with a
+- A feed of recommendations with likes and the possibility to tag others
+- Notifications for being tagged
+- Shareable lists and shareable statistics, with a
   switch on the profile for what is shared at all.
 
 The sharing ideas are the only ones that are not a column and a field. Every
