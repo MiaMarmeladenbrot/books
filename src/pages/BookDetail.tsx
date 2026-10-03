@@ -130,8 +130,6 @@ export function BookDetail() {
         />
         <Row label={m.label_isbn()} value={book.isbn} />
 
-        <Blurb text={catalogue.entry?.text ?? null} asking={catalogue.asking} />
-
         {book.notes && (
           <div className="border-accent/35 mt-6 border-l-2 pl-4">
             <p className="text-ink-3 mb-1 text-xs font-bold tracking-widest uppercase">
@@ -142,6 +140,8 @@ export function BookDetail() {
             </p>
           </div>
         )}
+
+        <Blurb text={catalogue.entry?.text ?? null} asking={catalogue.asking} />
       </main>
 
       <ConfirmDialog
