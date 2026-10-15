@@ -73,6 +73,15 @@ function buildDimensions(books: Book[]): Dimension[] {
         matches: (book: Book) => book.provenance === source,
       })),
     },
+    {
+      param: 'rating',
+      all: m.detail_rating(),
+      choices: [5, 4, 3, 2, 1].map((rating) => ({
+        value: String(rating),
+        label: String(rating),
+        matches: (book: Book) => book.rating === rating,
+      })),
+    },
   ]
 
   return dimensions.filter((dimension) => dimension.choices.length > 0)
@@ -170,59 +179,61 @@ export function Shelf() {
           </span>
         </div>
 
-        <div className="mx-auto mt-2.5 max-w-5xl">
-          <div className="border-line bg-card flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5">
-            <Search size={17} className="text-ink-3 shrink-0" />
-            <input
-              value={query}
-              onChange={(event) => updateParams({ q: event.target.value })}
-              placeholder={m.shelf_search_placeholder()}
-              aria-label={m.shelf_search_label()}
-              className="placeholder:text-ink-2 w-full bg-transparent text-sm outline-none"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => updateParams({ q: '' })}
-                aria-label={m.shelf_search_clear()}
-                className="text-ink-3 -mr-1 shrink-0 p-1"
-              >
-                <X size={17} />
-              </button>
-            )}
-          </div>
-
-          <div className="no-scrollbar -mx-4 mt-2.5 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
-            {dimensions.map((dimension) => {
-              const value = params.get(dimension.param) ?? ''
-              const active = dimension.choices.find((choice) => choice.value === value)
-              return (
-                <Select
-                  key={dimension.param}
-                  value={value}
-                  onChange={(event) => updateParams({ [dimension.param]: event.target.value })}
-                  aria-label={dimension.all}
-                  wrapper="shrink-0"
-                  chevron={value ? 'text-paper' : 'text-ink-3'}
-                  onClear={active ? () => updateParams({ [dimension.param]: '' }) : undefined}
-                  clearLabel={active ? m.shelf_filter_clear({ label: active.label }) : undefined}
-                  className={`rounded-full border py-1.5 pr-8 pl-3.5 text-sm font-medium ${
-                    value ? 'border-ink bg-ink text-paper' : 'border-line bg-card text-ink-2'
-                  }`}
+        {books.length > 0 && (
+          <div className="mx-auto mt-2.5 max-w-5xl">
+            <div className="border-line bg-card flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5">
+              <Search size={17} className="text-ink-3 shrink-0" />
+              <input
+                value={query}
+                onChange={(event) => updateParams({ q: event.target.value })}
+                placeholder={m.shelf_search_placeholder()}
+                aria-label={m.shelf_search_label()}
+                className="placeholder:text-ink-2 w-full bg-transparent text-sm outline-none"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => updateParams({ q: '' })}
+                  aria-label={m.shelf_search_clear()}
+                  className="text-ink-3 -mr-1 shrink-0 p-1"
                 >
-                  <option value="" className="bg-card text-ink">
-                    {dimension.all}
-                  </option>
-                  {dimension.choices.map((choice) => (
-                    <option key={choice.value} value={choice.value} className="bg-card text-ink">
-                      {choice.label}
+                  <X size={17} />
+                </button>
+              )}
+            </div>
+
+            <div className="no-scrollbar -mx-4 mt-2.5 flex gap-1.5 overflow-x-auto px-4 pb-0.5">
+              {dimensions.map((dimension) => {
+                const value = params.get(dimension.param) ?? ''
+                const active = dimension.choices.find((choice) => choice.value === value)
+                return (
+                  <Select
+                    key={dimension.param}
+                    value={value}
+                    onChange={(event) => updateParams({ [dimension.param]: event.target.value })}
+                    aria-label={dimension.all}
+                    wrapper="shrink-0"
+                    chevron={value ? 'text-paper' : 'text-ink-3'}
+                    onClear={active ? () => updateParams({ [dimension.param]: '' }) : undefined}
+                    clearLabel={active ? m.shelf_filter_clear({ label: active.label }) : undefined}
+                    className={`rounded-full border py-1.5 pr-8 pl-3.5 text-sm font-medium ${
+                      value ? 'border-ink bg-ink text-paper' : 'border-line bg-card text-ink-2'
+                    }`}
+                  >
+                    <option value="" className="bg-card text-ink">
+                      {dimension.all}
                     </option>
-                  ))}
-                </Select>
-              )
-            })}
+                    {dimension.choices.map((choice) => (
+                      <option key={choice.value} value={choice.value} className="bg-card text-ink">
+                        {choice.label}
+                      </option>
+                    ))}
+                  </Select>
+                )
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-5xl px-4 pt-4">
