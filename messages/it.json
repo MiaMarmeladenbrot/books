@@ -209,6 +209,9 @@
   "search_later_heading": "Da altri cataloghi",
   "search_none_fits": "Nessuno va bene?",
   "search_or": "oppure",
+  "twin_badge": "Già nello scaffale",
+  "twin_hint": "Questo libro è già nel tuo scaffale come «{status}».",
+  "twin_open": "Mostra",
   "search_pages": [
     {
       "declarations": [

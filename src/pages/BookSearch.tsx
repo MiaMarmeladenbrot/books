@@ -4,6 +4,8 @@ import { ScanBarcode, Search, X } from 'lucide-react'
 import { Cover } from '../components/Cover'
 import { ShelfGap } from '../components/ShelfGap'
 import { looksLikeIsbn, lookupBooks, rememberedLookup, type Candidate } from '../lib/lookup'
+import { shelvedTwin } from '../lib/shelfTwin'
+import { useBooks } from '../store/useBooks'
 import { m } from '../paraglide/messages.js'
 import { FORMAT_LABEL } from '../types'
 
@@ -35,6 +37,7 @@ function describe(candidate: Candidate) {
 export function BookSearch() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { books } = useBooks()
   const [params, setParams] = useSearchParams()
   const asked = params.get('q') ?? ''
   const [term, setTerm] = useState(asked)
@@ -294,6 +297,11 @@ export function BookSearch() {
                         </span>
                       )}
                       <span className="text-ink-3 mt-0.5 block text-xs">{describe(candidate)}</span>
+                      {shelvedTwin(books, candidate) && (
+                        <span className="bg-accent-soft text-accent mt-1.5 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                          {m.twin_badge()}
+                        </span>
+                      )}
                     </span>
                   </button>
                 </li>

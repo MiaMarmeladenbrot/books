@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type SyntheticEvent } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { useBooks } from '../store/useBooks'
 import { CoverPicker } from '../components/CoverPicker'
 import { Select } from '../components/Select'
 import { releaseCover, sharedCoverPath, uploadOwnCover, uploadSharedCover } from '../lib/supabase'
 import type { Candidate } from '../lib/lookup'
+import { shelvedTwin } from '../lib/shelfTwin'
 import { MAX_UPLOAD_BYTES, fetchGatedCoverJpeg, toCoverJpeg } from '../utils/image'
 import { todayIso } from '../utils/format'
 import { m } from '../paraglide/messages.js'
@@ -230,6 +231,20 @@ export function BookForm() {
   }
 
   const dates = DATES_FOR_STATUS[draft.status]
+  const twin = existing
+    ? null
+    : shelvedTwin(
+        books,
+        {
+          title: draft.title,
+          authors: authorText
+            .split(',')
+            .map((name) => name.trim())
+            .filter(Boolean),
+          isbn: draft.isbn,
+        },
+        savedId ?? undefined,
+      )
 
   const handleSubmit = async (event: SyntheticEvent) => {
     event.preventDefault()
@@ -311,6 +326,15 @@ export function BookForm() {
 
       <div className="mx-auto max-w-xl px-4 pt-5">
         {error && <p className="text-danger mb-4 text-sm">{error}</p>}
+
+        {twin && (
+          <p className="bg-accent-soft text-ink-2 mb-4 rounded-xl px-3.5 py-3 text-sm leading-relaxed">
+            {m.twin_hint({ status: STATUS_LABEL[twin.status]() })}{' '}
+            <Link to={`/buch/${twin.id}`} className="text-accent font-semibold">
+              {m.twin_open()}
+            </Link>
+          </p>
+        )}
 
         <CoverPicker
           title={draft.title}

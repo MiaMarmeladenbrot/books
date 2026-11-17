@@ -209,6 +209,9 @@
   "search_later_heading": "From further catalogues",
   "search_none_fits": "None of these?",
   "search_or": "or",
+  "twin_badge": "Already on your shelf",
+  "twin_hint": "This book is already on your shelf as “{status}”.",
+  "twin_open": "Show",
   "search_pages": [
     {
       "declarations": [
